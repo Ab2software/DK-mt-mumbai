@@ -93,10 +93,10 @@ exports.getLandingInfo = async (req, res) => {
       } catch (e) {}
     }
     if (!alertMessage || alertMessage.includes('Tara Baba') || alertMessage.includes('Sara 777')) {
-      alertMessage = "Welcome to Kalyan Matka! India's No.1 Live Matka Result Portal! Download our official app now.";
+      alertMessage = "Welcome to Bharat Matka! India's No.1 Live Matka Result Portal! Download our official app now.";
     }
 
-    const appName = 'Kalyan Matka';
+    const appName = 'Bharat Matka';
 
     const rawLink = settings.app_link ? settings.app_link.trim() : '';
     const appLink = (rawLink && rawLink !== '#' && rawLink !== '/api/download-apk' && !rawLink.includes('sara-777.apk')) ? rawLink : 'apk/Kalyan-Matka.apk';

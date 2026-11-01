@@ -88,7 +88,7 @@ router.get('/app-info', async (req, res) => {
     const [settings] = await db.query('SELECT app_link, upi_name, mpin_status, slider_status, referral_status, auto_active_status, alert_message, privacy_policy_url, data_deletion_url FROM admin_settings LIMIT 1');
     const [admins] = await db.query('SELECT name FROM admin WHERE id = 1');
     const [contacts] = await db.query('SELECT mobile, wp_mobile, email FROM contact_detail LIMIT 1');
-    const appName = 'Kalyan Matka';
+    const appName = 'Bharat Matka';
 
     const contactInfo = contacts.length > 0 ? contacts[0] : {};
     const wpNum = contactInfo.wp_mobile || contactInfo.mobile || '';
@@ -132,7 +132,7 @@ router.get('/app-info', async (req, res) => {
     return res.json({
       success: '1',
       data: {
-        app_name: 'Kalyan Matka',
+        app_name: 'Bharat Matka',
         app_logo: '/img/logo.png',
         mobile: '',
         wp_mobile: '',
