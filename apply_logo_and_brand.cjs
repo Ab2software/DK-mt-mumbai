@@ -2,11 +2,15 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const sourceLogo = '/Users/anilrathore/.gemini/antigravity-ide/brain/f6fab270-6493-4b5c-abc2-b128311f7c21/.user_uploaded/media_1793517360538.jpg';
+const candidateLogos = [
+  '/Users/anilrathore/.gemini/antigravity-ide/brain/f6fab270-6493-4b5c-abc2-b128311f7c21/.user_uploaded/media_1793522866752.jpg',
+  '/Users/anilrathore/.gemini/antigravity-ide/brain/f6fab270-6493-4b5c-abc2-b128311f7c21/.user_uploaded/media_1793517360538.jpg'
+];
+const sourceLogo = candidateLogos.find(p => fs.existsSync(p));
 const rootDir = '/Users/anilrathore/Documents/Project/Dk Sharma';
 
-console.log('Verifying source logo exists:', fs.existsSync(sourceLogo));
-if (!fs.existsSync(sourceLogo)) {
+console.log('Verifying source logo exists:', !!sourceLogo);
+if (!sourceLogo || !fs.existsSync(sourceLogo)) {
   console.error('Source logo does not exist!');
   process.exit(1);
 }

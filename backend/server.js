@@ -107,12 +107,15 @@ app.use('/img', express.static(path.join(__dirname, '..', 'frontend', 'public', 
 
 
 
-try {
-  const uploadedLogo = '/Users/anilrathore/.gemini/antigravity-ide/brain/f6fab270-6493-4b5c-abc2-b128311f7c21/.user_uploaded/media_1793517360538.jpg';
+  const candidateLogos = [
+    '/Users/anilrathore/.gemini/antigravity-ide/brain/f6fab270-6493-4b5c-abc2-b128311f7c21/.user_uploaded/media_1793522866752.jpg',
+    '/Users/anilrathore/.gemini/antigravity-ide/brain/f6fab270-6493-4b5c-abc2-b128311f7c21/.user_uploaded/media_1793517360538.jpg'
+  ];
+  const uploadedLogo = candidateLogos.find(p => fs.existsSync(p));
   const landingImgDir = path.join(__dirname, '..', 'landing', 'img');
   const logoSrc = path.join(landingImgDir, 'logo.png');
   const favDest = path.join(landingImgDir, 'fav.png');
-  if (fs.existsSync(uploadedLogo)) {
+  if (uploadedLogo && fs.existsSync(uploadedLogo)) {
     try { fs.copyFileSync(uploadedLogo, logoSrc); } catch (e) {}
   }
   if (fs.existsSync(logoSrc)) {
