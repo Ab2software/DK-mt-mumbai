@@ -107,6 +107,7 @@ app.use('/img', express.static(path.join(__dirname, '..', 'frontend', 'public', 
 
 
 
+try {
   const candidateLogos = [
     '/Users/anilrathore/.gemini/antigravity-ide/brain/f6fab270-6493-4b5c-abc2-b128311f7c21/.user_uploaded/media_1793522866752.jpg',
     '/Users/anilrathore/.gemini/antigravity-ide/brain/f6fab270-6493-4b5c-abc2-b128311f7c21/.user_uploaded/media_1793517360538.jpg'
