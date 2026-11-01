@@ -4,7 +4,7 @@ import { Menu, PlusCircle, Wallet, LogOut } from 'lucide-react';
 import api from '../../utils/api';
 
 const UserNavbar = ({ onOpenSidebar, wallet = '0', themeColor = 'gold', onThemeChange, onLogout }) => {
-  const [appName, setAppName] = useState('Kalyan Matka');
+  const [appName, setAppName] = useState('Bharat Matka');
 
   useEffect(() => {
     api.get('/app-info').then(res => {
@@ -58,7 +58,7 @@ const UserNavbar = ({ onOpenSidebar, wallet = '0', themeColor = 'gold', onThemeC
         <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
           <img
             src="/img/logo.png"
-            alt="Kalyan Matka Logo"
+            alt="Bharat Matka Logo"
             style={{
               height: '46px',
               width: 'auto',

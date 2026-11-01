@@ -9,15 +9,15 @@ const getBaseURL = () => {
     if (host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local')) {
       return 'http://localhost:5001/api';
     }
-    if (host.includes('airoapp.ai')) {
-      return 'https://ww7ncvv5bk.c24.airoapp.ai/api';
+    if (host.includes('backend-mt-dk.onrender.com')) {
+      return 'https://backend-mt-dk.onrender.com/api';
     }
     if (host.includes('gama567.biz')) {
       return `${window.location.origin}/api`;
     }
-    return `${window.location.origin}/api`;
+    return 'https://backend-mt-dk.onrender.com/api';
   }
-  return 'http://localhost:5001/api';
+  return 'https://backend-mt-dk.onrender.com/api';
 };
 
 const api = axios.create({

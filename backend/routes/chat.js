@@ -294,7 +294,7 @@ router.post('/admin/send', async (req, res) => {
     return res.status(400).json({ success: '0', msg: 'Message or attachment is required' });
   }
 
-  const name = sender_name || 'Kalyan Matka Support';
+  const name = sender_name || 'Bharat Matka Support';
   const attachUrl = attachment_url || null;
   const fName = file_name || null;
 

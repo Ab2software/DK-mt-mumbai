@@ -5,7 +5,7 @@ import api from '../utils/api';
 
 const DataDeletion = () => {
   const navigate = useNavigate();
-  const [appName, setAppName] = useState('Kalyan Matka');
+  const [appName, setAppName] = useState('Bharat Matka');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [reason, setReason] = useState('I want to close my account');

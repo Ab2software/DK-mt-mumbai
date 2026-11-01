@@ -26,7 +26,7 @@ const Login = ({ setAuth }) => {
   const [focusedInput, setFocusedInput] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [appName, setAppName] = useState('Kalyan Matka');
+  const [appName, setAppName] = useState('Bharat Matka');
   const [wpNumber, setWpNumber] = useState('');
   const [themeColor, setThemeColor] = useState(() => localStorage.getItem('auth_theme_color') || 'gold');
   const [showHelpModal, setShowHelpModal] = useState(false);

@@ -17,7 +17,7 @@ const Signup = ({ setAuth }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [appName, setAppName] = useState('Kalyan Matka');
+  const [appName, setAppName] = useState('Bharat Matka');
   const [wpNumber, setWpNumber] = useState('');
   const [referralStatus, setReferralStatus] = useState('1');
   const [themeColor, setThemeColor] = useState(() => localStorage.getItem('auth_theme_color') || 'gold');

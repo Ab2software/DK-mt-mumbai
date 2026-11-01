@@ -1,10 +1,11 @@
 {
-  "name": "pravesh-project",
+  "name": "bharat-matka",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "cd frontend && npm install && npm run build",
-    "build:all": "cd frontend && npm install && npm run build && cd ../backend && npm install",
+    "sync-logo": "node apply_logo_and_brand.cjs",
+    "build": "node apply_logo_and_brand.cjs && cd frontend && npm install && npm run build",
+    "build:all": "node apply_logo_and_brand.cjs && cd frontend && npm install && npm run build && cd ../backend && npm install",
     "start": "cd backend && node server.js"
   }
 }

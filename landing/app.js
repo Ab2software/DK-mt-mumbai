@@ -46,19 +46,20 @@ const CANDIDATE_API_BASES = (() => {
     candidates.push('/api');
   }
 
-  // D. Known production endpoints
+  // D. Production backend on Render
+  candidates.push('https://backend-mt-dk.onrender.com/api');
+
+  // E. Additional endpoints
   if (hostname.includes('gama567.biz')) {
     candidates.push('https://gama567.biz/api');
     candidates.push('https://app.gama567.biz/api');
     candidates.push('https://api.gama567.biz/api');
   } else {
     candidates.push('https://gama567.biz/api');
-    candidates.push('https://app.gama567.biz/api');
-    candidates.push('https://api.gama567.biz/api');
   }
 
-  // E. Cloud fallback (Render / Airoapp)
-  candidates.push('https://ww7ncvv5bk.c24.airoapp.ai/api');
+  // F. Cloud fallback
+  candidates.push('https://backend-mt-dk.onrender.com/api');
 
   // De-duplicate candidates while preserving order
   return [...new Set(candidates)];
@@ -128,11 +129,11 @@ async function fetchFromApi(endpoint) {
 const APK_STORE_FILE = 'apk/Kalyan-Matka.apk';
 
 let appConfig = {
-  appName: 'Kalyan Matka',
+  appName: 'Bharat Matka',
   appLink: APK_STORE_FILE,
   mobile: '',
   wpMobile: '',
-  alertMessage: "⚡ Welcome to Kalyan Matka! India's No.1 Live Matka Result Portal. Download Official Android App now for fastest Kalyan, Time Bazar & Main Bazar results! Fast automatic withdrawals & 24x7 Live Chat support available.",
+  alertMessage: "⚡ Welcome to Bharat Matka! India's No.1 Live Matka Result Portal. Download Official Android App now for fastest Kalyan, Time Bazar & Main Bazar results! Fast automatic withdrawals & 24x7 Live Chat support available.",
   privacyPolicyUrl: '/privacy-policy',
   dataDeletionUrl: '/data-deletion'
 };
@@ -205,8 +206,8 @@ async function loadAppInfo() {
     const data = await res.json();
     if (data && data.success === '1' && data.data) {
       const d = data.data;
-      // App name resolution: Kalyan Matka
-      appConfig.appName = d.app_name || 'Kalyan Matka';
+      // App name resolution: Bharat Matka
+      appConfig.appName = d.app_name || 'Bharat Matka';
       if (d.alert_message) appConfig.alertMessage = d.alert_message;
       if (d.mobile) appConfig.mobile = d.mobile;
       if (d.wp_mobile) appConfig.wpMobile = d.wp_mobile;

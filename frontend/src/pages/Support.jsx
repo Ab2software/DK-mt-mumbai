@@ -577,7 +577,7 @@ const Support = () => {
               </span>
             </div>
             <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.65)', margin: '2px 0 0 0' }}>
-              Instant response from Kalyan Matka Help Desk
+              Instant response from Bharat Matka Help Desk
             </p>
           </div>
         </div>
@@ -617,7 +617,7 @@ const Support = () => {
           }}>
             <Sparkles size={18} style={{ color: 'var(--color-gold)', margin: '0 auto 4px' }} />
             <h4 style={{ fontSize: '0.88rem', color: '#ffffff', margin: '0 0 2px', fontWeight: '700' }}>
-              Welcome to Kalyan Matka Live Support
+              Welcome to Bharat Matka Live Support
             </h4>
             <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)', margin: 0 }}>
               Send text messages, screenshot photos, or voice audio notes. We are here to help 24/7!
@@ -731,7 +731,7 @@ const Support = () => {
                         marginBottom: '4px',
                         padding: isImage ? '4px 6px' : '0'
                       }}>
-                        {m.sender_name || 'Kalyan Matka Support'}
+                        {m.sender_name || 'Bharat Matka Support'}
                       </div>
                     )}
 

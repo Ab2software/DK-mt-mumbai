@@ -1,13 +1,16 @@
 import api from './api';
 
 const getWsURL = () => {
+  if (import.meta.env.VITE_WS_URL) {
+    return import.meta.env.VITE_WS_URL;
+  }
   if (typeof window === 'undefined') return '';
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   // On localhost/127.0.0.1 connect directly to backend port 5001 to prevent proxy timeouts
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return `${protocol}//${window.location.hostname}:5001/ws/chat`;
   }
-  return `${protocol}//${window.location.host}/ws/chat`;
+  return 'wss://backend-mt-dk.onrender.com/ws/chat';
 };
 
 class ChatSocketManager {

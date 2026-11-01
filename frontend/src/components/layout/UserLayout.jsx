@@ -71,7 +71,7 @@ const UserLayout = ({ children, setAuth }) => {
       }
 
       setUserData({
-        name: prof.name || localStorage.getItem('name') || 'Kalyan Matka Player',
+        name: prof.name || localStorage.getItem('name') || 'Bharat Matka Player',
         phone_number: prof.phone_number || prof.phone || localStorage.getItem('phone') || '',
         phone: prof.phone || localStorage.getItem('phone') || '',
         email: prof.email || '',

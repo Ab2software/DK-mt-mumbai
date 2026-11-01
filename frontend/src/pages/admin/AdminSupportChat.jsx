@@ -33,11 +33,11 @@ import chatSocket from '../../utils/chatSocket';
 import { formatDisplayDateTime } from '../../utils/indianTime';
 
 const QUICK_REPLIES = [
-  "Hello! Welcome to Kalyan Matka Support. How can I assist you today?",
+  "Hello! Welcome to Bharat Matka Support. How can I assist you today?",
   "Your deposit is being verified and will be credited to your wallet in 5-10 minutes.",
   "Please share your registered mobile number and 12-digit UTR screenshot.",
   "Withdrawal requests are processed promptly between 10:00 AM and 06:00 PM.",
-  "Thank you for contacting Kalyan Matka Support. Have a great day!"
+  "Thank you for contacting Bharat Matka Support. Have a great day!"
 ];
 
 // Inline Audio Player Component for Admin View

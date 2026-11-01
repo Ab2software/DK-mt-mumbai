@@ -5,7 +5,7 @@ import api from '../utils/api';
 
 const PrivacyPolicy = () => {
   const navigate = useNavigate();
-  const [appName, setAppName] = useState('Kalyan Matka');
+  const [appName, setAppName] = useState('Bharat Matka');
   const [contactMobile, setContactMobile] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [dataDeletionUrl, setDataDeletionUrl] = useState('/data-deletion');

@@ -108,7 +108,7 @@ app.use('/img', express.static(path.join(__dirname, '..', 'frontend', 'public', 
 
 
 try {
-  const uploadedLogo = '/Users/anilrathore/.gemini/antigravity-ide/brain/1cbfdef8-9fd8-4275-8907-5f43353f6735/.user_uploaded/media_1793204473300.jpg';
+  const uploadedLogo = '/Users/anilrathore/.gemini/antigravity-ide/brain/f6fab270-6493-4b5c-abc2-b128311f7c21/.user_uploaded/media_1793517360538.jpg';
   const landingImgDir = path.join(__dirname, '..', 'landing', 'img');
   const logoSrc = path.join(landingImgDir, 'logo.png');
   const favDest = path.join(landingImgDir, 'fav.png');
@@ -134,6 +134,21 @@ try {
   const playStoreAssets = path.join(__dirname, '..', 'PlayStore', 'assets');
   if (fs.existsSync(logoSrc) && fs.existsSync(playStoreAssets)) {
     try { fs.copyFileSync(logoSrc, path.join(playStoreAssets, 'logo.png')); } catch (e) {}
+  }
+  // Android res mipmaps
+  const androidResDir = path.join(__dirname, '..', 'Application', 'app', 'src', 'main', 'res');
+  if (fs.existsSync(logoSrc) && fs.existsSync(androidResDir)) {
+    const mipmaps = ['mipmap-mdpi', 'mipmap-hdpi', 'mipmap-xhdpi', 'mipmap-xxhdpi', 'mipmap-xxxhdpi'];
+    mipmaps.forEach(m => {
+      const dir = path.join(androidResDir, m);
+      if (fs.existsSync(dir)) {
+        try {
+          fs.copyFileSync(logoSrc, path.join(dir, 'ic_launcher.webp'));
+          fs.copyFileSync(logoSrc, path.join(dir, 'ic_launcher_round.webp'));
+          fs.copyFileSync(logoSrc, path.join(dir, 'ic_launcher_foreground.webp'));
+        } catch (e) {}
+      }
+    });
   }
 } catch (e) {}
 
@@ -168,7 +183,7 @@ if (fs.existsSync(frontendDistPath)) {
   });
 } else {
   app.get('/', (req, res) => {
-    res.json({ message: 'Kalyan Matka API Server is running!', health: '/api/health' });
+    res.json({ message: 'Bharat Matka API Server is running!', health: '/api/health' });
   });
 }
 

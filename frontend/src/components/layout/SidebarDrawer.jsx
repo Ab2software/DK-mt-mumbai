@@ -156,7 +156,7 @@ const SidebarDrawer = ({
                 overflow: 'hidden'
               }}
             >
-              {user.name || localStorage.getItem('name') || 'Kalyan Matka Player'}
+              {user.name || localStorage.getItem('name') || 'Bharat Matka Player'}
             </h4>
             <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.82rem', margin: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
               <ShieldCheck size={14} style={{ color: '#10b981' }} />

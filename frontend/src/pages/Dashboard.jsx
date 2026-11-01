@@ -8,7 +8,7 @@ const Dashboard = () => {
   const [games, setGames] = useState([]);
   const [sortBy, setSortBy] = useState('time_asc');
   const [marketFilter, setMarketFilter] = useState('all');
-  const [alertMsg, setAlertMsg] = useState('Welcome to Kalyan Matka! Place your bets wisely.');
+  const [alertMsg, setAlertMsg] = useState('Welcome to Bharat Matka! Place your bets wisely.');
   const [welcomeToast, setWelcomeToast] = useState(null);
   const [sliderStatus, setSliderStatus] = useState('1');
   const [sliders, setSliders] = useState([]);

@@ -2895,7 +2895,7 @@ const AdminDashboard = ({ setAdminAuth }) => {
               style={{ color: '#ffffff', fontSize: isMobile ? '0.88rem' : '0.98rem', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}
               onClick={() => handleTabClick('dashboards')}
             >
-              Kalyan Matka Admin
+              Bharat Matka Admin
             </span>
           </div>
 
@@ -3527,7 +3527,7 @@ const AdminDashboard = ({ setAdminAuth }) => {
                           Welcome Back!
                         </h5>
                         <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.8rem', margin: 0 }}>
-                          Kalyan Matka Admin Console
+                          Bharat Matka Admin Console
                         </p>
                       </div>
                       <div style={{
@@ -7151,7 +7151,7 @@ const AdminDashboard = ({ setAdminAuth }) => {
                         🌐 App URLs & Legal Compliance (Play Store & Privacy Policy)
                       </h5>
                       <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#74788d' }}>
-                        Configure the APK Download Button Link, How to Play Website Link, Google Play Privacy Policy URL, and Data Deletion Link for Kalyan Matka.
+                        Configure the APK Download Button Link, How to Play Website Link, Google Play Privacy Policy URL, and Data Deletion Link for Bharat Matka.
                       </p>
                     </div>
 

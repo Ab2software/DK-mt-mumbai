@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Kalyan Matka"
+rootProject.name = "Bharat Matka"
 include(":app")
