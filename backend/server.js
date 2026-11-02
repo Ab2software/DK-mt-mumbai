@@ -191,6 +191,15 @@ app.use('/api', apiRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/chat', chatRoutes);
 
+// Mount Public Declared Result API
+try {
+  const resultRoutes = require('../ResultApi/routes/resultRoutes');
+  app.use('/api/results', resultRoutes);
+  app.use('/ResultApi', resultRoutes);
+} catch (e) {
+  console.warn('[ResultApi Mount Notice]:', e.message);
+}
+
 // Base route & Health check
 app.get('/health', (req, res) => {
   res.redirect('/api/health');
