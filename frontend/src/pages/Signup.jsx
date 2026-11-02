@@ -20,6 +20,7 @@ const Signup = ({ setAuth }) => {
   const [appName, setAppName] = useState('Bharat Matka');
   const [wpNumber, setWpNumber] = useState('');
   const [referralStatus, setReferralStatus] = useState('1');
+  const [mpinStatus, setMpinStatus] = useState('1');
   const [themeColor, setThemeColor] = useState(() => localStorage.getItem('auth_theme_color') || 'gold');
   const navigate = useNavigate();
 
@@ -31,6 +32,9 @@ const Signup = ({ setAuth }) => {
         }
         if (res.data.data.referral_status !== undefined) {
           setReferralStatus(String(res.data.data.referral_status));
+        }
+        if (res.data.data.mpin_status !== undefined) {
+          setMpinStatus(String(res.data.data.mpin_status));
         }
         const supportNum = res.data.data.wp_mobile || res.data.data.mobile || '';
         if (supportNum) {
@@ -65,9 +69,11 @@ const Signup = ({ setAuth }) => {
       setError('Password must be at least 6 characters');
       return;
     }
-    if (formData.user_mpin.length !== 4) {
-      setError('M-PIN must be exactly 4 digits');
-      return;
+    if (String(mpinStatus) === '1') {
+      if (formData.user_mpin.length !== 4) {
+        setError('M-PIN must be exactly 4 digits');
+        return;
+      }
     }
 
     setLoading(true);
@@ -76,9 +82,9 @@ const Signup = ({ setAuth }) => {
         user_name: formData.user_name,
         user_phone: formData.user_phone,
         user_password: formData.user_password,
-        user_mpin: formData.user_mpin,
+        user_mpin: String(mpinStatus) === '1' ? formData.user_mpin : '',
         user_email: formData.user_email,
-        referral_phone: formData.referral_phone
+        referral_phone: String(referralStatus) !== '0' ? formData.referral_phone : ''
       });
 
       const resData = response.data;
@@ -241,36 +247,37 @@ const Signup = ({ setAuth }) => {
               </div>
             </div>
 
-            <div className="grid-cols-2">
-              <div className="form-group">
-                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <KeyRound size={14} /> 4-Digit M-PIN
-                </label>
-                <div className="input-group-custom">
-                  <div className="input-icon-left">
-                    <KeyRound size={18} />
+            {/* Conditional M-PIN and Referral Phone Row */}
+            {(String(mpinStatus) === '1' && String(referralStatus) !== '0') ? (
+              <div className="grid-cols-2">
+                <div className="form-group">
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <KeyRound size={14} /> 4-Digit M-PIN
+                  </label>
+                  <div className="input-group-custom">
+                    <div className="input-icon-left">
+                      <KeyRound size={18} />
+                    </div>
+                    <input
+                      type={showMpin ? 'text' : 'password'}
+                      name="user_mpin"
+                      className="form-input form-input-icon"
+                      placeholder="4-digit pin"
+                      value={formData.user_mpin}
+                      onChange={(e) => setFormData({ ...formData, user_mpin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowMpin(!showMpin)}
+                      title={showMpin ? 'Hide M-PIN' : 'Show M-PIN'}
+                    >
+                      {showMpin ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                   </div>
-                  <input
-                    type={showMpin ? 'text' : 'password'}
-                    name="user_mpin"
-                    className="form-input form-input-icon"
-                    placeholder="4-digit pin"
-                    value={formData.user_mpin}
-                    onChange={(e) => setFormData({ ...formData, user_mpin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle-btn"
-                    onClick={() => setShowMpin(!showMpin)}
-                    title={showMpin ? 'Hide M-PIN' : 'Show M-PIN'}
-                  >
-                    {showMpin ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
                 </div>
-              </div>
 
-              {referralStatus !== '0' && (
                 <div className="form-group">
                   <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Gift size={14} /> Referral Phone (Optional)
@@ -289,8 +296,55 @@ const Signup = ({ setAuth }) => {
                     />
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            ) : String(mpinStatus) === '1' ? (
+              <div className="form-group">
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <KeyRound size={14} /> 4-Digit M-PIN
+                </label>
+                <div className="input-group-custom">
+                  <div className="input-icon-left">
+                    <KeyRound size={18} />
+                  </div>
+                  <input
+                    type={showMpin ? 'text' : 'password'}
+                    name="user_mpin"
+                    className="form-input form-input-icon"
+                    placeholder="Create a 4-digit security M-PIN"
+                    value={formData.user_mpin}
+                    onChange={(e) => setFormData({ ...formData, user_mpin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowMpin(!showMpin)}
+                    title={showMpin ? 'Hide M-PIN' : 'Show M-PIN'}
+                  >
+                    {showMpin ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+            ) : String(referralStatus) !== '0' ? (
+              <div className="form-group">
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Gift size={14} /> Referral Phone (Optional)
+                </label>
+                <div className="input-group-custom">
+                  <div className="input-icon-left">
+                    <Gift size={18} />
+                  </div>
+                  <input
+                    type="tel"
+                    name="referral_phone"
+                    className="form-input form-input-icon"
+                    placeholder="Enter referrer phone number (optional)"
+                    value={formData.referral_phone}
+                    onChange={(e) => setFormData({ ...formData, referral_phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                  />
+                </div>
+              </div>
+            ) : null}
 
             {/* Error & Success Messages Displayed Directly Above Action Button */}
             {error && (

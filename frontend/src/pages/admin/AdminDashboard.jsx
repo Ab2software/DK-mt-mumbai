@@ -1270,6 +1270,33 @@ const AdminDashboard = ({ setAdminAuth }) => {
     }
   };
 
+  const handleSaveReferralSetting = async (customStatus, e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const statusToSave = customStatus !== undefined ? String(customStatus) : String(settingsData.referral_status ?? '1');
+    setSettingsLoading(true);
+    setSettingsMsg('');
+    setSettingsError('');
+    try {
+      const res = await api.post('/admin/settings/update', {
+        settings: {
+          referral_status: statusToSave
+        }
+      }, getHeaders());
+      if (res.data.success === '1') {
+        setSettingsData(prev => ({ ...prev, referral_status: statusToSave }));
+        setSettingsMsg(`Referral Option Setting Updated Successfully (${statusToSave === '1' ? '🟢 Active' : '🔴 Inactive'})!`);
+        fetchSettings();
+      } else {
+        setSettingsError(res.data.msg || 'Failed to update Referral Setting');
+      }
+    } catch (err) {
+      console.error(err);
+      setSettingsError('Error updating Referral setting');
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
   const handleSaveValuesAndLimits = async (e) => {
     e.preventDefault();
     setSettingsLoading(true);
@@ -7016,6 +7043,45 @@ const AdminDashboard = ({ setAdminAuth }) => {
                     </button>
                   </form>
                 </div>
+
+                {/* 4. Referral Option Setting */}
+                <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '24px', border: '1px solid #eff2f7', boxShadow: '0 0.75rem 1.5rem rgba(18,38,63,.03)' }}>
+                  <h5 style={{ margin: '0 0 6px 0', fontSize: '1.05rem', color: '#495057', fontWeight: '600' }}>
+                    Referral Option Setting
+                  </h5>
+                  <p style={{ margin: '0 0 16px 0', fontSize: '0.8rem', color: '#74788d' }}>
+                    Signup page par Referral Code / Phone option dikhane ya chhipane ki setting.
+                  </p>
+                  <form onSubmit={(e) => handleSaveReferralSetting(settingsData.referral_status, e)}>
+                    <div style={{ marginBottom: '18px' }}>
+                      <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#495057', display: 'block', marginBottom: '8px' }}>Referral Status</label>
+                      <select
+                        value={String(settingsData.referral_status ?? '1')}
+                        onChange={(e) => setSettingsData({ ...settingsData, referral_status: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '4px',
+                          border: '1px solid #ced4da',
+                          fontSize: '0.88rem',
+                          fontWeight: '600',
+                          color: (settingsData.referral_status === '0' || settingsData.referral_status === 0) ? '#e53e3e' : '#28a745',
+                          backgroundColor: '#f8f9fa'
+                        }}
+                      >
+                        <option value="1">🟢 Active (Show Referral Option on Signup)</option>
+                        <option value="0">🔴 Inactive (Hide Referral Option on Signup)</option>
+                      </select>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={settingsLoading}
+                      style={{ backgroundColor: '#556ee6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '9px 24px', fontSize: '0.88rem', fontWeight: '600', cursor: 'pointer' }}
+                    >
+                      {settingsLoading ? 'Saving...' : 'Update Referral Setting'}
+                    </button>
+                  </form>
+                </div>
               </div>
 
               {/* Bottom Card: Add Value's (System Limits & Times) */}
@@ -7162,7 +7228,7 @@ const AdminDashboard = ({ setAdminAuth }) => {
                         </label>
                         <input
                           type="text"
-                          placeholder="https://yourdomain.com/apk/Kalyan-Matka.apk"
+                          placeholder="https://yourdomain.com/apk/Bharat-Matka.apk"
                           value={settingsData.app_link || ''}
                           onChange={(e) => setSettingsData({ ...settingsData, app_link: e.target.value })}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '4px', border: '1px solid #ced4da', fontSize: '0.88rem' }}
@@ -7262,7 +7328,11 @@ const AdminDashboard = ({ setAdminAuth }) => {
                         <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>Referral Status:</span>
                         <button
                           type="button"
-                          onClick={() => setSettingsData(prev => ({ ...prev, referral_status: prev.referral_status === '0' || prev.referral_status === 0 ? '1' : '0' }))}
+                          onClick={() => {
+                            const newStatus = (settingsData.referral_status === '0' || settingsData.referral_status === 0) ? '1' : '0';
+                            handleSaveReferralSetting(newStatus);
+                          }}
+                          disabled={settingsLoading}
                           style={{
                             padding: '7px 18px',
                             borderRadius: '20px',
@@ -7273,10 +7343,12 @@ const AdminDashboard = ({ setAdminAuth }) => {
                             backgroundColor: (settingsData.referral_status === '0' || settingsData.referral_status === 0) ? '#dc3545' : '#28a745',
                             color: '#ffffff',
                             boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-                            transition: 'all 0.2s'
+                            transition: 'all 0.2s',
+                            opacity: settingsLoading ? 0.7 : 1
                           }}
+                          title="Click to toggle active/inactive status immediately"
                         >
-                          {(settingsData.referral_status === '0' || settingsData.referral_status === 0) ? '🔴 INACTIVE (Disabled)' : '🟢 ACTIVE (Enabled)'}
+                          {(settingsData.referral_status === '0' || settingsData.referral_status === 0) ? '🔴 INACTIVE (Disabled - Click to Enable)' : '🟢 ACTIVE (Enabled - Click to Disable)'}
                         </button>
                       </div>
                     </div>

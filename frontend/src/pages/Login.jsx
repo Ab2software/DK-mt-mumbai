@@ -43,6 +43,9 @@ const Login = ({ setAuth }) => {
         if (res.data.data.app_name) {
           setAppName(res.data.data.app_name);
         }
+        if (res.data.data.mpin_status !== undefined) {
+          localStorage.setItem('app_mpin_status', String(res.data.data.mpin_status));
+        }
         const supportNum = res.data.data.wp_mobile || res.data.data.mobile || '';
         if (supportNum) {
           setWpNumber(supportNum);
@@ -78,7 +81,12 @@ const Login = ({ setAuth }) => {
 
       const resData = response.data;
       if (resData.success === '1') {
-        sessionStorage.removeItem('mpin_unlocked');
+        const savedMpinStatus = localStorage.getItem('app_mpin_status');
+        if (savedMpinStatus !== '1') {
+          sessionStorage.setItem('mpin_unlocked', 'true');
+        } else {
+          sessionStorage.removeItem('mpin_unlocked');
+        }
         localStorage.setItem('token', resData.data.token);
         localStorage.setItem('phone', resData.data.phone_number);
         localStorage.setItem('name', resData.data.name);

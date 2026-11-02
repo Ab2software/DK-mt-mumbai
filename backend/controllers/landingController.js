@@ -99,7 +99,7 @@ exports.getLandingInfo = async (req, res) => {
     const appName = 'Bharat Matka';
 
     const rawLink = settings.app_link ? settings.app_link.trim() : '';
-    const appLink = (rawLink && rawLink !== '#' && rawLink !== '/api/download-apk' && !rawLink.includes('sara-777.apk')) ? rawLink : 'apk/Kalyan-Matka.apk';
+    const appLink = (rawLink && rawLink !== '#' && rawLink !== '/api/download-apk' && !rawLink.includes('sara-777.apk') && !rawLink.includes('Kalyan-Matka.apk')) ? rawLink : 'apk/Bharat-Matka.apk';
     const howToPlay = settings.how_to_play || '#';
     const mobile = contact.mobile || '';
     const wpMobile = contact.wp_mobile || contact.mobile || '';

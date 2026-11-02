@@ -58,7 +58,7 @@ exports.getWalletInfo = async (req, res) => {
       start_time: '01:00',
       admin_mobile: contact.mobile,
       admin_wp: contact.wp_mobile,
-      upi_name: 'Kalyan',
+      upi_name: setting.upi_name || 'Bharat Matka',
       upi_payment_id: setting.upi_payment_id || setting.payment_upi_id || '',
       payment_upi_id: setting.upi_payment_id || setting.payment_upi_id || '',
       auto_upi_id: setting.auto_upi_id || '',

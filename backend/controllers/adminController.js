@@ -1596,6 +1596,9 @@ exports.updateSettings = async (req, res) => {
     };
 
     try {
+      await db.query(`ALTER TABLE admin_settings ADD COLUMN mpin_status VARCHAR(10) DEFAULT '1'`);
+    } catch (e) {}
+    try {
       await db.query(`ALTER TABLE admin_settings ADD COLUMN referral_status VARCHAR(10) DEFAULT '1'`);
     } catch (e) {}
     try {
@@ -1637,7 +1640,14 @@ exports.updateSettings = async (req, res) => {
     }
 
     // Update admin_settings
-    const [targetRows] = await db.query('SELECT id FROM admin_settings LIMIT 1');
+    let [targetRows] = await db.query('SELECT id FROM admin_settings LIMIT 1');
+    if (!targetRows || targetRows.length === 0) {
+      try {
+        await db.query('INSERT INTO admin_settings (id, mpin_status, referral_status) VALUES (1, "1", "1")');
+        const [recheck] = await db.query('SELECT id FROM admin_settings LIMIT 1');
+        targetRows = recheck;
+      } catch (e) {}
+    }
     const targetId = targetRows && targetRows.length > 0 ? targetRows[0].id : 1;
 
     await db.query(

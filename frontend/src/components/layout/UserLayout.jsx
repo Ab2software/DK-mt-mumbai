@@ -24,7 +24,11 @@ const UserLayout = ({ children, setAuth }) => {
   const [wpNumber, setWpNumber] = useState('');
   const [mpinStatus, setMpinStatus] = useState(() => localStorage.getItem('app_mpin_status') || '0');
   const [autoActiveStatus, setAutoActiveStatus] = useState('1');
-  const [isLocked, setIsLocked] = useState(() => sessionStorage.getItem('mpin_unlocked') !== 'true');
+  const [isLocked, setIsLocked] = useState(() => {
+    const savedStatus = localStorage.getItem('app_mpin_status');
+    if (savedStatus !== '1') return false;
+    return sessionStorage.getItem('mpin_unlocked') !== 'true';
+  });
   const [dataLoading, setDataLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -65,6 +69,10 @@ const UserLayout = ({ children, setAuth }) => {
           : '0';
       setMpinStatus(currentMpinStatus);
       localStorage.setItem('app_mpin_status', currentMpinStatus);
+      if (currentMpinStatus !== '1') {
+        sessionStorage.setItem('mpin_unlocked', 'true');
+        setIsLocked(false);
+      }
 
       if (appInfo.auto_active_status !== undefined && appInfo.auto_active_status !== null) {
         setAutoActiveStatus(String(appInfo.auto_active_status));
@@ -118,6 +126,11 @@ const UserLayout = ({ children, setAuth }) => {
     let lockTimeoutId = null;
 
     const handleLockTrigger = () => {
+      const activeStatus = localStorage.getItem('app_mpin_status') || mpinStatus;
+      if (String(activeStatus) !== '1') {
+        setIsLocked(false);
+        return;
+      }
       sessionStorage.removeItem('mpin_unlocked');
       setIsLocked(true);
     };
@@ -125,6 +138,8 @@ const UserLayout = ({ children, setAuth }) => {
     const handleVisibilityChange = () => {
       // Only lock on mobile devices & Android WebViews
       if (!isMobileDevice()) return;
+      const activeStatus = localStorage.getItem('app_mpin_status') || mpinStatus;
+      if (String(activeStatus) !== '1') return;
 
       if (document.visibilityState === 'hidden') {
         // Debounce lock trigger to prevent nuisance locking when opening native pickers or brief app pauses
@@ -346,7 +361,7 @@ const UserLayout = ({ children, setAuth }) => {
       <BottomNav themeColor={themeColor} />
 
       {/* M-PIN Lock Screen Overlay */}
-      {mpinStatus === '1' && isLocked && (
+      {String(mpinStatus) === '1' && isLocked && (
         <LockScreen
           onUnlock={() => setIsLocked(false)}
           onLogout={handleLogout}
