@@ -19,8 +19,15 @@ const Signup = ({ setAuth }) => {
   const [loading, setLoading] = useState(false);
   const [appName, setAppName] = useState('Bharat Matka');
   const [wpNumber, setWpNumber] = useState('');
-  const [referralStatus, setReferralStatus] = useState('1');
-  const [mpinStatus, setMpinStatus] = useState('1');
+  const [referralStatus, setReferralStatus] = useState(() => localStorage.getItem('app_referral_status') || '1');
+  const [mpinStatus, setMpinStatus] = useState(() => {
+    const saved = localStorage.getItem('app_mpin_status');
+    if (saved !== null && saved !== undefined) {
+      const s = String(saved).trim().toLowerCase();
+      return (s === '0' || s === 'inactive' || s === 'false' || s === 'off') ? '0' : '1';
+    }
+    return '0';
+  });
   const [themeColor, setThemeColor] = useState(() => localStorage.getItem('auth_theme_color') || 'gold');
   const navigate = useNavigate();
 
@@ -31,10 +38,15 @@ const Signup = ({ setAuth }) => {
           setAppName(res.data.data.app_name);
         }
         if (res.data.data.referral_status !== undefined) {
-          setReferralStatus(String(res.data.data.referral_status));
+          const rStatus = String(res.data.data.referral_status);
+          setReferralStatus(rStatus);
+          localStorage.setItem('app_referral_status', rStatus);
         }
         if (res.data.data.mpin_status !== undefined) {
-          setMpinStatus(String(res.data.data.mpin_status));
+          const rawM = String(res.data.data.mpin_status).trim().toLowerCase();
+          const mVal = (rawM === '0' || rawM === 'inactive' || rawM === 'false' || rawM === 'off') ? '0' : '1';
+          setMpinStatus(mVal);
+          localStorage.setItem('app_mpin_status', mVal);
         }
         const supportNum = res.data.data.wp_mobile || res.data.data.mobile || '';
         if (supportNum) {

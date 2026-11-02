@@ -1201,13 +1201,15 @@ const AdminDashboard = ({ setAdminAuth }) => {
     setSettingsMsg('');
     setSettingsError('');
     try {
+      const statusToSave = settingsData.mpin_status !== undefined ? String(settingsData.mpin_status) : '1';
       const res = await api.post('/admin/settings/update', {
         settings: {
-          mpin_status: settingsData.mpin_status !== undefined ? String(settingsData.mpin_status) : '1'
+          mpin_status: statusToSave
         }
       }, getHeaders());
       if (res.data.success === '1') {
-        setSettingsMsg('M-PIN Lock Screen Setting Updated Successfully!');
+        localStorage.setItem('app_mpin_status', statusToSave);
+        setSettingsMsg(`M-PIN Lock Screen Setting Updated Successfully (${statusToSave === '1' ? '🟢 Active' : '🔴 Inactive'})!`);
         fetchSettings();
       } else {
         setSettingsError(res.data.msg || 'Failed to update M-PIN Setting');

@@ -19,7 +19,14 @@ const Profile = () => {
   const [copied, setCopied] = useState(false);
 
   // M-PIN Change states
-  const [mpinStatus, setMpinStatus] = useState('1');
+  const [mpinStatus, setMpinStatus] = useState(() => {
+    const saved = localStorage.getItem('app_mpin_status');
+    if (saved !== null && saved !== undefined) {
+      const s = String(saved).trim().toLowerCase();
+      return (s === '0' || s === 'inactive' || s === 'false' || s === 'off') ? '0' : '1';
+    }
+    return '0';
+  });
   const [referralStatus, setReferralStatus] = useState('1');
   const [oldMpin, setOldMpin] = useState('');
   const [newMpin, setNewMpin] = useState('');
@@ -43,7 +50,12 @@ const Profile = () => {
       }
 
       if (appRes?.data?.data) {
-        setMpinStatus(appRes.data.data.mpin_status ?? '1');
+        if (appRes.data.data.mpin_status !== undefined) {
+          const rawM = String(appRes.data.data.mpin_status).trim().toLowerCase();
+          const mVal = (rawM === '0' || rawM === 'inactive' || rawM === 'false' || rawM === 'off') ? '0' : '1';
+          setMpinStatus(mVal);
+          localStorage.setItem('app_mpin_status', mVal);
+        }
         if (appRes.data.data.referral_status !== undefined) {
           setReferralStatus(String(appRes.data.data.referral_status));
         }

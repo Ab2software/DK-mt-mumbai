@@ -1535,6 +1535,10 @@ exports.getSettings = async (req, res) => {
   try {
     const [settingsRows] = await db.query('SELECT * FROM admin_settings LIMIT 1');
     const settings = settingsRows && settingsRows.length > 0 ? settingsRows[0] : {};
+    if (settings && settings.mpin_status !== undefined && settings.mpin_status !== null) {
+      const s = String(settings.mpin_status).trim().toLowerCase();
+      settings.mpin_status = (s === '0' || s === 'inactive' || s === 'false' || s === 'off') ? '0' : '1';
+    }
     const [contactRows] = await db.query('SELECT * FROM contact_detail LIMIT 1');
     const contact = contactRows && contactRows.length > 0 ? contactRows[0] : {};
     const [daysRows] = await db.query("SELECT name FROM withdraw_limit_days WHERE role = 'Days' AND status = 1");
@@ -1722,9 +1726,34 @@ exports.updateSettings = async (req, res) => {
         cleanAutoUpi !== undefined ? cleanAutoUpi : null,
         privacy_policy_url !== undefined ? privacy_policy_url : null,
         data_deletion_url !== undefined ? data_deletion_url : null,
-        targetId
       ]
     );
+
+    // Unconditionally sync dedicated status columns across all rows in admin_settings to prevent any targetId / multi-row mismatch
+    if (mpin_status !== undefined && mpin_status !== null) {
+      try {
+        const cleanMpinStatus = (String(mpin_status).trim() === '0' || String(mpin_status).toLowerCase() === 'inactive' || String(mpin_status).toLowerCase() === 'false') ? '0' : '1';
+        await db.query('UPDATE admin_settings SET mpin_status = ?', [cleanMpinStatus]);
+      } catch (e) {}
+    }
+    if (slider_status !== undefined && slider_status !== null) {
+      try {
+        const cleanSlider = String(slider_status).trim() === '0' ? '0' : '1';
+        await db.query('UPDATE admin_settings SET slider_status = ?', [cleanSlider]);
+      } catch (e) {}
+    }
+    if (referral_status !== undefined && referral_status !== null) {
+      try {
+        const cleanReferral = String(referral_status).trim() === '0' ? '0' : '1';
+        await db.query('UPDATE admin_settings SET referral_status = ?', [cleanReferral]);
+      } catch (e) {}
+    }
+    if (auto_active_status !== undefined && auto_active_status !== null) {
+      try {
+        const cleanAutoActive = String(auto_active_status).trim() === '0' ? '0' : '1';
+        await db.query('UPDATE admin_settings SET auto_active_status = ?', [cleanAutoActive]);
+      } catch (e) {}
+    }
 
     // Update withdraw allowed days if provided
     if (Array.isArray(withdraw_days)) {

@@ -44,7 +44,9 @@ const Login = ({ setAuth }) => {
           setAppName(res.data.data.app_name);
         }
         if (res.data.data.mpin_status !== undefined) {
-          localStorage.setItem('app_mpin_status', String(res.data.data.mpin_status));
+          const rawM = String(res.data.data.mpin_status).trim().toLowerCase();
+          const mVal = (rawM === '0' || rawM === 'inactive' || rawM === 'false' || rawM === 'off') ? '0' : '1';
+          localStorage.setItem('app_mpin_status', mVal);
         }
         const supportNum = res.data.data.wp_mobile || res.data.data.mobile || '';
         if (supportNum) {

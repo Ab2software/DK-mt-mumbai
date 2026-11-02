@@ -38,7 +38,11 @@ exports.getWalletInfo = async (req, res) => {
     const showUpi = setting.show_upi !== undefined ? parseInt(setting.show_upi, 10) : 1;
     const showQr = setting.show_qr !== undefined ? parseInt(setting.show_qr, 10) : 1;
     const barcodePaymentMode = (showQr || showUpi) ? 1 : 0;
-    const mpinStatus = (setting.mpin_status !== undefined && setting.mpin_status !== null) ? String(setting.mpin_status) : '1';
+    let mpinStatus = '1';
+    if (setting.mpin_status !== undefined && setting.mpin_status !== null) {
+      const s = String(setting.mpin_status).trim().toLowerCase();
+      mpinStatus = (s === '0' || s === 'inactive' || s === 'false' || s === 'off') ? '0' : '1';
+    }
     const depositMode = setting.deposit_mode || 'manual';
     const activePaymentGateway = setting.active_payment_gateway || 'razorpay';
 
