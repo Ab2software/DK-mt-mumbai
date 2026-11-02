@@ -16,3 +16,12 @@ services:
     plan: free
     buildCommand: npm install && cd frontend && npm install && npm run build && cd ../backend && npm install
     startCommand: cd backend && node server.js
+
+  # Option C: If deployed as a dedicated Result API Web Service
+  - type: web
+    name: result-api
+    env: node
+    plan: free
+    buildCommand: cd ResultApi && npm install
+    startCommand: cd ResultApi && node server.js
+

@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Public Market Result Fetch API for Bharat Matka",
   "main": "server.js",
+  "license": "ISC",
   "scripts": {
+    "build": "echo 'Build step completed successfully'",
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
@@ -15,5 +17,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
