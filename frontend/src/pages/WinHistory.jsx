@@ -90,20 +90,23 @@ const WinHistory = () => {
   return (
     <div style={{ maxWidth: '650px', margin: '0 auto', padding: '16px 14px 40px' }}>
       {/* Top Header */}
-      <div className="card-glass-v2" style={{
+      <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '12px 18px',
+        padding: '14px 18px',
         marginBottom: '18px',
-        borderRadius: '16px'
+        borderRadius: '16px',
+        background: 'linear-gradient(135deg, #043490 0%, #002663 100%)',
+        color: '#ffffff',
+        boxShadow: '0 4px 18px rgba(4, 52, 144, 0.28)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', color: '#fff' }}>
             <ArrowLeft size={20} />
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Trophy size={20} style={{ color: 'var(--color-gold)' }} />
+            <Trophy size={20} style={{ color: '#ffffff' }} />
             <span style={{ fontWeight: '700', fontSize: '1.05rem', color: '#fff' }}>Winning History</span>
           </div>
         </div>
@@ -112,12 +115,12 @@ const WinHistory = () => {
           alignItems: 'center',
           gap: '6px',
           padding: '6px 12px',
-          background: 'rgba(214, 190, 102, 0.15)',
-          border: '1px solid rgba(214, 190, 102, 0.3)',
+          background: 'rgba(255, 255, 255, 0.2)',
+          border: '1px solid rgba(255, 255, 255, 0.35)',
           borderRadius: '20px',
           fontWeight: '700',
           fontSize: '0.88rem',
-          color: 'var(--color-gold)'
+          color: '#ffffff'
         }}>
           <Wallet size={16} />
           <span>₹ {wallet}</span>
@@ -130,8 +133,8 @@ const WinHistory = () => {
           {/* Quick Date Chips */}
           <div style={{ marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-              <Sparkles size={14} style={{ color: 'var(--color-gold, #d6be66)' }} />
-              <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)', fontWeight: '600' }}>Quick Date Filters</span>
+              <Sparkles size={14} style={{ color: '#043490' }} />
+              <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '600' }}>Quick Date Filters</span>
             </div>
             <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
               <button
@@ -145,9 +148,9 @@ const WinHistory = () => {
                 style={{
                   padding: '5px 12px',
                   borderRadius: '20px',
-                  border: fromDate === todayStr && toDate === todayStr ? 'none' : '1px solid rgba(255,255,255,0.15)',
-                  background: fromDate === todayStr && toDate === todayStr ? 'var(--color-gold, #d6be66)' : 'rgba(255,255,255,0.06)',
-                  color: fromDate === todayStr && toDate === todayStr ? '#0b1a30' : '#ffffff',
+                  border: '1px solid #e2e8f0',
+                  background: fromDate === todayStr && toDate === todayStr ? '#043490' : '#f1f5f9',
+                  color: fromDate === todayStr && toDate === todayStr ? '#ffffff' : '#64748b',
                   fontSize: '0.78rem',
                   fontWeight: '700',
                   cursor: 'pointer',
@@ -169,9 +172,9 @@ const WinHistory = () => {
                 style={{
                   padding: '5px 12px',
                   borderRadius: '20px',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  background: 'rgba(255,255,255,0.06)',
-                  color: '#ffffff',
+                  border: '1px solid #e2e8f0',
+                  background: '#f1f5f9',
+                  color: '#64748b',
                   fontSize: '0.78rem',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -193,9 +196,9 @@ const WinHistory = () => {
                 style={{
                   padding: '5px 12px',
                   borderRadius: '20px',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  background: 'rgba(255,255,255,0.06)',
-                  color: '#ffffff',
+                  border: '1px solid #e2e8f0',
+                  background: '#f1f5f9',
+                  color: '#64748b',
                   fontSize: '0.78rem',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -217,9 +220,9 @@ const WinHistory = () => {
                 style={{
                   padding: '5px 12px',
                   borderRadius: '20px',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  background: 'rgba(255,255,255,0.06)',
-                  color: '#ffffff',
+                  border: '1px solid #e2e8f0',
+                  background: '#f1f5f9',
+                  color: '#64748b',
                   fontSize: '0.78rem',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -233,26 +236,24 @@ const WinHistory = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
             <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginBottom: '6px' }}>
-                <Calendar size={14} style={{ color: 'var(--color-gold)' }} />
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>
+                <Calendar size={14} style={{ color: '#043490' }} />
                 From Date
               </label>
               <input
                 type="date"
-                className="dark-date-input"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
                 style={inputStyle}
               />
             </div>
             <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginBottom: '6px' }}>
-                <Calendar size={14} style={{ color: 'var(--color-gold)' }} />
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>
+                <Calendar size={14} style={{ color: '#043490' }} />
                 To Date
               </label>
               <input
                 type="date"
-                className="dark-date-input"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
                 style={inputStyle}
@@ -261,7 +262,7 @@ const WinHistory = () => {
           </div>
           <button
             type="submit"
-            className="btn-gradient"
+            className="btn-gold"
             style={{
               width: '100%',
               padding: '11px',
@@ -282,7 +283,7 @@ const WinHistory = () => {
         </form>
       </div>
 
-      <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.9)', fontWeight: '700', fontSize: '0.95rem', letterSpacing: '0.5px', marginBottom: '14px' }}>
+      <p style={{ textAlign: 'center', color: '#0f172a', fontWeight: '700', fontSize: '0.95rem', letterSpacing: '0.5px', marginBottom: '14px' }}>
         Recent Winning Records
       </p>
 
@@ -293,34 +294,34 @@ const WinHistory = () => {
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '12px 16px',
-          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%)',
-          border: '1.5px solid rgba(16, 185, 129, 0.35)',
+          background: '#ecfdf5',
+          border: '1.5px solid #a7f3d0',
           borderRadius: '14px',
           marginBottom: '16px',
-          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.25)'
+          boxShadow: '0 4px 15px rgba(0, 30, 80, 0.05)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Trophy size={20} color="#10b981" />
-            <span style={{ fontSize: '0.86rem', fontWeight: '700', color: '#ffffff' }}>
-              Total Wins: <strong style={{ color: '#10b981' }}>{history.length}</strong>
+            <Trophy size={20} color="#059669" />
+            <span style={{ fontSize: '0.86rem', fontWeight: '700', color: '#065f46' }}>
+              Total Wins: <strong style={{ color: '#059669' }}>{history.length}</strong>
             </span>
           </div>
-          <div style={{ fontSize: '0.96rem', fontWeight: '900', color: '#10b981', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: '0.96rem', fontWeight: '900', color: '#059669', whiteSpace: 'nowrap' }}>
             +₹{history.reduce((sum, item) => sum + (parseFloat(item.winning_points) || 0), 0).toLocaleString('en-IN')}
           </div>
         </div>
       )}
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '30px', color: 'rgba(255,255,255,0.7)' }}>Loading winning records...</div>
+        <div style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Loading winning records...</div>
       ) : history.length === 0 ? (
         <div className="card-glass-v2" style={{
           borderRadius: '16px',
           padding: '36px 20px',
           textAlign: 'center',
-          color: 'rgba(255,255,255,0.6)'
+          color: '#64748b'
         }}>
-          <Trophy size={40} style={{ opacity: 0.3, marginBottom: '10px' }} />
+          <Trophy size={40} style={{ opacity: 0.3, marginBottom: '10px', color: '#043490' }} />
           <div>No winning records found in this date range.</div>
         </div>
       ) : (
@@ -336,11 +337,11 @@ const WinHistory = () => {
                   borderRadius: '16px',
                   padding: '14px 16px',
                   borderLeft: '4px solid #10b981',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.25)',
+                  boxShadow: '0 4px 15px rgba(0, 30, 80, 0.06)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '10px',
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)'
+                  backgroundColor: '#ffffff'
                 }}
               >
                 {/* Top Row: Game Name, Type, Date & Session */}
@@ -349,7 +350,7 @@ const WinHistory = () => {
                     <h4 style={{
                       margin: 0,
                       fontWeight: '800',
-                      color: '#ffffff',
+                      color: '#0f172a',
                       fontSize: '1.02rem',
                       textTransform: 'uppercase',
                       letterSpacing: '0.02em',
@@ -362,15 +363,15 @@ const WinHistory = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px', flexWrap: 'wrap' }}>
                       <span style={{
                         fontSize: '0.78rem',
-                        color: 'var(--color-gold, #d6be66)',
+                        color: '#043490',
                         fontWeight: '700'
                       }}>
                         {item.game_type}
                       </span>
-                      <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)' }}>•</span>
+                      <span style={{ fontSize: '0.7rem', color: '#cbd5e1' }}>•</span>
                       <span style={{
                         fontSize: '0.72rem',
-                        color: 'rgba(255,255,255,0.6)',
+                        color: '#64748b',
                         fontWeight: '600'
                       }}>
                         Bid #{item.bid_id || idx + 1}
@@ -383,7 +384,7 @@ const WinHistory = () => {
                     {item.date && (
                       <span style={{
                         fontSize: '0.74rem',
-                        color: 'rgba(255,255,255,0.65)',
+                        color: '#64748b',
                         fontWeight: '600',
                         display: 'block',
                         whiteSpace: 'nowrap'
@@ -393,9 +394,9 @@ const WinHistory = () => {
                     )}
                     <span style={{
                       display: 'inline-block',
-                      backgroundColor: 'rgba(214, 190, 102, 0.12)',
-                      color: 'var(--color-gold, #d6be66)',
-                      border: '1px solid rgba(214, 190, 102, 0.3)',
+                      backgroundColor: 'rgba(4, 52, 144, 0.08)',
+                      color: '#043490',
+                      border: '1px solid rgba(4, 52, 144, 0.2)',
                       padding: '2px 8px',
                       borderRadius: '8px',
                       fontSize: '0.68rem',
@@ -417,21 +418,21 @@ const WinHistory = () => {
                 {detail && (
                   <div style={{
                     fontSize: '0.82rem',
-                    color: '#f1f5f9',
+                    color: '#0f172a',
                     padding: '8px 12px',
-                    background: 'rgba(0, 0, 0, 0.35)',
+                    background: '#f8fafc',
                     borderRadius: '10px',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    border: '1px solid #e2e8f0',
                     fontWeight: '600',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
                     flexWrap: 'wrap'
                   }}>
-                    <span style={{ color: 'var(--color-gold, #d6be66)', fontSize: '0.75rem', fontWeight: '800' }}>
+                    <span style={{ color: '#043490', fontSize: '0.75rem', fontWeight: '800' }}>
                       WIN DETAIL:
                     </span>
-                    <span style={{ letterSpacing: '0.02em', color: '#ffffff' }}>
+                    <span style={{ letterSpacing: '0.02em', color: '#0f172a' }}>
                       {detail}
                     </span>
                   </div>
@@ -443,7 +444,7 @@ const WinHistory = () => {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   paddingTop: '8px',
-                  borderTop: '1px solid rgba(255, 255, 255, 0.08)'
+                  borderTop: '1px solid #f1f5f9'
                 }}>
                   {/* Left: Won Badge + Amount */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -479,10 +480,10 @@ const WinHistory = () => {
                   <div style={{
                     fontSize: '0.82rem',
                     fontWeight: '700',
-                    color: 'rgba(255, 255, 255, 0.65)',
+                    color: '#64748b',
                     whiteSpace: 'nowrap'
                   }}>
-                    Bet: <strong style={{ color: '#ffffff', fontWeight: '800' }}>₹{item.points_action || item.points || '0'}</strong>
+                    Bet: <strong style={{ color: '#0f172a', fontWeight: '800' }}>₹{item.points_action || item.points || '0'}</strong>
                   </div>
                 </div>
               </div>
@@ -498,10 +499,10 @@ const inputStyle = {
   width: '100%',
   padding: '10px 12px',
   borderRadius: '10px',
-  border: '1px solid rgba(255,255,255,0.15)',
-  backgroundColor: 'rgba(0,0,0,0.25)',
+  border: '1px solid #cbd5e1',
+  backgroundColor: '#f8fafc',
   fontSize: '0.88rem',
-  color: '#ffffff',
+  color: '#0f172a',
   boxSizing: 'border-box',
   outline: 'none'
 };

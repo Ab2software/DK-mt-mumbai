@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Lock, Delete, LogOut, AlertCircle } from 'lucide-react';
 import api from '../../utils/api';
 
-const LockScreen = ({ onUnlock, onLogout, themeColor = 'gold' }) => {
+const LockScreen = ({ onUnlock, onLogout, themeColor = 'blue' }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -58,44 +58,44 @@ const LockScreen = ({ onUnlock, onLogout, themeColor = 'gold' }) => {
       inset: 0,
       zIndex: 999999,
       pointerEvents: 'all',
-      backgroundColor: '#09121f',
-      backgroundImage: 'radial-gradient(circle at 50% 30%, rgba(214, 190, 102, 0.15), transparent 70%)',
+      backgroundColor: '#f4f6fa',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '20px',
-      color: '#ffffff'
+      color: '#1e293b'
     }}>
-      <div className="card-glass-v2" style={{
+      <div style={{
         maxWidth: '380px',
         width: '100%',
         padding: '32px 24px',
         textAlign: 'center',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.7)',
+        boxShadow: '0 10px 40px rgba(0, 30, 80, 0.12)',
         borderRadius: '24px',
-        border: '1px solid rgba(214, 190, 102, 0.3)'
+        border: '1px solid #e2e8f0',
+        backgroundColor: '#ffffff'
       }}>
         {/* Header Icon */}
         <div style={{
           width: '72px',
           height: '72px',
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, rgba(214, 190, 102, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%)',
-          border: '2px solid var(--color-gold, #d6be66)',
+          background: 'rgba(4, 52, 144, 0.08)',
+          border: '2px solid #043490',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           margin: '0 auto 16px',
-          boxShadow: '0 0 25px rgba(214, 190, 102, 0.4)'
+          boxShadow: '0 4px 16px rgba(4, 52, 144, 0.2)'
         }}>
-          <Lock size={32} style={{ color: 'var(--color-gold, #d6be66)' }} />
+          <Lock size={32} style={{ color: '#043490' }} />
         </div>
 
-        <h3 style={{ fontSize: '1.35rem', fontWeight: '800', margin: '0 0 4px 0', color: '#ffffff' }}>
+        <h3 style={{ fontSize: '1.35rem', fontWeight: '800', margin: '0 0 4px 0', color: '#043490' }}>
           App Lock Screen
         </h3>
-        <p style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.65)', margin: '0 0 20px 0' }}>
-          Welcome back, <strong style={{ color: 'var(--color-gold, #d6be66)' }}>{name}</strong> ({phone})
+        <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '0 0 20px 0' }}>
+          Welcome back, <strong style={{ color: '#043490' }}>{name}</strong> ({phone})
         </p>
 
         {/* PIN Indicators */}
@@ -112,9 +112,9 @@ const LockScreen = ({ onUnlock, onLogout, themeColor = 'gold' }) => {
                 width: '18px',
                 height: '18px',
                 borderRadius: '50%',
-                border: '2px solid var(--color-gold, #d6be66)',
-                backgroundColor: pin.length > index ? 'var(--color-gold, #d6be66)' : 'transparent',
-                boxShadow: pin.length > index ? '0 0 12px var(--color-gold, #d6be66)' : 'none',
+                border: '2px solid #043490',
+                backgroundColor: pin.length > index ? '#043490' : 'transparent',
+                boxShadow: pin.length > index ? '0 0 10px rgba(4, 52, 144, 0.4)' : 'none',
                 transition: 'all 0.2s ease'
               }}
             />
@@ -124,11 +124,11 @@ const LockScreen = ({ onUnlock, onLogout, themeColor = 'gold' }) => {
         {/* Error message */}
         {error && (
           <div style={{
-            backgroundColor: 'rgba(239, 68, 68, 0.2)',
-            border: '1px solid rgba(239, 68, 68, 0.5)',
-            color: '#f87171',
+            backgroundColor: '#fee2e2',
+            border: '1px solid #fca5a5',
+            color: '#dc2626',
             padding: '8px 12px',
-            borderRadius: '10px',
+            borderRadius: '50px',
             fontSize: '0.82rem',
             marginBottom: '16px',
             display: 'flex',
@@ -159,12 +159,12 @@ const LockScreen = ({ onUnlock, onLogout, themeColor = 'gold' }) => {
                 fontSize: '1.4rem',
                 fontWeight: '700',
                 borderRadius: '16px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                color: '#ffffff',
+                border: '1px solid #e2e8f0',
+                backgroundColor: '#f8fafc',
+                color: '#043490',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
-                backdropFilter: 'blur(10px)'
+                boxShadow: '0 2px 6px rgba(0, 30, 80, 0.04)'
               }}
               onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
               onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -182,9 +182,9 @@ const LockScreen = ({ onUnlock, onLogout, themeColor = 'gold' }) => {
               fontSize: '0.85rem',
               fontWeight: '700',
               borderRadius: '16px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              color: 'rgba(255, 255, 255, 0.6)',
+              border: '1px solid #e2e8f0',
+              backgroundColor: '#f8fafc',
+              color: '#64748B',
               cursor: 'pointer'
             }}
           >
@@ -199,10 +199,11 @@ const LockScreen = ({ onUnlock, onLogout, themeColor = 'gold' }) => {
               fontSize: '1.4rem',
               fontWeight: '700',
               borderRadius: '16px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              color: '#ffffff',
-              cursor: 'pointer'
+              border: '1px solid #e2e8f0',
+              backgroundColor: '#f8fafc',
+              color: '#043490',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(0, 30, 80, 0.04)'
             }}
             onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
             onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -219,9 +220,9 @@ const LockScreen = ({ onUnlock, onLogout, themeColor = 'gold' }) => {
               fontSize: '1rem',
               fontWeight: '700',
               borderRadius: '16px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              color: 'rgba(255, 255, 255, 0.8)',
+              border: '1px solid #e2e8f0',
+              backgroundColor: '#f8fafc',
+              color: '#64748B',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -240,7 +241,7 @@ const LockScreen = ({ onUnlock, onLogout, themeColor = 'gold' }) => {
             style={{
               background: 'none',
               border: 'none',
-              color: 'rgba(255, 255, 255, 0.5)',
+              color: '#64748B',
               fontSize: '0.85rem',
               fontWeight: '600',
               cursor: 'pointer',

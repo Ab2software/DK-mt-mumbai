@@ -102,40 +102,51 @@ const AddBank = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        background: 'var(--app-gradient-primary, linear-gradient(135deg, #d6be66 0%, #10b981 100%))',
-        padding: '12px 18px',
-        borderRadius: '14px',
+        background: 'linear-gradient(135deg, #043490 0%, #002663 100%)',
+        padding: '14px 18px',
+        borderRadius: '16px',
         marginBottom: '20px',
-        color: '#0b1a30',
-        boxShadow: '0 6px 20px rgba(0,0,0,0.3)'
+        color: '#ffffff',
+        boxShadow: '0 4px 14px rgba(4, 52, 144, 0.25)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#0b1a30' }}>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#ffffff' }}>
             <ArrowLeft size={20} />
           </Link>
-          <span style={{ fontWeight: '800', fontSize: '1.1rem', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Add Bank Account</span>
+          <span style={{ fontWeight: '800', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Add Bank Account</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '800', fontSize: '0.95rem' }}>
-          <Wallet size={18} />
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          fontWeight: '800',
+          fontSize: '0.9rem',
+          background: 'rgba(255, 255, 255, 0.18)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          padding: '6px 12px',
+          borderRadius: '20px',
+          color: '#ffffff'
+        }}>
+          <Wallet size={16} />
           <span>₹ {wallet}</span>
         </div>
       </div>
 
-      <div className="card-glass-v2">
-        <h5 style={{ color: '#ffffff', fontWeight: '800', margin: '0 0 18px 0', fontSize: '1.1rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Building2 size={20} style={{ color: 'var(--color-gold, #d6be66)' }} /> Bank Account & Withdrawal Info
+      <div className="card-glass-v2" style={{ padding: '24px' }}>
+        <h5 style={{ color: '#0f172a', fontWeight: '800', margin: '0 0 18px 0', fontSize: '1.1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Building2 size={20} style={{ color: '#043490' }} /> Bank Account & Withdrawal Info
         </h5>
 
         {msg && <div className="badge badge-success" style={{ display: 'block', padding: '12px', marginBottom: '18px', textAlign: 'center', borderRadius: '10px' }}>✓ {msg}</div>}
         {error && <div className="badge badge-danger" style={{ display: 'block', padding: '12px', marginBottom: '18px', textAlign: 'center', borderRadius: '10px' }}>⚠️ {error}</div>}
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255, 255, 255, 0.6)' }}>Loading Bank Details...</div>
+          <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>Loading Bank Details...</div>
         ) : (
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', marginBottom: '22px' }}>
               <div className="form-group">
-                <label className="form-label">Bank Name</label>
+                <label className="form-label" style={{ color: '#334155' }}>Bank Name</label>
                 <input
                   type="text"
                   className="form-input"
@@ -147,7 +158,7 @@ const AddBank = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Branch Address</label>
+                <label className="form-label" style={{ color: '#334155' }}>Branch Address</label>
                 <input
                   type="text"
                   className="form-input"
@@ -158,7 +169,7 @@ const AddBank = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">A/c Holder Name</label>
+                <label className="form-label" style={{ color: '#334155' }}>A/c Holder Name</label>
                 <input
                   type="text"
                   className="form-input"
@@ -170,7 +181,7 @@ const AddBank = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Account Number (Digits Only)</label>
+                <label className="form-label" style={{ color: '#334155' }}>Account Number (Digits Only)</label>
                 <input
                   type="text"
                   className="form-input"
@@ -183,7 +194,7 @@ const AddBank = () => {
               </div>
 
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">IFSC Code (11 Characters)</label>
+                <label className="form-label" style={{ color: '#334155' }}>IFSC Code (11 Characters)</label>
                 <input
                   type="text"
                   className="form-input"
@@ -203,7 +214,7 @@ const AddBank = () => {
               style={{
                 width: '100%',
                 padding: '14px',
-                borderRadius: '12px',
+                borderRadius: '50px',
                 fontSize: '1rem',
                 letterSpacing: '0.04em'
               }}

@@ -5,15 +5,11 @@ import {
   Lock,
   Eye,
   EyeOff,
+  Smartphone,
   MessageCircle,
-  ShieldCheck,
-  CheckCircle2,
-  ArrowRight,
-  Sparkles,
   HelpCircle,
   X,
-  Zap,
-  KeyRound,
+  CheckCircle2,
   Headphones
 } from 'lucide-react';
 import api from '../utils/api';
@@ -23,12 +19,10 @@ const Login = ({ setAuth }) => {
   const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem('remember_login_phone'));
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [focusedInput, setFocusedInput] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [appName, setAppName] = useState('Bharat Matka');
   const [wpNumber, setWpNumber] = useState('');
-  const [themeColor, setThemeColor] = useState(() => localStorage.getItem('auth_theme_color') || 'gold');
   const [showHelpModal, setShowHelpModal] = useState(false);
   const navigate = useNavigate();
 
@@ -55,11 +49,6 @@ const Login = ({ setAuth }) => {
       }
     }).catch(() => { });
   }, []);
-
-  const handleThemeChange = (color) => {
-    setThemeColor(color);
-    localStorage.setItem('auth_theme_color', color);
-  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -113,322 +102,167 @@ const Login = ({ setAuth }) => {
     }
   };
 
-
   return (
-    <div className={`auth-page-bg auth-theme-${themeColor}`}>
-      {/* Dynamic Background Mesh Overlay */}
-      <div className="auth-grid-overlay" />
-
-      {/* Floating Animated Ambient Orbs */}
-      <div
-        className="auth-ambient-orb auth-ambient-orb-1"
-        style={{
-          background: themeColor === 'cyan'
-            ? 'radial-gradient(circle, rgba(6, 182, 212, 0.4) 0%, transparent 70%)'
-            : themeColor === 'crimson'
-              ? 'radial-gradient(circle, rgba(244, 63, 94, 0.38) 0%, transparent 70%)'
-              : 'radial-gradient(circle, rgba(214, 190, 102, 0.38) 0%, transparent 70%)'
-        }}
-      />
-      <div
-        className="auth-ambient-orb auth-ambient-orb-2"
-        style={{
-          background: themeColor === 'cyan'
-            ? 'radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, transparent 70%)'
-            : themeColor === 'crimson'
-              ? 'radial-gradient(circle, rgba(249, 115, 22, 0.35) 0%, transparent 70%)'
-              : 'radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, transparent 70%)'
-        }}
-      />
-      <div
-        className="auth-ambient-orb auth-ambient-orb-3"
-        style={{
-          background: themeColor === 'cyan'
-            ? 'rgba(6, 182, 212, 0.15)'
-            : themeColor === 'crimson'
-              ? 'rgba(244, 63, 94, 0.15)'
-              : 'rgba(214, 190, 102, 0.15)'
-        }}
-      />
-
-      <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 10 }}>
-        {/* Top Status & Theme Bar */}
-        <div className="auth-top-bar">
-          <div className="auth-security-badge">
-            <span className="auth-status-dot" />
-            <ShieldCheck size={13} style={{ color: '#10b981' }} />
-            <span>256-Bit SSL Encrypted</span>
+    <div className="auth-page-bg">
+      <div className="auth-ref-container">
+        {/* Top Header Row matching Image 1 */}
+        <div className="auth-ref-header">
+          <div>
+            <h1 className="auth-ref-title">LOGIN</h1>
+            <p className="auth-ref-subtitle">Sign In To Your Account</p>
           </div>
+          <div style={{ color: '#043490', display: 'flex', alignItems: 'center' }}>
+            <Smartphone size={32} strokeWidth={2.2} />
+          </div>
+        </div>
 
-          <div className="theme-selector-bar" title="Select Theme Color">
-            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.65)', marginRight: '2px', fontWeight: '600' }}>
-              <Sparkles size={11} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} />
-              Theme:
-            </span>
-            <button
-              type="button"
-              className={`theme-pill theme-pill-gold ${themeColor === 'gold' ? 'active' : ''}`}
-              onClick={() => handleThemeChange('gold')}
-              title="Gold Emerald VIP Theme"
-            />
-            <button
-              type="button"
-              className={`theme-pill theme-pill-cyan ${themeColor === 'cyan' ? 'active' : ''}`}
-              onClick={() => handleThemeChange('cyan')}
-              title="Cyber Cyan Theme"
-            />
-            <button
-              type="button"
-              className={`theme-pill theme-pill-crimson ${themeColor === 'crimson' ? 'active' : ''}`}
-              onClick={() => handleThemeChange('crimson')}
-              title="Crimson Sunset Theme"
+        {/* Center Logo Card matching Image 1 */}
+        <div className="auth-ref-logo-card">
+          <div className="auth-ref-logo-box">
+            <img
+              src="/img/logo.png"
+              alt={`${appName} Logo`}
+              className="auth-ref-logo-img"
+              onError={(e) => { e.target.src = '/img/logo.png'; }}
             />
           </div>
         </div>
 
-        {/* Auth Glass Card */}
-        <div className="auth-card">
-          {/* Header Branding */}
-          <div style={{ textAlign: 'center', marginBottom: '26px' }}>
-            <div className="auth-logo-wrapper">
-              <div className="auth-logo-halo" />
-              <img
-                src="/img/logo.png?v=2"
-                alt={`${appName} Logo`}
-                className="auth-logo-img"
-                onError={(e) => { e.target.src = '/img/logo.png'; }}
-              />
+        {/* Login Form */}
+        <form onSubmit={handleLogin}>
+          {/* Mobile No */}
+          <div className="auth-pill-input-wrap">
+            <div className="auth-pill-icon">
+              <Phone size={19} />
             </div>
-
-            <h1 className="auth-title-gradient">
-              {appName}
-            </h1>
-            <p className="auth-subtitle">
-              <ShieldCheck size={15} style={{ color: 'var(--theme-primary, #d6be66)' }} />
-              Enter your credentials to access your dashboard
-            </p>
+            <input
+              type="tel"
+              name="phone"
+              className="auth-pill-input"
+              placeholder="Enter Mobile No"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              required
+            />
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleLogin} noValidate>
-            {/* Phone Input */}
-            <div className="auth-input-group">
-              <label className="auth-label" htmlFor="login-phone">
-                <span className="auth-label-left">
-                  <Phone size={14} style={{ color: 'var(--theme-primary, #d6be66)' }} />
-                  <span>Phone Number</span>
-                </span>
-                <span style={{ fontSize: '0.75rem', color: phone.length === 10 ? '#10b981' : 'rgba(255,255,255,0.4)', fontWeight: '600' }}>
-                  {phone.length === 10 ? (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                      <CheckCircle2 size={12} /> 10 / 10
-                    </span>
-                  ) : (
-                    `${phone.length}/10`
-                  )}
-                </span>
-              </label>
-
-              <div className={`auth-input-wrapper ${focusedInput === 'phone' ? 'focused' : ''}`}>
-                <div className="auth-input-icon">
-                  <Phone size={18} />
-                </div>
-                <div className="auth-country-code">
-                  <span>🇮🇳</span>
-                  <span>+91</span>
-                </div>
-                <input
-                  id="login-phone"
-                  type="tel"
-                  className="auth-field"
-                  placeholder="Enter 10-digit mobile number"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  onFocus={() => setFocusedInput('phone')}
-                  onBlur={() => setFocusedInput(null)}
-                  autoComplete="tel"
-                  required
-                />
-              </div>
+          {/* Password */}
+          <div className="auth-pill-input-wrap">
+            <div className="auth-pill-icon">
+              <Lock size={19} />
             </div>
-
-            {/* Password Input */}
-            <div className="auth-input-group" style={{ marginBottom: '16px' }}>
-              <label className="auth-label" htmlFor="login-password">
-                <span className="auth-label-left">
-                  <Lock size={14} style={{ color: 'var(--theme-primary, #d6be66)' }} />
-                  <span>Password</span>
-                </span>
-                <span style={{ fontSize: '0.74rem', color: 'rgba(255,255,255,0.4)' }}>
-                  Min. 6 chars
-                </span>
-              </label>
-
-              <div className={`auth-input-wrapper ${focusedInput === 'password' ? 'focused' : ''}`}>
-                <div className="auth-input-icon">
-                  <Lock size={18} />
-                </div>
-                <input
-                  id="login-password"
-                  type={showPassword ? 'text' : 'password'}
-                  className="auth-field"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onFocus={() => setFocusedInput('password')}
-                  onBlur={() => setFocusedInput(null)}
-                  autoComplete="current-password"
-                  required
-                />
-                <button
-                  type="button"
-                  className="auth-toggle-pass"
-                  onClick={() => setShowPassword(!showPassword)}
-                  title={showPassword ? 'Hide password' : 'Show password'}
-                  tabIndex="-1"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Remember Me & Forgot Password Row */}
-            <div className="auth-options-row">
-              <label className="auth-remember-label">
-                <input
-                  type="checkbox"
-                  style={{ display: 'none' }}
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
-                <span className="auth-checkbox-custom">
-                  {rememberMe && <CheckCircle2 size={13} style={{ color: '#081320' }} />}
-                </span>
-                <span>Remember Me</span>
-              </label>
-
-              <button
-                type="button"
-                className="auth-forgot-btn"
-                onClick={() => setShowHelpModal(true)}
-              >
-                <HelpCircle size={13} />
-                <span>Forgot Password?</span>
-              </button>
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div
-                className="badge badge-danger"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  padding: '12px 16px',
-                  marginBottom: '18px',
-                  textAlign: 'center',
-                  borderRadius: '12px',
-                  fontSize: '0.86rem',
-                  fontWeight: '600',
-                  boxShadow: '0 4px 14px rgba(231, 29, 54, 0.3)',
-                  border: '1px solid rgba(231, 29, 54, 0.4)'
-                }}
-              >
-                <span>⚠️</span>
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Submit Button */}
+            <input
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              className="auth-pill-input"
+              style={{ paddingRight: '48px' }}
+              placeholder="Enter Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
             <button
-              type="submit"
-              className="btn-auth-submit"
-              disabled={loading}
-              id="login-submit-btn"
+              type="button"
+              className="password-toggle-btn"
+              style={{ color: '#64748B' }}
+              onClick={() => setShowPassword(!showPassword)}
+              title={showPassword ? 'Hide password' : 'Show password'}
             >
-              {loading ? (
-                <>
-                  <div className="auth-spinner" />
-                  <span>VERIFYING ACCOUNT...</span>
-                </>
-              ) : (
-                <>
-                  <span>LOGIN TO ACCOUNT</span>
-                  <ArrowRight size={18} />
-                </>
-              )}
+              {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
             </button>
-          </form>
-
-          {/* Live In-App Chat Support Banner */}
-          <Link
-            to="/support"
-            className="auth-support-card"
-          >
-            <div className="auth-support-left">
-              <div className="auth-support-icon-wrap" style={{ background: 'linear-gradient(135deg, #d6be66 0%, #10b981 100%)' }}>
-                <Headphones size={22} color="#0b1a30" />
-              </div>
-              <div>
-                <div className="auth-support-title">Need Help? Live Support Chat</div>
-                <div className="auth-support-subtitle">
-                  <span className="auth-status-dot" style={{ width: '6px', height: '6px' }} />
-                  24/7 Dedicated In-App Support Team
-                </div>
-              </div>
-            </div>
-            <div className="auth-support-chip" style={{ background: 'rgba(214, 190, 102, 0.2)', color: 'var(--color-gold)' }}>
-              Open Chat
-            </div>
-          </Link>
-
-          {/* Security & Features Strip */}
-          <div className="auth-trust-strip">
-            <div className="auth-trust-item">
-              <Zap size={16} className="auth-trust-icon" />
-              <span className="auth-trust-text">Fast Deposit</span>
-            </div>
-            <div className="auth-trust-item">
-              <ShieldCheck size={16} className="auth-trust-icon" />
-              <span className="auth-trust-text">100% Safe</span>
-            </div>
-            <div className="auth-trust-item">
-              <Sparkles size={16} className="auth-trust-icon" />
-              <span className="auth-trust-text">Fair Play</span>
-            </div>
           </div>
 
-          {/* Sign Up Link */}
-          <div style={{ marginTop: '20px', textAlign: 'center', color: 'rgba(255, 255, 255, 0.72)', fontSize: '0.9rem' }}>
-            Don't have an account?{' '}
-            <Link
-              to="/signup"
+          {/* Options Row: Remember Me & Forgot Password */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '16px',
+            padding: '0 4px',
+            fontSize: '0.85rem'
+          }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#475569', cursor: 'pointer', userSelect: 'none' }}>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                style={{ accentColor: '#043490', cursor: 'pointer', width: '16px', height: '16px' }}
+              />
+              <span>Remember Me</span>
+            </label>
+
+            <button
+              type="button"
+              onClick={() => setShowHelpModal(true)}
               style={{
-                color: 'var(--theme-accent, #fab02b)',
-                textDecoration: 'none',
-                fontWeight: '700',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '3px',
-                marginLeft: '4px'
+                background: 'none',
+                border: 'none',
+                color: '#043490',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '0.85rem'
               }}
             >
-              <span>Sign Up Here</span>
-              <ArrowRight size={14} />
-            </Link>
+              Forgot Password?
+            </button>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div style={{
+              backgroundColor: '#fee2e2',
+              color: '#dc2626',
+              border: '1px solid #fca5a5',
+              padding: '11px 16px',
+              borderRadius: '50px',
+              marginBottom: '14px',
+              textAlign: 'center',
+              fontSize: '0.88rem',
+              fontWeight: '600'
+            }}>
+              {error}
+            </div>
+          )}
+
+          {/* Primary Action Button */}
+          <button
+            type="submit"
+            className="auth-btn-primary"
+            disabled={loading}
+          >
+            {loading ? 'LOGGING IN...' : 'LOGIN'}
+          </button>
+        </form>
+
+        {/* Secondary Action Button */}
+        <Link to="/signup" className="auth-btn-secondary">
+          DON'T HAVE AN ACCOUNT? REGISTER
+        </Link>
+
+        {/* WhatsApp Link matching Image 1 */}
+        <div className="auth-whatsapp-row">
+          <a
+            href={`https://wa.me/${(wpNumber || '919876543210').replace(/\D/g, '')}`}
+            target="_blank"
+            rel="noreferrer"
+            className="auth-whatsapp-link"
+          >
+            <div className="auth-whatsapp-icon-circle">
+              <MessageCircle size={16} fill="#ffffff" />
+            </div>
+            <span>{wpNumber ? (wpNumber.startsWith('+') ? wpNumber : `+${wpNumber}`) : '+919876543210'}</span>
+          </a>
         </div>
       </div>
 
       {/* Forgot Password / Help Modal */}
       {showHelpModal && (
         <div className="auth-modal-backdrop" onClick={() => setShowHelpModal(false)}>
-          <div className="auth-modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="auth-modal-content" style={{ backgroundColor: '#ffffff', color: '#1e293b' }} onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
               className="auth-modal-close"
+              style={{ backgroundColor: '#f1f5f9', color: '#475569' }}
               onClick={() => setShowHelpModal(false)}
               title="Close"
             >
@@ -437,35 +271,34 @@ const Login = ({ setAuth }) => {
 
             <div style={{ textAlign: 'center', marginBottom: '18px' }}>
               <div style={{
-                width: '54px',
-                height: '54px',
+                width: '56px',
+                height: '56px',
                 borderRadius: '50%',
-                background: 'rgba(250, 176, 43, 0.15)',
-                border: '1px solid rgba(250, 176, 43, 0.3)',
+                background: 'rgba(4, 52, 144, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 12px',
-                color: 'var(--theme-accent, #fab02b)'
+                color: '#043490'
               }}>
                 <HelpCircle size={28} />
               </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#ffffff', marginBottom: '6px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#043490', marginBottom: '6px' }}>
                 Password Recovery
               </h3>
-              <p style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.7)', lineHeight: '1.4' }}>
-                For security reasons, password resets are verified directly by our team via Live Support Chat or Helpline.
+              <p style={{ fontSize: '0.85rem', color: '#64748B', lineHeight: '1.4' }}>
+                For security reasons, password resets are verified directly by our team via Live Support or Helpline.
               </p>
             </div>
 
             <div style={{
-              background: 'rgba(0, 0, 0, 0.35)',
+              background: '#f8fafc',
               borderRadius: '12px',
               padding: '12px 14px',
               marginBottom: '18px',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              border: '1px solid #e2e8f0',
               fontSize: '0.82rem',
-              color: 'rgba(255, 255, 255, 0.8)'
+              color: '#334155'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                 <CheckCircle2 size={14} style={{ color: '#10b981', flexShrink: 0 }} />
@@ -477,36 +310,39 @@ const Login = ({ setAuth }) => {
               </div>
             </div>
 
-            <Link
-              to="/support"
+            <a
+              href={`https://wa.me/${(wpNumber || '919876543210').replace(/\D/g, '')}?text=${encodeURIComponent('Hello Bharat Matka Team, I need help recovering my account password for phone: ' + phone)}`}
+              target="_blank"
+              rel="noreferrer"
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
                 padding: '13px',
-                borderRadius: '12px',
+                borderRadius: '50px',
                 fontSize: '0.92rem',
                 textDecoration: 'none',
-                background: 'linear-gradient(135deg, #d6be66 0%, #10b981 100%)',
-                color: '#081320',
-                fontWeight: '700'
+                background: '#043490',
+                color: '#ffffff',
+                fontWeight: '700',
+                boxShadow: '0 4px 14px rgba(4, 52, 144, 0.3)'
               }}
             >
               <Headphones size={18} />
-              <span>Connect to Live Support Chat</span>
-            </Link>
+              <span>Connect with Support on WhatsApp</span>
+            </a>
 
             <button
               type="button"
               onClick={() => setShowHelpModal(false)}
               style={{
                 width: '100%',
-                marginTop: '10px',
+                marginTop: '12px',
                 padding: '10px',
                 background: 'transparent',
                 border: 'none',
-                color: 'rgba(255, 255, 255, 0.6)',
+                color: '#64748B',
                 fontSize: '0.84rem',
                 cursor: 'pointer'
               }}

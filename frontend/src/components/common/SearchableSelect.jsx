@@ -245,7 +245,7 @@ const SearchableSelect = ({
                 style={{
                   position: 'absolute',
                   left: '12px',
-                  color: isLight ? '#d97706' : 'var(--color-gold, #d6be66)'
+                  color: isLight ? '#043490' : 'var(--color-primary, #043490)'
                 }}
               />
               <input
@@ -431,7 +431,7 @@ const SearchableSelect = ({
           display: 'block',
           fontSize: '12px',
           fontWeight: 700,
-          color: isLight ? '#64748b' : 'var(--color-gold, #d6be66)',
+          color: isLight ? '#475569' : 'var(--color-primary, #043490)',
           marginBottom: '5px'
         }}>
           {label}
@@ -466,7 +466,7 @@ const SearchableSelect = ({
           fontSize: '14.5px',
           fontWeight: value ? '800' : '500',
           color: value
-            ? isLight ? '#0f172a' : 'var(--color-gold, #d6be66)'
+            ? isLight ? '#0f172a' : 'var(--color-primary, #043490)'
             : isLight ? '#94a3b8' : 'rgba(255, 255, 255, 0.4)',
           overflow: 'hidden',
           textOverflow: 'ellipsis',

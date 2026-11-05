@@ -54,20 +54,23 @@ const WalletHistory = () => {
   return (
     <div style={{ maxWidth: '650px', margin: '0 auto', padding: '16px 14px' }}>
       {/* Top Header */}
-      <div className="card-glass-v2" style={{
+      <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '12px 18px',
+        padding: '14px 18px',
         marginBottom: '18px',
-        borderRadius: '16px'
+        borderRadius: '16px',
+        background: 'linear-gradient(135deg, #043490 0%, #002663 100%)',
+        boxShadow: '0 4px 14px rgba(4, 52, 144, 0.25)',
+        color: '#ffffff'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', color: '#fff' }}>
             <ArrowLeft size={20} />
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <History size={20} style={{ color: 'var(--color-gold)' }} />
+            <History size={20} style={{ color: '#ffb703' }} />
             <span style={{ fontWeight: '700', fontSize: '1.05rem', color: '#fff' }}>Wallet History</span>
           </div>
         </div>
@@ -76,12 +79,12 @@ const WalletHistory = () => {
           alignItems: 'center',
           gap: '6px',
           padding: '6px 12px',
-          background: 'rgba(214, 190, 102, 0.15)',
-          border: '1px solid rgba(214, 190, 102, 0.3)',
+          background: 'rgba(255, 255, 255, 0.18)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
           borderRadius: '20px',
           fontWeight: '700',
           fontSize: '0.88rem',
-          color: 'var(--color-gold)'
+          color: '#ffffff'
         }}>
           <Wallet size={16} />
           <span>₹ {wallet}</span>
@@ -93,26 +96,24 @@ const WalletHistory = () => {
         <form onSubmit={handleApply}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
             <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginBottom: '6px' }}>
-                <Calendar size={14} style={{ color: 'var(--color-gold)' }} />
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
+                <Calendar size={14} style={{ color: 'var(--color-primary)' }} />
                 From Date
               </label>
               <input
                 type="date"
-                className="dark-date-input"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
                 style={inputStyle}
               />
             </div>
             <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginBottom: '6px' }}>
-                <Calendar size={14} style={{ color: 'var(--color-gold)' }} />
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
+                <Calendar size={14} style={{ color: 'var(--color-primary)' }} />
                 To Date
               </label>
               <input
                 type="date"
-                className="dark-date-input"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
                 style={inputStyle}
@@ -121,19 +122,21 @@ const WalletHistory = () => {
           </div>
           <button
             type="submit"
-            className="btn-gradient"
             style={{
               width: '100%',
               padding: '11px',
               border: 'none',
-              borderRadius: '10px',
+              borderRadius: '50px',
               fontWeight: '700',
               fontSize: '0.92rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px'
+              gap: '8px',
+              background: 'linear-gradient(135deg, #043490 0%, #002663 100%)',
+              color: '#ffffff',
+              boxShadow: '0 4px 12px rgba(4, 52, 144, 0.25)'
             }}
           >
             <Filter size={16} />
@@ -142,18 +145,18 @@ const WalletHistory = () => {
         </form>
       </div>
 
-      <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.9)', fontWeight: '700', fontSize: '0.95rem', letterSpacing: '0.5px', marginBottom: '14px' }}>
+      <p style={{ textAlign: 'center', color: '#0f172a', fontWeight: '700', fontSize: '0.95rem', letterSpacing: '0.5px', marginBottom: '14px' }}>
         Recent Transactions
       </p>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '30px', color: 'rgba(255,255,255,0.7)' }}>Loading transactions...</div>
+        <div style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Loading transactions...</div>
       ) : history.length === 0 ? (
         <div className="card-glass-v2" style={{
           borderRadius: '16px',
           padding: '36px 20px',
           textAlign: 'center',
-          color: 'rgba(255,255,255,0.6)'
+          color: '#64748b'
         }}>
           <History size={40} style={{ opacity: 0.3, marginBottom: '10px' }} />
           <div>No transactions found in this date range.</div>
@@ -181,13 +184,13 @@ const WalletHistory = () => {
                 }}
               >
                 <div>
-                  <p style={{ margin: 0, fontWeight: '700', color: '#fff', fontSize: '0.9rem' }}>
+                  <p style={{ margin: 0, fontWeight: '700', color: '#0f172a', fontSize: '0.9rem' }}>
                     {item.remark || 'Transaction'}
                   </p>
                   <h5 style={{ margin: '4px 0 2px 0', color: badgeColor, fontWeight: '800', fontSize: '1.1rem' }}>
                     {isDebit ? `- ₹ ${rawAmt}` : `+ ₹ ${rawAmt}`}
                   </h5>
-                  <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)' }}>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b' }}>
                     {formatDisplayDateTime(item.date, item.time)}
                   </p>
                 </div>
@@ -206,7 +209,7 @@ const WalletHistory = () => {
                     {isDebit ? 'DEBITED' : 'SUCCESSFUL'}
                   </span>
                   {item.updated_amount !== undefined && item.updated_amount !== null && (
-                    <p style={{ margin: '4px 0 0 0', fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '0.75rem', color: '#64748b' }}>
                       Bal: ₹{item.updated_amount}
                     </p>
                   )}
@@ -224,10 +227,10 @@ const inputStyle = {
   width: '100%',
   padding: '10px 12px',
   borderRadius: '10px',
-  border: '1px solid rgba(255,255,255,0.15)',
-  backgroundColor: 'rgba(0,0,0,0.25)',
+  border: '1px solid #cbd5e1',
+  backgroundColor: '#f8fafc',
   fontSize: '0.88rem',
-  color: '#ffffff',
+  color: '#0f172a',
   boxSizing: 'border-box',
   outline: 'none'
 };

@@ -3,6 +3,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const candidateLogos = [
+  '/Users/anilrathore/.gemini/antigravity/brain/54c36f16-287f-4e3f-a71a-b94f47c6c8f0/.user_uploaded/media_1793869999945_2a61b3a5.jpg',
   '/Users/anilrathore/.gemini/antigravity-ide/brain/f6fab270-6493-4b5c-abc2-b128311f7c21/.user_uploaded/media_1793522866752.jpg',
   '/Users/anilrathore/.gemini/antigravity-ide/brain/f6fab270-6493-4b5c-abc2-b128311f7c21/.user_uploaded/media_1793517360538.jpg'
 ];

@@ -13,7 +13,7 @@ const UserLayout = ({ children, setAuth }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [themeColor, setThemeColor] = useState(() => localStorage.getItem('auth_theme_color') || 'gold');
+  const [themeColor, setThemeColor] = useState(() => localStorage.getItem('auth_theme_color') || 'blue');
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [userData, setUserData] = useState({
     name: localStorage.getItem('name') || '',
@@ -216,24 +216,24 @@ const UserLayout = ({ children, setAuth }) => {
     return (
       <div style={{
         minHeight: '100vh',
-        backgroundColor: '#09121f',
+        backgroundColor: '#f8fafc',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#ffffff',
+        color: '#0f172a',
         padding: '20px'
       }}>
         <div style={{
           width: '46px',
           height: '46px',
           borderRadius: '50%',
-          border: '3px solid rgba(214, 190, 102, 0.2)',
-          borderTopColor: 'var(--color-gold, #d6be66)',
+          border: '3px solid rgba(4, 52, 144, 0.2)',
+          borderTopColor: '#043490',
           animation: 'spin 0.8s linear infinite',
           marginBottom: '16px'
         }} />
-        <span style={{ fontSize: '0.88rem', color: 'rgba(255, 255, 255, 0.75)', fontWeight: '600' }}>
+        <span style={{ fontSize: '0.88rem', color: '#64748b', fontWeight: '600' }}>
           Loading application...
         </span>
       </div>
@@ -247,15 +247,15 @@ const UserLayout = ({ children, setAuth }) => {
   return (
     <div className={`app-theme-${themeColor}`} style={{
       minHeight: '100vh',
-      backgroundColor: 'var(--app-bg, #09121f)',
+      backgroundColor: 'var(--app-bg, #f4f6fa)',
       display: 'flex',
       flexDirection: 'column',
-      color: '#ffffff',
+      color: 'var(--color-text-primary, #0f172a)',
       position: 'relative',
       overflowX: 'hidden',
       transition: 'background 0.4s ease'
     }}>
-      {/* Background Decorative Glowing Ambient Orbs */}
+      {/* Background Decorative Subtle Ambient Orbs */}
       <div style={{
         position: 'fixed',
         top: '-120px',
@@ -263,7 +263,7 @@ const UserLayout = ({ children, setAuth }) => {
         width: '380px',
         height: '380px',
         borderRadius: '50%',
-        background: themeColor === 'cyan' ? 'rgba(6, 182, 212, 0.15)' : themeColor === 'crimson' ? 'rgba(244, 63, 94, 0.15)' : 'rgba(214, 190, 102, 0.15)',
+        background: 'rgba(4, 52, 144, 0.04)',
         filter: 'blur(100px)',
         pointerEvents: 'none',
         zIndex: 0
@@ -275,7 +275,7 @@ const UserLayout = ({ children, setAuth }) => {
         width: '380px',
         height: '380px',
         borderRadius: '50%',
-        background: themeColor === 'cyan' ? 'rgba(168, 85, 247, 0.15)' : themeColor === 'crimson' ? 'rgba(249, 115, 22, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+        background: 'rgba(255, 118, 7, 0.04)',
         filter: 'blur(100px)',
         pointerEvents: 'none',
         zIndex: 0
@@ -315,10 +315,12 @@ const UserLayout = ({ children, setAuth }) => {
         </PullToRefresh>
       </main>
 
-      {/* Floating In-App Live Support Chat Button */}
+      {/* Floating Direct WhatsApp Connect Button */}
       {location.pathname !== '/support' && (
-        <Link
-          to="/support"
+        <a
+          href={`https://wa.me/${String(wpNumber || '').replace(/\D/g, '').startsWith('91') && String(wpNumber || '').replace(/\D/g, '').length > 10 ? String(wpNumber || '').replace(/\D/g, '') : (String(wpNumber || '').replace(/\D/g, '') ? `91${String(wpNumber || '').replace(/\D/g, '')}` : '919876543210')}?text=${encodeURIComponent('Hello Bharat Matka Support, I need assistance.')}`}
+          target="_blank"
+          rel="noopener noreferrer"
           style={{
             position: 'fixed',
             bottom: 'calc(78px + env(safe-area-inset-bottom, 0px))',
@@ -327,34 +329,23 @@ const UserLayout = ({ children, setAuth }) => {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            background: 'linear-gradient(135deg, #d6be66 0%, #10b981 100%)',
-            color: '#081320',
-            padding: '10px 16px',
-            borderRadius: '30px',
-            fontWeight: '700',
-            fontSize: '0.84rem',
+            background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+            color: '#ffffff',
+            padding: '10px 18px',
+            borderRadius: '50px',
+            fontWeight: '800',
+            fontSize: '0.86rem',
             textDecoration: 'none',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45), 0 0 16px rgba(214, 190, 102, 0.35)',
+            boxShadow: '0 8px 24px rgba(37, 211, 102, 0.4), 0 2px 8px rgba(0, 0, 0, 0.15)',
             transition: 'all 0.25s ease'
           }}
-          title="Open Live Support Chat"
+          title="Direct WhatsApp Support"
         >
-          <Headphones size={18} />
-          <span>Live Chat</span>
-          {unreadChatCount > 0 && (
-            <span style={{
-              background: '#ef4444',
-              color: '#ffffff',
-              borderRadius: '50%',
-              padding: '2px 6px',
-              fontSize: '0.72rem',
-              fontWeight: '800',
-              animation: 'pulseDot 1.5s infinite'
-            }}>
-              {unreadChatCount}
-            </span>
-          )}
-        </Link>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#ffffff">
+            <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 15 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.67 12.05 3.67M9.11 7.03C8.92 7.03 8.61 7.1 8.36 7.37C8.11 7.64 7.41 8.3 7.41 9.64C7.41 10.98 8.39 12.27 8.52 12.45C8.66 12.63 10.43 15.36 13.15 16.53C13.79 16.81 14.3 16.98 14.69 17.11C15.34 17.31 15.93 17.29 16.4 17.22C16.92 17.14 18 16.56 18.23 15.91C18.46 15.26 18.46 14.7 18.39 14.59C18.32 14.47 18.13 14.41 17.85 14.27C17.57 14.13 16.2 13.45 15.94 13.36C15.69 13.27 15.5 13.22 15.32 13.5C15.13 13.77 14.6 14.41 14.44 14.59C14.28 14.78 14.12 14.8 13.84 14.66C13.56 14.53 12.67 14.23 11.62 13.29C10.79 12.55 10.23 11.64 10.07 11.36C9.91 11.09 10.05 10.93 10.2 10.79C10.32 10.67 10.48 10.46 10.62 10.3C10.76 10.13 10.8 10.02 10.89 9.83C10.99 9.65 10.94 9.48 10.87 9.35C10.8 9.21 10.24 7.84 10.01 7.28C9.78 6.74 9.55 6.81 9.38 6.81C9.22 6.81 9.03 6.8 8.85 6.8L9.11 7.03Z" />
+          </svg>
+          <span>WhatsApp Chat</span>
+        </a>
       )}
 
       {/* Fixed Bottom Navigation */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Phone, Lock, KeyRound, Mail, Gift, Eye, EyeOff, Headphones, ShieldCheck } from 'lucide-react';
+import { User, Phone, Lock, KeyRound, Gift, Eye, EyeOff, Smartphone, MessageCircle } from 'lucide-react';
 import api from '../utils/api';
 
 const Signup = ({ setAuth }) => {
@@ -28,7 +28,6 @@ const Signup = ({ setAuth }) => {
     }
     return '0';
   });
-  const [themeColor, setThemeColor] = useState(() => localStorage.getItem('auth_theme_color') || 'gold');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,11 +54,6 @@ const Signup = ({ setAuth }) => {
       }
     }).catch(() => {});
   }, []);
-
-  const handleThemeChange = (color) => {
-    setThemeColor(color);
-    localStorage.setItem('auth_theme_color', color);
-  };
 
   const handleChange = (e) => {
     setFormData({
@@ -125,292 +119,197 @@ const Signup = ({ setAuth }) => {
   };
 
   return (
-    <div className={`auth-page-bg auth-theme-${themeColor}`}>
-      {/* Background Ambient Orbs */}
-      <div style={{
-        position: 'absolute',
-        top: '-100px',
-        right: '-100px',
-        width: '320px',
-        height: '320px',
-        borderRadius: '50%',
-        background: themeColor === 'cyan' ? 'rgba(168, 85, 247, 0.22)' : themeColor === 'crimson' ? 'rgba(249, 115, 22, 0.22)' : 'rgba(16, 185, 129, 0.22)',
-        filter: 'blur(90px)',
-        pointerEvents: 'none'
-      }} />
-
-      <div style={{ width: '100%', maxWidth: '520px', position: 'relative', zIndex: 10 }}>
-        {/* Theme Color Selector Pill Bar */}
-        <div className="theme-selector-bar" title="Select Theme Color">
-          <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginRight: '4px', fontWeight: '500' }}>Theme:</span>
-          <button 
-            type="button" 
-            className={`theme-pill theme-pill-gold ${themeColor === 'gold' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('gold')}
-            title="Gold Emerald Theme"
-          />
-          <button 
-            type="button" 
-            className={`theme-pill theme-pill-cyan ${themeColor === 'cyan' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('cyan')}
-            title="Cyber Cyan Theme"
-          />
-          <button 
-            type="button" 
-            className={`theme-pill theme-pill-crimson ${themeColor === 'crimson' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('crimson')}
-            title="Crimson Sunset Theme"
-          />
+    <div className="auth-page-bg">
+      <div className="auth-ref-container">
+        {/* Top Header Row matching Image 1 */}
+        <div className="auth-ref-header">
+          <div>
+            <h1 className="auth-ref-title">REGISTER</h1>
+            <p className="auth-ref-subtitle">Create New Account</p>
+          </div>
+          <div style={{ color: '#043490', display: 'flex', alignItems: 'center' }}>
+            <Smartphone size={32} strokeWidth={2.2} />
+          </div>
         </div>
 
-        {/* Auth Glass Card */}
-        <div className="auth-card">
-          <div style={{ textAlign: 'center', marginBottom: '22px' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-              <img
-                src="/img/logo.png"
-                alt={`${appName} Logo`}
-                style={{
-                  height: '68px',
-                  width: 'auto',
-                  maxWidth: '210px',
-                  objectFit: 'contain',
-                  filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))'
-                }}
-                onError={(e) => { e.target.src = '/img/logo.png'; }}
+        {/* Center Logo Card matching Image 1 */}
+        <div className="auth-ref-logo-card">
+          <div className="auth-ref-logo-box">
+            <img
+              src="/img/logo.png"
+              alt={`${appName} Logo`}
+              className="auth-ref-logo-img"
+              onError={(e) => { e.target.src = '/img/logo.png'; }}
+            />
+          </div>
+        </div>
+
+        {/* Form Controls */}
+        <form onSubmit={handleSignup}>
+          {/* Username */}
+          <div className="auth-pill-input-wrap">
+            <div className="auth-pill-icon">
+              <User size={19} />
+            </div>
+            <input
+              type="text"
+              name="user_name"
+              className="auth-pill-input"
+              placeholder="Username"
+              value={formData.user_name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          {/* Mobile No */}
+          <div className="auth-pill-input-wrap">
+            <div className="auth-pill-icon">
+              <Phone size={19} />
+            </div>
+            <input
+              type="tel"
+              name="user_phone"
+              className="auth-pill-input"
+              placeholder="Enter Mobile No"
+              value={formData.user_phone}
+              onChange={(e) => setFormData({ ...formData, user_phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+              required
+            />
+          </div>
+
+          {/* Password */}
+          <div className="auth-pill-input-wrap">
+            <div className="auth-pill-icon">
+              <Lock size={19} />
+            </div>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              name="user_password"
+              className="auth-pill-input"
+              style={{ paddingRight: '48px' }}
+              placeholder="Enter Password"
+              value={formData.user_password}
+              onChange={handleChange}
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle-btn"
+              style={{ color: '#64748B' }}
+              onClick={() => setShowPassword(!showPassword)}
+              title={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+            </button>
+          </div>
+
+          {/* Conditional M-PIN */}
+          {String(mpinStatus) === '1' && (
+            <div className="auth-pill-input-wrap">
+              <div className="auth-pill-icon">
+                <KeyRound size={19} />
+              </div>
+              <input
+                type={showMpin ? 'text' : 'password'}
+                name="user_mpin"
+                className="auth-pill-input"
+                style={{ paddingRight: '48px' }}
+                placeholder="Enter 4-Digit M-PIN"
+                value={formData.user_mpin}
+                onChange={(e) => setFormData({ ...formData, user_mpin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                style={{ color: '#64748B' }}
+                onClick={() => setShowMpin(!showMpin)}
+                title={showMpin ? 'Hide M-PIN' : 'Show M-PIN'}
+              >
+                {showMpin ? <EyeOff size={19} /> : <Eye size={19} />}
+              </button>
+            </div>
+          )}
+
+          {/* Conditional Referral */}
+          {String(referralStatus) !== '0' && (
+            <div className="auth-pill-input-wrap">
+              <div className="auth-pill-icon">
+                <Gift size={19} />
+              </div>
+              <input
+                type="tel"
+                name="referral_phone"
+                className="auth-pill-input"
+                placeholder="Referral Mobile (Optional)"
+                value={formData.referral_phone}
+                onChange={(e) => setFormData({ ...formData, referral_phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
               />
             </div>
-            <h2 className={`auth-heading-gradient-${themeColor}`} style={{ fontSize: '1.9rem', marginBottom: '4px', fontWeight: '800', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              CREATE ACCOUNT
-            </h2>
-            <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-              <ShieldCheck size={16} style={{ color: 'var(--color-gold)' }} /> Join {appName} & start placing bids
-            </p>
-          </div>
+          )}
 
-          <form onSubmit={handleSignup}>
-            <div className="form-group">
-              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <User size={14} /> Full Name
-              </label>
-              <div className="input-group-custom">
-                <div className="input-icon-left">
-                  <User size={18} />
-                </div>
-                <input
-                  type="text"
-                  name="user_name"
-                  className="form-input form-input-icon"
-                  placeholder="Enter your full name"
-                  value={formData.user_name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+          {/* Feedback messages */}
+          {error && (
+            <div style={{
+              backgroundColor: '#fee2e2',
+              color: '#dc2626',
+              border: '1px solid #fca5a5',
+              padding: '11px 16px',
+              borderRadius: '50px',
+              marginBottom: '14px',
+              textAlign: 'center',
+              fontSize: '0.88rem',
+              fontWeight: '600'
+            }}>
+              {error}
             </div>
+          )}
 
-            <div className="grid-cols-2">
-              <div className="form-group">
-                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Phone size={14} /> Phone Number
-                </label>
-                <div className="input-group-custom">
-                  <div className="input-icon-left">
-                    <Phone size={18} />
-                  </div>
-                  <input
-                    type="tel"
-                    name="user_phone"
-                    className="form-input form-input-icon"
-                    placeholder="10-digit number"
-                    value={formData.user_phone}
-                    onChange={(e) => setFormData({ ...formData, user_phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Lock size={14} /> Password
-                </label>
-                <div className="input-group-custom">
-                  <div className="input-icon-left">
-                    <Lock size={18} />
-                  </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="user_password"
-                    className="form-input form-input-icon"
-                    placeholder="Min 6 characters"
-                    value={formData.user_password}
-                    onChange={handleChange}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle-btn"
-                    onClick={() => setShowPassword(!showPassword)}
-                    title={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
+          {success && (
+            <div style={{
+              backgroundColor: '#dcfce7',
+              color: '#15803d',
+              border: '1px solid #86efac',
+              padding: '11px 16px',
+              borderRadius: '50px',
+              marginBottom: '14px',
+              textAlign: 'center',
+              fontSize: '0.88rem',
+              fontWeight: '600'
+            }}>
+              {success}
             </div>
+          )}
 
-            {/* Conditional M-PIN and Referral Phone Row */}
-            {(String(mpinStatus) === '1' && String(referralStatus) !== '0') ? (
-              <div className="grid-cols-2">
-                <div className="form-group">
-                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <KeyRound size={14} /> 4-Digit M-PIN
-                  </label>
-                  <div className="input-group-custom">
-                    <div className="input-icon-left">
-                      <KeyRound size={18} />
-                    </div>
-                    <input
-                      type={showMpin ? 'text' : 'password'}
-                      name="user_mpin"
-                      className="form-input form-input-icon"
-                      placeholder="4-digit pin"
-                      value={formData.user_mpin}
-                      onChange={(e) => setFormData({ ...formData, user_mpin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="password-toggle-btn"
-                      onClick={() => setShowMpin(!showMpin)}
-                      title={showMpin ? 'Hide M-PIN' : 'Show M-PIN'}
-                    >
-                      {showMpin ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
+          {/* Primary Action Button matching Image 1 */}
+          <button
+            type="submit"
+            className="auth-btn-primary"
+            disabled={loading}
+          >
+            {loading ? 'REGISTERING...' : 'REGISTER'}
+          </button>
+        </form>
 
-                <div className="form-group">
-                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Gift size={14} /> Referral Phone (Optional)
-                  </label>
-                  <div className="input-group-custom">
-                    <div className="input-icon-left">
-                      <Gift size={18} />
-                    </div>
-                    <input
-                      type="tel"
-                      name="referral_phone"
-                      className="form-input form-input-icon"
-                      placeholder="Referrer number"
-                      value={formData.referral_phone}
-                      onChange={(e) => setFormData({ ...formData, referral_phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : String(mpinStatus) === '1' ? (
-              <div className="form-group">
-                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <KeyRound size={14} /> 4-Digit M-PIN
-                </label>
-                <div className="input-group-custom">
-                  <div className="input-icon-left">
-                    <KeyRound size={18} />
-                  </div>
-                  <input
-                    type={showMpin ? 'text' : 'password'}
-                    name="user_mpin"
-                    className="form-input form-input-icon"
-                    placeholder="Create a 4-digit security M-PIN"
-                    value={formData.user_mpin}
-                    onChange={(e) => setFormData({ ...formData, user_mpin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle-btn"
-                    onClick={() => setShowMpin(!showMpin)}
-                    title={showMpin ? 'Hide M-PIN' : 'Show M-PIN'}
-                  >
-                    {showMpin ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-            ) : String(referralStatus) !== '0' ? (
-              <div className="form-group">
-                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Gift size={14} /> Referral Phone (Optional)
-                </label>
-                <div className="input-group-custom">
-                  <div className="input-icon-left">
-                    <Gift size={18} />
-                  </div>
-                  <input
-                    type="tel"
-                    name="referral_phone"
-                    className="form-input form-input-icon"
-                    placeholder="Enter referrer phone number (optional)"
-                    value={formData.referral_phone}
-                    onChange={(e) => setFormData({ ...formData, referral_phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                  />
-                </div>
-              </div>
-            ) : null}
+        {/* Secondary Action Button matching Image 1 */}
+        <Link to="/login" className="auth-btn-secondary">
+          ALREADY HAVE AN ACCOUNT? LOGIN
+        </Link>
 
-            {/* Error & Success Messages Displayed Directly Above Action Button */}
-            {error && (
-              <div className="badge badge-danger" style={{ display: 'block', padding: '12px 14px', marginBottom: '16px', textAlign: 'center', borderRadius: '10px', fontSize: '0.88rem', fontWeight: '600' }}>
-                {error}
-              </div>
-            )}
-
-            {success && (
-              <div className="badge badge-success" style={{ display: 'block', padding: '12px 14px', marginBottom: '16px', textAlign: 'center', borderRadius: '10px', fontSize: '0.88rem', fontWeight: '600' }}>
-                {success}
-              </div>
-            )}
-
-            <button 
-              type="submit" 
-              className={`btn btn-gold btn-theme-submit-${themeColor}`} 
-              style={{ width: '100%', padding: '14px', borderRadius: '12px', fontSize: '1rem', letterSpacing: '0.05em', marginTop: '6px' }} 
-              disabled={loading}
-            >
-              {loading ? 'CREATING ACCOUNT...' : 'REGISTER NOW'}
-            </button>
-          </form>
-
-          {/* Live Support Chat Link */}
-          <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-            <Link 
-              to="/support" 
-              className="btn-support-chat"
-              style={{
-                background: 'linear-gradient(135deg, rgba(214, 190, 102, 0.22) 0%, rgba(16, 185, 129, 0.22) 100%)',
-                border: '1px solid rgba(214, 190, 102, 0.4)',
-                color: '#ffffff',
-                textDecoration: 'none'
-              }}
-            >
-              <Headphones size={20} />
-              <span>Live Support Chat</span>
-            </Link>
-          </div>
-
-          <div style={{ marginTop: '18px', textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.9rem' }}>
-            Already have an account?{' '}
-            <Link 
-              to="/login" 
-              style={{ 
-                color: themeColor === 'cyan' ? '#38bdf8' : themeColor === 'crimson' ? '#fb7185' : 'var(--color-gold)', 
-                textDecoration: 'none', 
-                fontWeight: '700' 
-              }}
-            >
-              Login Here
-            </Link>
-          </div>
+        {/* WhatsApp Link matching Image 1 */}
+        <div className="auth-whatsapp-row">
+          <a
+            href={`https://wa.me/${(wpNumber || '919876543210').replace(/\D/g, '')}`}
+            target="_blank"
+            rel="noreferrer"
+            className="auth-whatsapp-link"
+          >
+            <div className="auth-whatsapp-icon-circle">
+              <MessageCircle size={16} fill="#ffffff" />
+            </div>
+            <span>{wpNumber ? (wpNumber.startsWith('+') ? wpNumber : `+${wpNumber}`) : '+919876543210'}</span>
+          </a>
         </div>
       </div>
     </div>

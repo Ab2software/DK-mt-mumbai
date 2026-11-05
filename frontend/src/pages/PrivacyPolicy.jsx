@@ -25,12 +25,11 @@ const PrivacyPolicy = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#09121f',
-      color: '#f8fafc',
+      backgroundColor: '#f4f6fa',
+      color: '#0f172a',
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       padding: '24px 16px 80px 16px',
-      boxSizing: 'border-box',
-      background: 'radial-gradient(circle at top right, rgba(214, 190, 102, 0.12) 0%, transparent 60%), #09121f'
+      boxSizing: 'border-box'
     }}>
       <div style={{ maxWidth: '840px', margin: '0 auto' }}>
 
@@ -41,7 +40,7 @@ const PrivacyPolicy = () => {
           justifyContent: 'space-between',
           marginBottom: '28px',
           paddingBottom: '16px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+          borderBottom: '1px solid #e2e8f0'
         }}>
           <button
             type="button"
@@ -50,14 +49,15 @@ const PrivacyPolicy = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: '#f8fafc',
+              backgroundColor: '#ffffff',
+              border: '1px solid #cbd5e1',
+              color: '#0f172a',
               padding: '8px 16px',
-              borderRadius: '10px',
+              borderRadius: '50px',
               cursor: 'pointer',
               fontSize: '0.88rem',
-              fontWeight: '600'
+              fontWeight: '600',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
             }}
           >
             <ArrowLeft size={16} /> Back
@@ -69,11 +69,11 @@ const PrivacyPolicy = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              color: '#f87171',
-              backgroundColor: 'rgba(239, 68, 68, 0.12)',
+              color: '#dc2626',
+              backgroundColor: 'rgba(239, 68, 68, 0.08)',
               border: '1px solid rgba(239, 68, 68, 0.25)',
-              padding: '8px 14px',
-              borderRadius: '10px',
+              padding: '8px 16px',
+              borderRadius: '50px',
               textDecoration: 'none',
               fontSize: '0.82rem',
               fontWeight: '700'
@@ -85,27 +85,25 @@ const PrivacyPolicy = () => {
 
         {/* Hero Card */}
         <div style={{
-          background: 'linear-gradient(135deg, rgba(25, 38, 58, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(214, 190, 102, 0.25)',
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
           borderRadius: '20px',
           padding: '32px 24px',
           marginBottom: '28px',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
           textAlign: 'center'
         }}>
           <div style={{
             width: '64px',
             height: '64px',
             borderRadius: '16px',
-            background: 'linear-gradient(135deg, #d6be66 0%, #bca54e 100%)',
+            background: 'linear-gradient(135deg, #043490 0%, #002663 100%)',
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#09121f',
+            color: '#ffffff',
             marginBottom: '16px',
-            boxShadow: '0 4px 15px rgba(214, 190, 102, 0.3)'
+            boxShadow: '0 4px 15px rgba(4, 52, 144, 0.3)'
           }}>
             <Shield size={32} />
           </div>
@@ -113,7 +111,7 @@ const PrivacyPolicy = () => {
             margin: '0 0 8px 0',
             fontSize: '1.85rem',
             fontWeight: '800',
-            color: '#ffffff',
+            color: '#043490',
             letterSpacing: '-0.02em'
           }}>
             Privacy Policy
@@ -121,8 +119,8 @@ const PrivacyPolicy = () => {
           <p style={{
             margin: '0 0 14px 0',
             fontSize: '0.98rem',
-            color: '#d6be66',
-            fontWeight: '600'
+            color: '#043490',
+            fontWeight: '700'
           }}>
             {appName} (Package: com.saraquiz.saraapps)
           </p>
@@ -131,8 +129,9 @@ const PrivacyPolicy = () => {
             alignItems: 'center',
             gap: '12px',
             fontSize: '0.82rem',
-            color: 'rgba(255, 255, 255, 0.65)',
-            backgroundColor: 'rgba(0, 0, 0, 0.25)',
+            color: '#64748b',
+            backgroundColor: '#f8fafc',
+            border: '1px solid #e2e8f0',
             padding: '6px 14px',
             borderRadius: '20px'
           }}>
@@ -143,20 +142,20 @@ const PrivacyPolicy = () => {
         </div>
 
         {/* Content Card */}
-        <div style={{
-          backgroundColor: 'rgba(15, 23, 42, 0.6)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+        <div className="card-glass-v2" style={{
+          backgroundColor: '#ffffff',
+          border: '1px solid #e2e8f0',
           borderRadius: '18px',
           padding: '28px 24px',
           lineHeight: '1.65',
           fontSize: '0.94rem',
-          color: 'rgba(255, 255, 255, 0.85)'
+          color: '#334155'
         }}>
 
           {/* Section 1 */}
           <section style={{ marginBottom: '28px' }}>
-            <h2 style={{ fontSize: '1.25rem', color: '#ffffff', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FileText size={20} style={{ color: '#d6be66' }} />
+            <h2 style={{ fontSize: '1.25rem', color: '#0f172a', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileText size={20} style={{ color: '#043490' }} />
               1. Introduction & Overview
             </h2>
             <p>
@@ -169,8 +168,8 @@ const PrivacyPolicy = () => {
 
           {/* Section 2 */}
           <section style={{ marginBottom: '28px' }}>
-            <h2 style={{ fontSize: '1.25rem', color: '#ffffff', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Lock size={20} style={{ color: '#d6be66' }} />
+            <h2 style={{ fontSize: '1.25rem', color: '#0f172a', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Lock size={20} style={{ color: '#043490' }} />
               2. Information We Collect
             </h2>
             <p>We only collect data necessary to provide and enhance our services:</p>
@@ -183,8 +182,8 @@ const PrivacyPolicy = () => {
 
           {/* Section 3 */}
           <section style={{ marginBottom: '28px' }}>
-            <h2 style={{ fontSize: '1.25rem', color: '#ffffff', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle2 size={20} style={{ color: '#d6be66' }} />
+            <h2 style={{ fontSize: '1.25rem', color: '#0f172a', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CheckCircle2 size={20} style={{ color: '#043490' }} />
               3. How We Use Your Information
             </h2>
             <p>Your information is used strictly for legitimate operational purposes:</p>
@@ -198,8 +197,8 @@ const PrivacyPolicy = () => {
 
           {/* Section 4 */}
           <section style={{ marginBottom: '28px' }}>
-            <h2 style={{ fontSize: '1.25rem', color: '#ffffff', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Shield size={20} style={{ color: '#d6be66' }} />
+            <h2 style={{ fontSize: '1.25rem', color: '#0f172a', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Shield size={20} style={{ color: '#043490' }} />
               4. Data Protection & Sharing
             </h2>
             <p>
@@ -218,7 +217,7 @@ const PrivacyPolicy = () => {
             borderRadius: '14px',
             padding: '20px'
           }}>
-            <h2 style={{ fontSize: '1.2rem', color: '#f87171', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 style={{ fontSize: '1.2rem', color: '#dc2626', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Trash2 size={20} />
               5. Your Rights & Account Data Deletion
             </h2>
@@ -244,7 +243,7 @@ const PrivacyPolicy = () => {
               >
                 <Trash2 size={16} /> Request Account & Data Deletion
               </Link>
-              <span style={{ fontSize: '0.84rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+              <span style={{ fontSize: '0.84rem', color: '#64748b' }}>
                 Requests are processed within 24–48 hours.
               </span>
             </div>
@@ -252,8 +251,8 @@ const PrivacyPolicy = () => {
 
           {/* Section 6 */}
           <section>
-            <h2 style={{ fontSize: '1.25rem', color: '#ffffff', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Mail size={20} style={{ color: '#d6be66' }} />
+            <h2 style={{ fontSize: '1.25rem', color: '#0f172a', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Mail size={20} style={{ color: '#043490' }} />
               6. Grievance Officer & Contact Us
             </h2>
             <p>
@@ -263,17 +262,18 @@ const PrivacyPolicy = () => {
               display: 'flex',
               flexDirection: 'column',
               gap: '10px',
-              backgroundColor: 'rgba(0, 0, 0, 0.25)',
+              backgroundColor: '#f8fafc',
+              border: '1px solid #e2e8f0',
               padding: '16px',
               borderRadius: '12px'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Mail size={16} style={{ color: '#d6be66' }} />
-                <span>Email Support: <a href={`mailto:${contactEmail || 'support@saraquiz.com'}`} style={{ color: '#d6be66', textDecoration: 'none', fontWeight: '700' }}>{contactEmail || 'support@saraquiz.com'}</a></span>
+                <Mail size={16} style={{ color: '#043490' }} />
+                <span>Email Support: <a href={`mailto:${contactEmail || 'support@saraquiz.com'}`} style={{ color: '#043490', textDecoration: 'none', fontWeight: '700' }}>{contactEmail || 'support@saraquiz.com'}</a></span>
               </div>
               {contactMobile && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Phone size={16} style={{ color: '#d6be66' }} />
+                  <Phone size={16} style={{ color: '#043490' }} />
                   <span>Support Helpline: <strong>+91 {contactMobile}</strong></span>
                 </div>
               )}
@@ -283,7 +283,7 @@ const PrivacyPolicy = () => {
         </div>
 
         {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: '28px', color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.82rem' }}>
+        <div style={{ textAlign: 'center', marginTop: '28px', color: '#64748b', fontSize: '0.82rem' }}>
           © {new Date().getFullYear()} {appName}. All rights reserved.
         </div>
 

@@ -171,9 +171,9 @@ const QuizApp = ({ onLogout, wpNumber = '' }) => {
           <Link
             to="/support"
             style={{
-              backgroundColor: 'rgba(214, 190, 102, 0.2)',
-              color: 'var(--color-gold, #d6be66)',
-              border: '1px solid rgba(214, 190, 102, 0.4)',
+              backgroundColor: 'rgba(255, 255, 255, 0.18)',
+              color: '#ffffff',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
               padding: '6px 12px',
               borderRadius: '20px',
               fontSize: '0.75rem',
@@ -184,7 +184,7 @@ const QuizApp = ({ onLogout, wpNumber = '' }) => {
               textDecoration: 'none'
             }}
           >
-            <Headphones size={14} /> Live Support
+            <Headphones size={14} /> WhatsApp Support
           </Link>
           {onLogout && (
             <button

@@ -68,12 +68,11 @@ const DataDeletion = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#09121f',
-      color: '#f8fafc',
+      backgroundColor: '#f4f6fa',
+      color: '#0f172a',
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       padding: '24px 16px 80px 16px',
-      boxSizing: 'border-box',
-      background: 'radial-gradient(circle at top right, rgba(239, 68, 68, 0.12) 0%, transparent 60%), #09121f'
+      boxSizing: 'border-box'
     }}>
       <div style={{ maxWidth: '780px', margin: '0 auto' }}>
         
@@ -84,7 +83,7 @@ const DataDeletion = () => {
           justifyContent: 'space-between',
           marginBottom: '28px',
           paddingBottom: '16px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+          borderBottom: '1px solid #e2e8f0'
         }}>
           <button
             type="button"
@@ -93,14 +92,15 @@ const DataDeletion = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: '#f8fafc',
+              backgroundColor: '#ffffff',
+              border: '1px solid #cbd5e1',
+              color: '#0f172a',
               padding: '8px 16px',
-              borderRadius: '10px',
+              borderRadius: '50px',
               cursor: 'pointer',
               fontSize: '0.88rem',
-              fontWeight: '600'
+              fontWeight: '600',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
             }}
           >
             <ArrowLeft size={16} /> Back
@@ -112,10 +112,10 @@ const DataDeletion = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              color: '#d6be66',
+              color: '#043490',
               textDecoration: 'none',
               fontSize: '0.84rem',
-              fontWeight: '600'
+              fontWeight: '700'
             }}
           >
             <ShieldCheck size={16} /> Privacy Policy
@@ -124,14 +124,12 @@ const DataDeletion = () => {
 
         {/* Header Hero */}
         <div style={{
-          background: 'linear-gradient(135deg, rgba(35, 18, 25, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(239, 68, 68, 0.3)',
+          background: '#ffffff',
+          border: '1px solid #fee2e2',
           borderRadius: '20px',
           padding: '32px 24px',
           marginBottom: '28px',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
           textAlign: 'center'
         }}>
           <div style={{
@@ -181,23 +179,23 @@ const DataDeletion = () => {
         </div>
 
         {/* Info Box: What happens on deletion */}
-        <div style={{
-          backgroundColor: 'rgba(15, 23, 42, 0.6)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+        <div className="card-glass-v2" style={{
+          backgroundColor: '#ffffff',
+          border: '1px solid #e2e8f0',
           borderRadius: '18px',
           padding: '24px',
           marginBottom: '24px',
           fontSize: '0.92rem',
           lineHeight: '1.6'
         }}>
-          <h2 style={{ fontSize: '1.15rem', color: '#ffffff', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ShieldAlert size={20} style={{ color: '#f87171' }} />
+          <h2 style={{ fontSize: '1.15rem', color: '#0f172a', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ShieldAlert size={20} style={{ color: '#dc2626' }} />
             What Data is Deleted?
           </h2>
-          <p style={{ margin: '0 0 12px 0', color: 'rgba(255, 255, 255, 0.8)' }}>
+          <p style={{ margin: '0 0 12px 0', color: '#475569' }}>
             When your deletion request is verified and processed:
           </p>
-          <ul style={{ paddingLeft: '20px', margin: '0 0 16px 0', display: 'flex', flexDirection: 'column', gap: '8px', color: 'rgba(255, 255, 255, 0.85)' }}>
+          <ul style={{ paddingLeft: '20px', margin: '0 0 16px 0', display: 'flex', flexDirection: 'column', gap: '8px', color: '#334155' }}>
             <li><strong>Account Profile:</strong> Name, phone number, login credentials, and MPIN are permanently purged.</li>
             <li><strong>Device & Session Tokens:</strong> Active logins, device identifiers, and cached sessions are revoked.</li>
             <li><strong>Payment Accounts:</strong> Saved bank details and UPI IDs linked to your user profile are erased.</li>
@@ -206,14 +204,14 @@ const DataDeletion = () => {
         </div>
 
         {/* Deletion Form */}
-        <div style={{
-          backgroundColor: 'rgba(20, 30, 48, 0.75)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+        <div className="card-glass-v2" style={{
+          backgroundColor: '#ffffff',
+          border: '1px solid #e2e8f0',
           borderRadius: '18px',
           padding: '28px 24px',
-          boxShadow: '0 8px 25px rgba(0,0,0,0.3)'
+          boxShadow: '0 8px 25px rgba(0,0,0,0.05)'
         }}>
-          <h3 style={{ margin: '0 0 18px 0', fontSize: '1.2rem', color: '#ffffff', fontWeight: '700' }}>
+          <h3 style={{ margin: '0 0 18px 0', fontSize: '1.2rem', color: '#0f172a', fontWeight: '800' }}>
             Submit Account Deletion Form
           </h3>
 
@@ -222,11 +220,11 @@ const DataDeletion = () => {
               display: 'flex',
               alignItems: 'flex-start',
               gap: '12px',
-              backgroundColor: 'rgba(16, 185, 129, 0.12)',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
+              backgroundColor: '#ecfdf5',
+              border: '1px solid #a7f3d0',
               borderRadius: '12px',
               padding: '16px',
-              color: '#34d399',
+              color: '#059669',
               fontSize: '0.92rem',
               marginBottom: '20px'
             }}>
@@ -243,11 +241,11 @@ const DataDeletion = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '10px',
-              backgroundColor: 'rgba(239, 68, 68, 0.12)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
+              backgroundColor: '#fef2f2',
+              border: '1px solid #fecaca',
               borderRadius: '12px',
               padding: '14px 16px',
-              color: '#f87171',
+              color: '#dc2626',
               fontSize: '0.9rem',
               marginBottom: '20px'
             }}>
@@ -259,7 +257,7 @@ const DataDeletion = () => {
           <form onSubmit={handleSubmit}>
             {/* Phone Input */}
             <div style={{ marginBottom: '18px' }}>
-              <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.9)', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: '700', color: '#334155', marginBottom: '8px' }}>
                 Registered Mobile Number <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <div style={{ position: 'relative' }}>
@@ -268,7 +266,7 @@ const DataDeletion = () => {
                   left: '14px',
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  color: 'rgba(255, 255, 255, 0.5)',
+                  color: '#64748b',
                   fontSize: '0.9rem',
                   fontWeight: '600'
                 }}>
@@ -285,9 +283,9 @@ const DataDeletion = () => {
                     width: '100%',
                     padding: '12px 14px 12px 52px',
                     borderRadius: '10px',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                    color: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    backgroundColor: '#f8fafc',
+                    color: '#0f172a',
                     fontSize: '0.95rem',
                     boxSizing: 'border-box',
                     outline: 'none'
@@ -298,7 +296,7 @@ const DataDeletion = () => {
 
             {/* Email Input (Optional) */}
             <div style={{ marginBottom: '18px' }}>
-              <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.9)', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: '700', color: '#334155', marginBottom: '8px' }}>
                 Email Address (Optional)
               </label>
               <input
@@ -310,9 +308,9 @@ const DataDeletion = () => {
                   width: '100%',
                   padding: '12px 14px',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  color: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  backgroundColor: '#f8fafc',
+                  color: '#0f172a',
                   fontSize: '0.95rem',
                   boxSizing: 'border-box',
                   outline: 'none'
@@ -322,7 +320,7 @@ const DataDeletion = () => {
 
             {/* Reason */}
             <div style={{ marginBottom: '18px' }}>
-              <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.9)', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: '700', color: '#334155', marginBottom: '8px' }}>
                 Reason for Deletion
               </label>
               <select
@@ -332,9 +330,9 @@ const DataDeletion = () => {
                   width: '100%',
                   padding: '12px 14px',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  backgroundColor: '#0f172a',
-                  color: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  backgroundColor: '#f8fafc',
+                  color: '#0f172a',
                   fontSize: '0.92rem',
                   boxSizing: 'border-box',
                   outline: 'none'
@@ -349,7 +347,7 @@ const DataDeletion = () => {
 
             {/* Additional Notes */}
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.9)', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: '700', color: '#334155', marginBottom: '8px' }}>
                 Additional Details (Optional)
               </label>
               <textarea
@@ -361,9 +359,9 @@ const DataDeletion = () => {
                   width: '100%',
                   padding: '12px 14px',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  color: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  backgroundColor: '#f8fafc',
+                  color: '#0f172a',
                   fontSize: '0.92rem',
                   boxSizing: 'border-box',
                   outline: 'none',
@@ -401,8 +399,8 @@ const DataDeletion = () => {
           </form>
 
           {/* In-App Live Support Alternative */}
-          <div style={{ marginTop: '22px', textAlign: 'center', paddingTop: '18px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-            <p style={{ margin: '0 0 10px 0', fontSize: '0.84rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+          <div style={{ marginTop: '22px', textAlign: 'center', paddingTop: '18px', borderTop: '1px solid #e2e8f0' }}>
+            <p style={{ margin: '0 0 10px 0', fontSize: '0.84rem', color: '#64748b' }}>
               Need urgent assistance or direct confirmation?
             </p>
             <Link
@@ -411,19 +409,19 @@ const DataDeletion = () => {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                color: 'var(--color-gold, #d6be66)',
+                color: '#043490',
                 textDecoration: 'none',
                 fontSize: '0.88rem',
                 fontWeight: '700'
               }}
             >
-              <Headphones size={15} /> Chat with {appName} Live Support
+              <HelpCircle size={15} /> Connect to Official WhatsApp Support
             </Link>
           </div>
         </div>
 
         {/* Footer info */}
-        <div style={{ textAlign: 'center', marginTop: '28px', color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.82rem' }}>
+        <div style={{ textAlign: 'center', marginTop: '28px', color: '#64748b', fontSize: '0.82rem' }}>
           © {new Date().getFullYear()} {appName}. All rights reserved.
         </div>
 

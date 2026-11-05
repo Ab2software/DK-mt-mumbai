@@ -958,12 +958,12 @@ const PlayGame = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '12px 16px',
-        background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+        padding: '14px 18px',
+        background: 'linear-gradient(135deg, #043490 0%, #002663 100%)',
         borderRadius: '16px',
-        color: '#000',
+        color: '#ffffff',
         marginBottom: '14px',
-        boxShadow: '0 4px 16px rgba(245, 158, 11, 0.3)'
+        boxShadow: '0 4px 14px rgba(4, 52, 144, 0.25)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
           <button
@@ -972,7 +972,7 @@ const PlayGame = () => {
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#000',
+              color: '#ffffff',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -986,7 +986,7 @@ const PlayGame = () => {
               margin: 0,
               fontSize: '14.5px',
               fontWeight: 900,
-              color: '#000',
+              color: '#ffffff',
               letterSpacing: '0.4px',
               textTransform: 'uppercase',
               whiteSpace: 'nowrap',
@@ -1003,12 +1003,13 @@ const PlayGame = () => {
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
-          background: 'rgba(0, 0, 0, 0.12)',
+          background: 'rgba(255, 255, 255, 0.18)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
           padding: '6px 12px',
-          borderRadius: '10px',
+          borderRadius: '20px',
           fontWeight: 900,
           fontSize: '15px',
-          color: '#000',
+          color: '#ffffff',
           flexShrink: 0
         }}>
           <Wallet size={17} strokeWidth={2.4} />
@@ -1037,18 +1038,19 @@ const PlayGame = () => {
                 padding: '8px 14px',
                 borderRadius: '10px',
                 border: isSelected
-                  ? '1.5px solid var(--color-gold, #d6be66)'
-                  : '1px solid rgba(255, 255, 255, 0.08)',
+                  ? '1.5px solid #043490'
+                  : '1px solid #cbd5e1',
                 background: isSelected
-                  ? 'linear-gradient(135deg, rgba(214, 190, 102, 0.25), rgba(214, 190, 102, 0.08))'
-                  : 'rgba(255, 255, 255, 0.03)',
-                color: isSelected ? 'var(--color-gold, #d6be66)' : '#9ca3af',
-                fontWeight: isSelected ? 800 : 500,
+                  ? 'rgba(4, 52, 144, 0.1)'
+                  : '#ffffff',
+                color: isSelected ? '#043490' : '#64748b',
+                fontWeight: isSelected ? 800 : 600,
                 fontSize: '12px',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
-                transition: 'all 0.15s ease'
+                transition: 'all 0.15s ease',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
               }}
             >
               {type}
@@ -1467,12 +1469,12 @@ const PlayGame = () => {
                             height: '52px',
                             borderRadius: '12px',
                             border: 'none',
-                            background: 'linear-gradient(135deg, #fba756 0%, #f58f33 100%)',
-                            color: '#421d00',
+                            background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+                            color: '#ffffff',
                             fontSize: '19px',
                             fontWeight: 900,
                             cursor: 'pointer',
-                            boxShadow: '0 4px 10px rgba(245, 158, 11, 0.35)',
+                            boxShadow: '0 4px 12px rgba(4, 52, 144, 0.28)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -1488,13 +1490,14 @@ const PlayGame = () => {
                               position: 'absolute',
                               top: '-4px',
                               right: '-4px',
-                              background: '#0f172a',
-                              color: '#f59e0b',
+                              background: '#FF6B00',
+                              color: '#ffffff',
                               fontSize: '9px',
                               fontWeight: 800,
-                              padding: '1px 4px',
+                              padding: '1px 5px',
                               borderRadius: '6px',
-                              border: '1px solid #f59e0b'
+                              border: '1px solid #ffffff',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                             }}>
                               ₹{cartAmt}
                             </span>
@@ -1575,12 +1578,12 @@ const PlayGame = () => {
                             height: '52px',
                             borderRadius: '12px',
                             border: 'none',
-                            background: 'linear-gradient(135deg, #fba756 0%, #f58f33 100%)',
-                            color: '#421d00',
+                            background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+                            color: '#ffffff',
                             fontSize: '19px',
                             fontWeight: 900,
                             cursor: 'pointer',
-                            boxShadow: '0 4px 10px rgba(245, 158, 11, 0.35)',
+                            boxShadow: '0 4px 12px rgba(4, 52, 144, 0.28)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -1596,13 +1599,14 @@ const PlayGame = () => {
                               position: 'absolute',
                               top: '-4px',
                               right: '-4px',
-                              background: '#0f172a',
-                              color: '#f59e0b',
+                              background: '#FF6B00',
+                              color: '#ffffff',
                               fontSize: '9px',
                               fontWeight: 800,
-                              padding: '1px 4px',
+                              padding: '1px 5px',
                               borderRadius: '6px',
-                              border: '1px solid #f59e0b'
+                              border: '1px solid #ffffff',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                             }}>
                               ₹{cartAmt}
                             </span>
@@ -1757,12 +1761,12 @@ const PlayGame = () => {
                             height: '46px',
                             borderRadius: '10px',
                             border: 'none',
-                            background: 'linear-gradient(135deg, #fba756 0%, #f58f33 100%)',
-                            color: '#421d00',
+                            background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+                            color: '#ffffff',
                             fontSize: '16px',
                             fontWeight: 900,
                             cursor: 'pointer',
-                            boxShadow: '0 3px 8px rgba(245, 158, 11, 0.28)',
+                            boxShadow: '0 3px 8px rgba(4, 52, 144, 0.28)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -1778,13 +1782,13 @@ const PlayGame = () => {
                               position: 'absolute',
                               top: '-4px',
                               right: '-4px',
-                              background: '#0f172a',
-                              color: '#f59e0b',
+                              background: '#FF6B00',
+                              color: '#ffffff',
                               fontSize: '8.5px',
                               fontWeight: 800,
-                              padding: '1px 3px',
+                              padding: '1px 4px',
                               borderRadius: '5px',
-                              border: '1px solid #f59e0b'
+                              border: '1px solid #ffffff'
                             }}>
                               ₹{cartAmt}
                             </span>
@@ -1873,12 +1877,12 @@ const PlayGame = () => {
                             height: '46px',
                             borderRadius: '10px',
                             border: 'none',
-                            background: 'linear-gradient(135deg, #fba756 0%, #f58f33 100%)',
-                            color: '#421d00',
+                            background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+                            color: '#ffffff',
                             fontSize: '16px',
                             fontWeight: 900,
                             cursor: 'pointer',
-                            boxShadow: '0 3px 8px rgba(245, 158, 11, 0.28)',
+                            boxShadow: '0 3px 8px rgba(4, 52, 144, 0.28)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -1894,13 +1898,13 @@ const PlayGame = () => {
                               position: 'absolute',
                               top: '-4px',
                               right: '-4px',
-                              background: '#0f172a',
-                              color: '#f59e0b',
+                              background: '#FF6B00',
+                              color: '#ffffff',
                               fontSize: '8.5px',
                               fontWeight: 800,
-                              padding: '1px 3px',
+                              padding: '1px 4px',
                               borderRadius: '5px',
-                              border: '1px solid #f59e0b'
+                              border: '1px solid #ffffff'
                             }}>
                               ₹{cartAmt}
                             </span>
@@ -2106,12 +2110,12 @@ const PlayGame = () => {
                             height: '44px',
                             borderRadius: '10px',
                             border: 'none',
-                            background: 'linear-gradient(135deg, #fba756 0%, #f58f33 100%)',
-                            color: '#421d00',
+                            background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+                            color: '#ffffff',
                             fontSize: '15px',
                             fontWeight: 900,
                             cursor: 'pointer',
-                            boxShadow: '0 3px 8px rgba(245, 158, 11, 0.28)',
+                            boxShadow: '0 3px 8px rgba(4, 52, 144, 0.28)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -2127,13 +2131,13 @@ const PlayGame = () => {
                               position: 'absolute',
                               top: '-4px',
                               right: '-4px',
-                              background: '#0f172a',
-                              color: '#f59e0b',
+                              background: '#FF6B00',
+                              color: '#ffffff',
                               fontSize: '8px',
                               fontWeight: 800,
                               padding: '1px 3px',
                               borderRadius: '5px',
-                              border: '1px solid #f59e0b'
+                              border: '1px solid #ffffff'
                             }}>
                               ₹{cartAmt}
                             </span>
@@ -2219,12 +2223,12 @@ const PlayGame = () => {
                             height: '44px',
                             borderRadius: '10px',
                             border: 'none',
-                            background: 'linear-gradient(135deg, #fba756 0%, #f58f33 100%)',
-                            color: '#421d00',
+                            background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+                            color: '#ffffff',
                             fontSize: '15px',
                             fontWeight: 900,
                             cursor: 'pointer',
-                            boxShadow: '0 3px 8px rgba(245, 158, 11, 0.28)',
+                            boxShadow: '0 3px 8px rgba(4, 52, 144, 0.28)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -2240,13 +2244,13 @@ const PlayGame = () => {
                               position: 'absolute',
                               top: '-4px',
                               right: '-4px',
-                              background: '#0f172a',
-                              color: '#f59e0b',
+                              background: '#FF6B00',
+                              color: '#ffffff',
                               fontSize: '8px',
                               fontWeight: 800,
                               padding: '1px 3px',
                               borderRadius: '5px',
-                              border: '1px solid #f59e0b'
+                              border: '1px solid #ffffff'
                             }}>
                               ₹{cartAmt}
                             </span>
@@ -2453,12 +2457,12 @@ const PlayGame = () => {
                             height: '44px',
                             borderRadius: '10px',
                             border: 'none',
-                            background: 'linear-gradient(135deg, #fba756 0%, #f58f33 100%)',
-                            color: '#421d00',
+                            background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+                            color: '#ffffff',
                             fontSize: '15px',
                             fontWeight: 900,
                             cursor: 'pointer',
-                            boxShadow: '0 3px 8px rgba(245, 158, 11, 0.28)',
+                            boxShadow: '0 3px 8px rgba(4, 52, 144, 0.28)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -2474,13 +2478,13 @@ const PlayGame = () => {
                               position: 'absolute',
                               top: '-4px',
                               right: '-4px',
-                              background: '#0f172a',
-                              color: '#f59e0b',
+                              background: '#FF6B00',
+                              color: '#ffffff',
                               fontSize: '8px',
                               fontWeight: 800,
                               padding: '1px 3px',
                               borderRadius: '5px',
-                              border: '1px solid #f59e0b'
+                              border: '1px solid #ffffff'
                             }}>
                               ₹{cartAmt}
                             </span>
@@ -2566,12 +2570,12 @@ const PlayGame = () => {
                             height: '44px',
                             borderRadius: '10px',
                             border: 'none',
-                            background: 'linear-gradient(135deg, #fba756 0%, #f58f33 100%)',
-                            color: '#421d00',
+                            background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+                            color: '#ffffff',
                             fontSize: '15px',
                             fontWeight: 900,
                             cursor: 'pointer',
-                            boxShadow: '0 3px 8px rgba(245, 158, 11, 0.28)',
+                            boxShadow: '0 3px 8px rgba(4, 52, 144, 0.28)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -2587,13 +2591,13 @@ const PlayGame = () => {
                               position: 'absolute',
                               top: '-4px',
                               right: '-4px',
-                              background: '#0f172a',
-                              color: '#f59e0b',
+                              background: '#FF6B00',
+                              color: '#ffffff',
                               fontSize: '8px',
                               fontWeight: 800,
                               padding: '1px 3px',
                               borderRadius: '5px',
-                              border: '1px solid #f59e0b'
+                              border: '1px solid #ffffff'
                             }}>
                               ₹{cartAmt}
                             </span>
@@ -2678,12 +2682,12 @@ const PlayGame = () => {
                             height: '48px',
                             borderRadius: '12px',
                             border: 'none',
-                            background: 'linear-gradient(135deg, #fba756 0%, #f58f33 100%)',
-                            color: '#421d00',
+                            background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+                            color: '#ffffff',
                             fontSize: '15px',
                             fontWeight: 900,
                             cursor: 'pointer',
-                            boxShadow: '0 4px 10px rgba(245, 158, 11, 0.35)',
+                            boxShadow: '0 4px 10px rgba(4, 52, 144, 0.3)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -2699,13 +2703,13 @@ const PlayGame = () => {
                               position: 'absolute',
                               top: '-4px',
                               right: '-4px',
-                              background: '#0f172a',
-                              color: '#f59e0b',
+                              background: '#FF6B00',
+                              color: '#ffffff',
                               fontSize: '8px',
                               fontWeight: 800,
                               padding: '1px 3px',
                               borderRadius: '5px',
-                              border: '1px solid #f59e0b'
+                              border: '1px solid #ffffff'
                             }}>
                               ₹{cartAmt}
                             </span>
@@ -2929,12 +2933,12 @@ const PlayGame = () => {
                             height: '46px',
                             borderRadius: '10px',
                             border: 'none',
-                            background: 'linear-gradient(135deg, #fba756 0%, #f58f33 100%)',
-                            color: '#421d00',
+                            background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+                            color: '#ffffff',
                             fontSize: '16px',
                             fontWeight: 900,
                             cursor: 'pointer',
-                            boxShadow: '0 3px 8px rgba(245, 158, 11, 0.28)',
+                            boxShadow: '0 3px 8px rgba(4, 52, 144, 0.28)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -2947,13 +2951,13 @@ const PlayGame = () => {
                               position: 'absolute',
                               top: '-4px',
                               right: '-4px',
-                              background: '#0f172a',
-                              color: '#f59e0b',
+                              background: '#FF6B00',
+                              color: '#ffffff',
                               fontSize: '8.5px',
                               fontWeight: 800,
                               padding: '1px 3px',
                               borderRadius: '5px',
-                              border: '1px solid #f59e0b'
+                              border: '1px solid #ffffff'
                             }}>
                               ₹{cartAmt}
                             </span>

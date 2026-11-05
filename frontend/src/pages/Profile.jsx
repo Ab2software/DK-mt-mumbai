@@ -155,20 +155,23 @@ const Profile = () => {
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px 14px' }}>
       {/* Subpage Header Banner */}
-      <div className="card-glass-v2" style={{
+      <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '12px 18px',
+        padding: '14px 18px',
         marginBottom: '18px',
-        borderRadius: '16px'
+        borderRadius: '16px',
+        background: 'linear-gradient(135deg, #043490 0%, #002663 100%)',
+        boxShadow: '0 4px 14px rgba(4, 52, 144, 0.25)',
+        color: '#ffffff'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', color: '#fff' }}>
             <ArrowLeft size={20} />
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <User size={20} style={{ color: 'var(--color-gold)' }} />
+            <User size={20} style={{ color: '#ffb703' }} />
             <span style={{ fontWeight: '700', fontSize: '1.05rem', color: '#fff' }}>My Profile</span>
           </div>
         </div>
@@ -177,12 +180,12 @@ const Profile = () => {
           alignItems: 'center',
           gap: '6px',
           padding: '6px 12px',
-          background: 'rgba(214, 190, 102, 0.15)',
-          border: '1px solid rgba(214, 190, 102, 0.3)',
+          background: 'rgba(255, 255, 255, 0.18)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
           borderRadius: '20px',
           fontWeight: '700',
           fontSize: '0.88rem',
-          color: 'var(--color-gold)'
+          color: '#ffffff'
         }}>
           <Wallet size={16} />
           <span>₹ {profile.wallet || '0'}</span>
@@ -190,7 +193,7 @@ const Profile = () => {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--color-gold)' }}>Loading Profile...</div>
+        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>Loading Profile...</div>
       ) : (
         <>
           {/* Card 1: My Information */}
@@ -199,28 +202,28 @@ const Profile = () => {
               <img
                 src="/img/logo.png"
                 alt="Logo"
-                style={{ height: '48px', width: 'auto', objectFit: 'contain' }}
+                style={{ height: '56px', width: 'auto', objectFit: 'contain' }}
                 onError={(e) => { e.target.src = '/img/logo.png'; }}
               />
             </div>
-            <h5 style={{ color: 'var(--color-gold)', fontWeight: '700', margin: '0 0 14px 0', fontSize: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h5 style={{ color: '#043490', fontWeight: '800', margin: '0 0 14px 0', fontSize: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <ShieldCheck size={18} />
               My Account Details
             </h5>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.92rem', color: '#fff' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.92rem', color: '#0f172a' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <User size={16} style={{ color: 'var(--color-gold)' }} />
-                <span style={{ color: 'rgba(255,255,255,0.7)' }}>Name:</span>
+                <User size={16} style={{ color: '#043490' }} />
+                <span style={{ color: '#64748b' }}>Name:</span>
                 <strong>{profile.name || '—'}</strong>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Phone size={16} style={{ color: 'var(--color-gold)' }} />
-                <span style={{ color: 'rgba(255,255,255,0.7)' }}>Phone:</span>
+                <Phone size={16} style={{ color: '#043490' }} />
+                <span style={{ color: '#64748b' }}>Phone:</span>
                 <strong>{profile.phone || profile.phone_number || '—'}</strong>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Mail size={16} style={{ color: 'var(--color-gold)' }} />
-                <span style={{ color: 'rgba(255,255,255,0.7)' }}>Email:</span>
+                <Mail size={16} style={{ color: '#043490' }} />
+                <span style={{ color: '#64748b' }}>Email:</span>
                 <strong>{profile.email || '—'}</strong>
               </div>
             </div>
@@ -229,11 +232,11 @@ const Profile = () => {
           {/* Card 2: Referral (Dost ko bulao) */}
           {referralStatus !== '0' && (
             <div className="card-glass-v2" style={{ padding: '20px', marginBottom: '18px', borderRadius: '16px' }}>
-              <h5 style={{ color: 'var(--color-gold)', fontWeight: '700', margin: '0 0 6px 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h5 style={{ color: '#043490', fontWeight: '800', margin: '0 0 6px 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Share2 size={18} />
                 Referral Program
               </h5>
-              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.82rem', margin: '0 0 14px 0' }}>
+              <p style={{ color: '#64748b', fontSize: '0.82rem', margin: '0 0 14px 0' }}>
                 Share your referral link with friends and earn rewards on signup!
               </p>
               <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
@@ -245,63 +248,65 @@ const Profile = () => {
                     flex: 1,
                     padding: '10px 12px',
                     borderRadius: '10px',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    backgroundColor: 'rgba(0,0,0,0.3)',
+                    border: '1px solid #cbd5e1',
+                    backgroundColor: '#f8fafc',
                     fontSize: '0.82rem',
-                    color: 'rgba(255,255,255,0.9)',
+                    color: '#0f172a',
                     outline: 'none'
                   }}
                 />
                 <button
                   type="button"
                   onClick={handleCopyReferral}
-                  className="btn-gradient"
                   style={{
-                    padding: '9px 16px',
+                    padding: '9px 18px',
                     border: 'none',
-                    borderRadius: '10px',
+                    borderRadius: '50px',
                     fontWeight: '700',
                     fontSize: '0.85rem',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px'
+                    gap: '6px',
+                    background: 'linear-gradient(135deg, #043490 0%, #002663 100%)',
+                    color: '#ffffff',
+                    boxShadow: '0 3px 10px rgba(4, 52, 144, 0.25)'
                   }}
                 >
                   {copied ? <Check size={16} /> : <Copy size={16} />}
                   {copied ? 'Copied!' : 'Copy'}
                 </button>
               </div>
-              <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.8)' }}>
-                <strong>Referral Code / Number:</strong> <span style={{ color: 'var(--color-gold)' }}>{profile.phone || profile.phone_number || ''}</span>
+              <div style={{ fontSize: '0.82rem', color: '#475569' }}>
+                <strong>Referral Code / Number:</strong> <span style={{ color: '#043490', fontWeight: '800' }}>{profile.phone || profile.phone_number || ''}</span>
               </div>
             </div>
           )}
 
           {/* Card 3: Edit Profile */}
           <div className="card-glass-v2" style={{ padding: '20px', borderRadius: '16px' }}>
-            <h5 style={{ color: 'var(--color-gold)', fontWeight: '700', margin: '0 0 16px 0', fontSize: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>
+            <h5 style={{ color: '#043490', fontWeight: '800', margin: '0 0 16px 0', fontSize: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
               Edit Profile Info
             </h5>
 
             {msg && (
-              <div style={{ backgroundColor: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', color: '#10b981', padding: '10px 14px', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ backgroundColor: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.4)', color: '#10b981', padding: '10px 14px', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <CheckCircle2 size={16} /> {msg}
               </div>
             )}
             {error && (
-              <div style={{ backgroundColor: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#ef4444', padding: '10px 14px', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ backgroundColor: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', color: '#ef4444', padding: '10px 14px', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <AlertCircle size={16} /> {error}
               </div>
             )}
 
             <form onSubmit={handleSaveProfile}>
               <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                   Full Name
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+                  <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                   <input
                     type="text"
                     placeholder="Enter Full Name"
@@ -313,11 +318,11 @@ const Profile = () => {
               </div>
 
               <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                   Email Address
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+                  <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                   <input
                     type="email"
                     placeholder="Enter Email Address"
@@ -329,16 +334,16 @@ const Profile = () => {
               </div>
 
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                   Registered Phone
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <Phone size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                  <Phone size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                   <input
                     type="text"
                     readOnly
                     value={profile.phone || profile.phone_number || ''}
-                    style={{ ...inputStyle, paddingLeft: '38px', backgroundColor: 'rgba(0,0,0,0.4)', color: 'rgba(255,255,255,0.5)', cursor: 'not-allowed' }}
+                    style={{ ...inputStyle, paddingLeft: '38px', backgroundColor: '#e2e8f0', color: '#64748b', cursor: 'not-allowed' }}
                   />
                 </div>
               </div>
@@ -346,19 +351,21 @@ const Profile = () => {
               <button
                 type="submit"
                 disabled={saving}
-                className="btn-gradient"
                 style={{
                   width: '100%',
                   padding: '12px',
                   border: 'none',
-                  borderRadius: '10px',
+                  borderRadius: '50px',
                   fontWeight: '700',
                   fontSize: '0.95rem',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px'
+                  gap: '8px',
+                  background: 'linear-gradient(135deg, #043490 0%, #002663 100%)',
+                  color: '#ffffff',
+                  boxShadow: '0 4px 12px rgba(4, 52, 144, 0.25)'
                 }}
               >
                 <Save size={18} />
@@ -370,29 +377,29 @@ const Profile = () => {
           {/* Card 4: Change 4-Digit M-PIN (Only if active) */}
           {String(mpinStatus) === '1' && (
             <div className="card-glass-v2" style={{ padding: '20px', borderRadius: '16px', marginTop: '18px' }}>
-              <h5 style={{ color: 'var(--color-gold)', fontWeight: '700', margin: '0 0 16px 0', fontSize: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h5 style={{ color: '#043490', fontWeight: '800', margin: '0 0 16px 0', fontSize: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <KeyRound size={18} />
                 Change 4-Digit M-PIN
               </h5>
 
               {mpinMsg && (
-                <div style={{ backgroundColor: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', color: '#10b981', padding: '10px 14px', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ backgroundColor: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.4)', color: '#10b981', padding: '10px 14px', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <CheckCircle2 size={16} /> {mpinMsg}
                 </div>
               )}
               {mpinError && (
-                <div style={{ backgroundColor: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#ef4444', padding: '10px 14px', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ backgroundColor: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', color: '#ef4444', padding: '10px 14px', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <AlertCircle size={16} /> {mpinError}
                 </div>
               )}
 
               <form onSubmit={handleChangeMpin}>
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                     Current M-PIN
                   </label>
                   <div style={{ position: 'relative' }}>
-                    <KeyRound size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+                    <KeyRound size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                     <input
                       type="password"
                       maxLength={4}
@@ -405,11 +412,11 @@ const Profile = () => {
                 </div>
 
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                     New M-PIN
                   </label>
                   <div style={{ position: 'relative' }}>
-                    <KeyRound size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+                    <KeyRound size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                     <input
                       type="password"
                       maxLength={4}
@@ -422,11 +429,11 @@ const Profile = () => {
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                     Confirm New M-PIN
                   </label>
                   <div style={{ position: 'relative' }}>
-                    <KeyRound size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+                    <KeyRound size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                     <input
                       type="password"
                       maxLength={4}
@@ -441,19 +448,21 @@ const Profile = () => {
                 <button
                   type="submit"
                   disabled={mpinSaving}
-                  className="btn-gradient"
                   style={{
                     width: '100%',
                     padding: '12px',
                     border: 'none',
-                    borderRadius: '10px',
+                    borderRadius: '50px',
                     fontWeight: '700',
                     fontSize: '0.95rem',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '8px'
+                    gap: '8px',
+                    background: 'linear-gradient(135deg, #043490 0%, #002663 100%)',
+                    color: '#ffffff',
+                    boxShadow: '0 4px 12px rgba(4, 52, 144, 0.25)'
                   }}
                 >
                   <Save size={18} />
@@ -465,7 +474,7 @@ const Profile = () => {
 
           {/* Card 4: Legal & Privacy */}
           <div className="card-glass-v2" style={{ padding: '18px 20px', borderRadius: '16px', marginTop: '18px' }}>
-            <h5 style={{ color: 'var(--color-gold)', fontWeight: '700', margin: '0 0 12px 0', fontSize: '0.98rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h5 style={{ color: '#043490', fontWeight: '800', margin: '0 0 12px 0', fontSize: '0.98rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Shield size={18} />
               Privacy & Account Rights
             </h5>
@@ -478,19 +487,19 @@ const Profile = () => {
                   justifyContent: 'space-between',
                   padding: '12px 14px',
                   borderRadius: '10px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  color: '#ffffff',
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  color: '#0f172a',
                   textDecoration: 'none',
                   fontSize: '0.9rem',
                   fontWeight: '600'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <ShieldCheck size={18} style={{ color: 'var(--color-gold)' }} />
+                  <ShieldCheck size={18} style={{ color: '#043490' }} />
                   <span>Privacy Policy</span>
                 </div>
-                <ChevronRight size={16} style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+                <ChevronRight size={16} style={{ color: '#64748b' }} />
               </Link>
 
               <Link
@@ -503,7 +512,7 @@ const Profile = () => {
                   borderRadius: '10px',
                   backgroundColor: 'rgba(239, 68, 68, 0.08)',
                   border: '1px solid rgba(239, 68, 68, 0.2)',
-                  color: '#f87171',
+                  color: '#dc2626',
                   textDecoration: 'none',
                   fontSize: '0.9rem',
                   fontWeight: '600'
@@ -513,7 +522,7 @@ const Profile = () => {
                   <Trash2 size={18} style={{ color: '#ef4444' }} />
                   <span>Request Account & Data Deletion</span>
                 </div>
-                <ChevronRight size={16} style={{ color: '#f87171' }} />
+                <ChevronRight size={16} style={{ color: '#dc2626' }} />
               </Link>
             </div>
           </div>
@@ -533,7 +542,7 @@ const Profile = () => {
                 width: '100%',
                 padding: '12px',
                 border: 'none',
-                borderRadius: '10px',
+                borderRadius: '50px',
                 background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                 color: '#ffffff',
                 fontWeight: '800',
@@ -560,10 +569,10 @@ const inputStyle = {
   width: '100%',
   padding: '10px 14px',
   borderRadius: '10px',
-  border: '1px solid rgba(255,255,255,0.15)',
-  backgroundColor: 'rgba(0,0,0,0.25)',
+  border: '1px solid #cbd5e1',
+  backgroundColor: '#f8fafc',
   fontSize: '0.9rem',
-  color: '#ffffff',
+  color: '#0f172a',
   boxSizing: 'border-box',
   outline: 'none'
 };

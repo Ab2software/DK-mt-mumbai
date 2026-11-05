@@ -225,20 +225,20 @@ const Withdraw = () => {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '12px',
-        background: 'var(--app-gradient-primary, linear-gradient(135deg, #d6be66 0%, #10b981 100%))',
-        padding: '10px 14px',
-        borderRadius: '14px',
+        background: 'linear-gradient(135deg, #043490 0%, #002663 100%)',
+        padding: '14px 18px',
+        borderRadius: '16px',
         marginBottom: '16px',
-        color: '#0b1a30',
-        boxShadow: '0 6px 20px rgba(0,0,0,0.3)'
+        color: '#ffffff',
+        boxShadow: '0 4px 14px rgba(4, 52, 144, 0.25)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#0b1a30', flexShrink: 0 }}>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#ffffff', flexShrink: 0 }}>
             <ArrowLeft size={20} />
           </Link>
           <span style={{
             fontWeight: '800',
-            fontSize: '0.92rem',
+            fontSize: '0.98rem',
             textTransform: 'uppercase',
             letterSpacing: '0.02em',
             whiteSpace: 'nowrap',
@@ -254,10 +254,12 @@ const Withdraw = () => {
           gap: '6px',
           fontWeight: '800',
           fontSize: '0.9rem',
-          background: 'rgba(11, 26, 48, 0.12)',
+          background: 'rgba(255, 255, 255, 0.18)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
           padding: '6px 12px',
           borderRadius: '20px',
           whiteSpace: 'nowrap',
+          color: '#ffffff',
           flexShrink: 0
         }}>
           <Wallet size={16} style={{ flexShrink: 0 }} />
@@ -270,8 +272,8 @@ const Withdraw = () => {
         padding: '16px 20px',
         borderRadius: '16px',
         marginBottom: '20px',
-        border: '1px solid rgba(214, 190, 102, 0.3)',
-        boxShadow: '0 8px 25px rgba(0,0,0,0.4)'
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 4px 14px rgba(0,0,0,0.05)'
       }}>
         <div style={{
           display: 'grid',
@@ -282,12 +284,12 @@ const Withdraw = () => {
         }}>
           {/* Withdraw Open Time */}
           <div style={{
-            backgroundColor: 'rgba(16, 185, 129, 0.12)',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
             padding: '12px 14px',
             borderRadius: '12px',
             border: '1px solid rgba(16, 185, 129, 0.25)'
           }}>
-            <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: '700', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+            <div style={{ fontSize: '0.78rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: '700', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
               <Clock size={15} style={{ color: '#10b981' }} /> Withdraw Open Time
             </div>
             <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#10b981', letterSpacing: '0.02em' }}>
@@ -297,12 +299,12 @@ const Withdraw = () => {
 
           {/* Withdraw Close Time */}
           <div style={{
-            backgroundColor: 'rgba(239, 68, 68, 0.12)',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
             padding: '12px 14px',
             borderRadius: '12px',
             border: '1px solid rgba(239, 68, 68, 0.25)'
           }}>
-            <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: '700', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+            <div style={{ fontSize: '0.78rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: '700', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
               <Clock size={15} style={{ color: '#ef4444' }} /> Withdraw Close Time
             </div>
             <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#ef4444', letterSpacing: '0.02em' }}>
@@ -316,15 +318,15 @@ const Withdraw = () => {
       <div className="card-glass-v2" style={{ marginBottom: '20px' }}>
         {/* Saved UPI IDs Card */}
         <div style={{
-          backgroundColor: 'rgba(0,0,0,0.3)',
+          backgroundColor: '#f8fafc',
           borderRadius: '12px',
           padding: '14px 16px',
           marginBottom: '20px',
-          border: '1px solid rgba(255, 255, 255, 0.08)'
+          border: '1px solid #e2e8f0'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <span style={{ color: '#ffffff', fontWeight: '700', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <ShieldCheck size={16} style={{ color: 'var(--color-gold, #d6be66)' }} /> Saved Payment Methods
+            <span style={{ color: '#0f172a', fontWeight: '700', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <ShieldCheck size={16} style={{ color: '#043490' }} /> Saved Payment Methods
             </span>
             <button
               type="button"
@@ -343,13 +345,13 @@ const Withdraw = () => {
             </button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
-            <div onClick={() => setShowUpiModal(true)} style={{ cursor: 'pointer', background: profile?.phonepay ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.15)', border: profile?.phonepay ? '1px solid rgba(16, 185, 129, 0.3)' : '1px dashed rgba(239, 68, 68, 0.4)', padding: '8px 10px', borderRadius: '8px', fontSize: '0.8rem', color: '#ffffff' }}>
+            <div onClick={() => setShowUpiModal(true)} style={{ cursor: 'pointer', background: profile?.phonepay ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: profile?.phonepay ? '1px solid rgba(16, 185, 129, 0.3)' : '1px dashed rgba(239, 68, 68, 0.4)', padding: '8px 10px', borderRadius: '8px', fontSize: '0.8rem', color: '#0f172a' }}>
               PhonePe: <strong style={{ color: profile?.phonepay ? '#10b981' : '#ef4444' }}>{profile?.phonepay || '+ Add ID (Required)'}</strong>
             </div>
-            <div onClick={() => setShowUpiModal(true)} style={{ cursor: 'pointer', background: profile?.paytm ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.15)', border: profile?.paytm ? '1px solid rgba(16, 185, 129, 0.3)' : '1px dashed rgba(239, 68, 68, 0.4)', padding: '8px 10px', borderRadius: '8px', fontSize: '0.8rem', color: '#ffffff' }}>
+            <div onClick={() => setShowUpiModal(true)} style={{ cursor: 'pointer', background: profile?.paytm ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: profile?.paytm ? '1px solid rgba(16, 185, 129, 0.3)' : '1px dashed rgba(239, 68, 68, 0.4)', padding: '8px 10px', borderRadius: '8px', fontSize: '0.8rem', color: '#0f172a' }}>
               Paytm: <strong style={{ color: profile?.paytm ? '#10b981' : '#ef4444' }}>{profile?.paytm || '+ Add ID (Required)'}</strong>
             </div>
-            <div onClick={() => setShowUpiModal(true)} style={{ cursor: 'pointer', background: profile?.googlepay ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.15)', border: profile?.googlepay ? '1px solid rgba(16, 185, 129, 0.3)' : '1px dashed rgba(239, 68, 68, 0.4)', padding: '8px 10px', borderRadius: '8px', fontSize: '0.8rem', color: '#ffffff' }}>
+            <div onClick={() => setShowUpiModal(true)} style={{ cursor: 'pointer', background: profile?.googlepay ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: profile?.googlepay ? '1px solid rgba(16, 185, 129, 0.3)' : '1px dashed rgba(239, 68, 68, 0.4)', padding: '8px 10px', borderRadius: '8px', fontSize: '0.8rem', color: '#0f172a' }}>
               GPay: <strong style={{ color: profile?.googlepay ? '#10b981' : '#ef4444' }}>{profile?.googlepay || '+ Add ID (Required)'}</strong>
             </div>
           </div>
@@ -361,12 +363,12 @@ const Withdraw = () => {
         <form onSubmit={handleWithdraw}>
           {/* Payment Method Select */}
           <div className="form-group">
-            <label className="form-label">Select Payment Method *</label>
+            <label className="form-label" style={{ color: '#334155', fontWeight: '700' }}>Select Payment Method *</label>
             <select
               value={paymentMethod}
               onChange={handleMethodChange}
               className="form-input"
-              style={{ background: 'rgba(0,0,0,0.5)', height: '46px', borderRadius: '10px' }}
+              style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1', height: '46px', borderRadius: '10px' }}
               required
             >
               <option value="">-- Choose Payment Method --</option>
@@ -381,7 +383,7 @@ const Withdraw = () => {
 
           {/* Quick Amount Chips */}
           <div className="form-group" style={{ marginBottom: '20px' }}>
-            <label className="form-label">Withdrawal Amount (₹)</label>
+            <label className="form-label" style={{ color: '#334155', fontWeight: '700' }}>Withdrawal Amount (₹)</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '12px' }}>
               {['1000', '2000', '5000', '10000'].map((val) => (
                 <button
@@ -391,9 +393,9 @@ const Withdraw = () => {
                   style={{
                     padding: '10px 4px',
                     borderRadius: '10px',
-                    border: amount === val ? '2px solid var(--color-gold, #d6be66)' : '1px solid rgba(255,255,255,0.1)',
-                    backgroundColor: amount === val ? 'rgba(214, 190, 102, 0.2)' : 'rgba(0,0,0,0.3)',
-                    color: amount === val ? 'var(--color-gold, #d6be66)' : '#ffffff',
+                    border: amount === val ? '2px solid #043490' : '1px solid #cbd5e1',
+                    backgroundColor: amount === val ? 'rgba(4, 52, 144, 0.08)' : '#f8fafc',
+                    color: amount === val ? '#043490' : '#0f172a',
                     fontWeight: '700',
                     fontSize: '0.85rem',
                     cursor: 'pointer'
@@ -406,6 +408,7 @@ const Withdraw = () => {
             <input
               type="number"
               className="form-input"
+              style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1' }}
               placeholder="Enter custom withdrawal amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
@@ -420,7 +423,7 @@ const Withdraw = () => {
             style={{
               width: '100%',
               padding: '14px',
-              borderRadius: '12px',
+              borderRadius: '50px',
               fontSize: '1rem',
               letterSpacing: '0.04em'
             }}
@@ -430,16 +433,16 @@ const Withdraw = () => {
         </form>
 
         <div style={{ marginTop: '18px', textAlign: 'center' }}>
-          <Link to="/withdraw-history" style={{ color: 'var(--color-gold, #d6be66)', fontSize: '0.88rem', fontWeight: '700', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <Link to="/withdraw-history" style={{ color: '#043490', fontSize: '0.88rem', fontWeight: '700', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <span>View Withdraw History</span> <ArrowRight size={14} />
           </Link>
         </div>
       </div>
 
       {/* Note Card */}
-      <div className="card-glass-v2" style={{ padding: '14px 18px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.82rem' }}>
+      <div className="card-glass-v2" style={{ padding: '14px 18px', color: '#64748b', fontSize: '0.82rem' }}>
         <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <AlertCircle size={16} style={{ color: 'var(--color-gold, #d6be66)', flexShrink: 0 }} />
+          <AlertCircle size={16} style={{ color: '#043490', flexShrink: 0 }} />
           <span>Withdrawal requests are processed within official market timings. Ensure payment details are accurate.</span>
         </p>
       </div>
@@ -452,7 +455,7 @@ const Withdraw = () => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
           display: 'flex',
@@ -461,13 +464,13 @@ const Withdraw = () => {
           zIndex: 9999,
           padding: '16px'
         }}>
-          <div className="card-glass-v2" style={{ maxWidth: '440px', width: '100%', padding: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '10px' }}>
-              <h5 style={{ margin: 0, color: '#ffffff', fontWeight: '800', fontSize: '1.1rem' }}>Update UPI Payment IDs</h5>
+          <div className="card-glass-v2" style={{ maxWidth: '440px', width: '100%', padding: '24px', background: '#ffffff', borderRadius: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+              <h5 style={{ margin: 0, color: '#0f172a', fontWeight: '800', fontSize: '1.1rem' }}>Update UPI Payment IDs</h5>
               <button
                 type="button"
                 onClick={() => setShowUpiModal(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255, 255, 255, 0.6)' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
               >
                 <X size={18} />
               </button>
@@ -478,30 +481,33 @@ const Withdraw = () => {
 
             <form onSubmit={handleUpdateUpi}>
               <div className="form-group">
-                <label className="form-label">PhonePe UPI ID</label>
+                <label className="form-label" style={{ color: '#334155' }}>PhonePe UPI ID</label>
                 <input
                   type="text"
                   className="form-input"
+                  style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1' }}
                   placeholder="e.g. 9876543210@ybl"
                   value={phonepe}
                   onChange={(e) => setPhonepe(e.target.value)}
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Paytm UPI ID</label>
+                <label className="form-label" style={{ color: '#334155' }}>Paytm UPI ID</label>
                 <input
                   type="text"
                   className="form-input"
+                  style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1' }}
                   placeholder="e.g. 9876543210@paytm"
                   value={paytm}
                   onChange={(e) => setPaytm(e.target.value)}
                 />
               </div>
               <div className="form-group" style={{ marginBottom: '20px' }}>
-                <label className="form-label">Google Pay UPI ID</label>
+                <label className="form-label" style={{ color: '#334155' }}>Google Pay UPI ID</label>
                 <input
                   type="text"
                   className="form-input"
+                  style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1' }}
                   placeholder="e.g. 9876543210@okaxis"
                   value={gpay}
                   onChange={(e) => setGpay(e.target.value)}
@@ -512,7 +518,7 @@ const Withdraw = () => {
                   type="button"
                   onClick={() => setShowUpiModal(false)}
                   className="btn-outline"
-                  style={{ flex: 1, padding: '12px', borderRadius: '10px' }}
+                  style={{ flex: 1, padding: '12px', borderRadius: '50px' }}
                 >
                   Cancel
                 </button>
@@ -520,7 +526,7 @@ const Withdraw = () => {
                   type="submit"
                   disabled={upiUpdating}
                   className="btn-gold"
-                  style={{ flex: 1, padding: '12px', borderRadius: '10px' }}
+                  style={{ flex: 1, padding: '12px', borderRadius: '50px' }}
                 >
                   {upiUpdating ? 'Updating...' : 'SAVE DETAILS'}
                 </button>

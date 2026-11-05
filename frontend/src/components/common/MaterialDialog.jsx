@@ -82,7 +82,7 @@ const MaterialDialog = ({
       position: 'fixed',
       inset: 0,
       zIndex: 10000,
-      backgroundColor: 'rgba(5, 12, 22, 0.75)',
+      backgroundColor: 'rgba(15, 23, 42, 0.65)',
       backdropFilter: 'blur(8px)',
       WebkitBackdropFilter: 'blur(8px)',
       display: 'flex',
@@ -94,15 +94,14 @@ const MaterialDialog = ({
       <div style={{
         width: '100%',
         maxWidth: '400px',
-        backgroundColor: '#0d192b',
-        backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(214, 190, 102, 0.08), transparent 70%)',
+        backgroundColor: '#ffffff',
         borderRadius: '20px',
-        border: `1px solid ${config.borderColor}`,
-        boxShadow: `0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px ${config.glowColor}`,
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)',
         padding: '24px 20px 20px 20px',
         textAlign: 'center',
         position: 'relative',
-        color: '#ffffff',
+        color: '#0f172a',
         transform: 'translateY(0)',
         animation: 'slideUp 0.25s ease-out'
       }}>
@@ -115,7 +114,7 @@ const MaterialDialog = ({
               position: 'absolute',
               top: '14px',
               right: '14px',
-              background: 'rgba(255, 255, 255, 0.06)',
+              background: '#f1f5f9',
               border: 'none',
               borderRadius: '50%',
               width: '32px',
@@ -123,17 +122,17 @@ const MaterialDialog = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'rgba(255, 255, 255, 0.6)',
+              color: '#64748b',
               cursor: 'pointer',
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-              e.currentTarget.style.color = '#ffffff';
+              e.currentTarget.style.background = '#e2e8f0';
+              e.currentTarget.style.color = '#0f172a';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+              e.currentTarget.style.background = '#f1f5f9';
+              e.currentTarget.style.color = '#64748b';
             }}
           >
             <X size={18} />
@@ -150,8 +149,7 @@ const MaterialDialog = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '0 auto 16px auto',
-          boxShadow: `0 0 20px ${config.glowColor}`
+          margin: '0 auto 16px auto'
         }}>
           {config.icon}
         </div>
@@ -161,7 +159,7 @@ const MaterialDialog = ({
           fontSize: '1.25rem',
           fontWeight: '800',
           margin: '0 0 10px 0',
-          color: '#ffffff',
+          color: '#0f172a',
           letterSpacing: '0.01em'
         }}>
           {dialogTitle}
@@ -169,8 +167,8 @@ const MaterialDialog = ({
 
         {/* Message Content */}
         <div style={{
-          fontSize: '0.9rem',
-          color: 'rgba(255, 255, 255, 0.8)',
+          fontSize: '0.92rem',
+          color: '#475569',
           lineHeight: '1.5',
           marginBottom: '24px'
         }}>
@@ -191,16 +189,16 @@ const MaterialDialog = ({
                 flex: 1,
                 padding: '12px 18px',
                 borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                color: 'rgba(255, 255, 255, 0.8)',
+                border: '1px solid #cbd5e1',
+                backgroundColor: '#f8fafc',
+                color: '#475569',
                 fontSize: '0.9rem',
                 fontWeight: '700',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.12)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
             >
               {cancelText || 'Cancel'}
             </button>
@@ -209,7 +207,6 @@ const MaterialDialog = ({
           <button
             type="button"
             onClick={handleConfirmAction}
-            className={isInsufficient ? 'btn-gold' : type === 'success' ? 'btn-gold' : 'btn-gold'}
             style={{
               flex: 1,
               padding: '12px 18px',
@@ -223,13 +220,13 @@ const MaterialDialog = ({
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
-              background: isInsufficient 
-                ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' 
+              background: isInsufficient
+                ? 'linear-gradient(135deg, #059669 0%, #047857 100%)'
                 : type === 'error'
                 ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
-                : 'var(--app-gradient-primary, linear-gradient(135deg, #d6be66 0%, #10b981 100%))',
-              color: '#0b1a30',
-              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)'
+                : 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+              color: '#ffffff',
+              boxShadow: '0 4px 14px rgba(4, 52, 144, 0.3)'
             }}
           >
             {isInsufficient && <Wallet size={16} />}

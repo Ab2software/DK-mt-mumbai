@@ -656,8 +656,8 @@ const AddFund = () => {
 
   if (loading) {
     return (
-      <div style={{ maxWidth: '680px', margin: '0 auto', padding: '60px 20px', textAlign: 'center', color: '#ffffff' }}>
-        <RefreshCw size={32} className="animate-spin" style={{ margin: '0 auto 16px', color: 'var(--color-gold, #d6be66)' }} />
+      <div style={{ maxWidth: '680px', margin: '0 auto', padding: '60px 20px', textAlign: 'center', color: '#0f172a' }}>
+        <RefreshCw size={32} className="animate-spin" style={{ margin: '0 auto 16px', color: '#043490' }} />
         <p style={{ fontWeight: '700' }}>Loading Deposit Information...</p>
       </div>
     );
@@ -672,20 +672,20 @@ const AddFund = () => {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '12px',
-        background: 'var(--app-gradient-primary, linear-gradient(135deg, #d6be66 0%, #10b981 100%))',
-        padding: '10px 14px',
-        borderRadius: '14px',
+        background: 'linear-gradient(135deg, #043490 0%, #002663 100%)',
+        padding: '14px 18px',
+        borderRadius: '16px',
         marginBottom: '20px',
-        color: '#0b1a30',
-        boxShadow: '0 6px 20px rgba(0,0,0,0.3)'
+        color: '#ffffff',
+        boxShadow: '0 4px 14px rgba(4, 52, 144, 0.25)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#0b1a30', flexShrink: 0 }}>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#ffffff', flexShrink: 0 }}>
             <ArrowLeft size={20} />
           </Link>
           <span style={{
             fontWeight: '800',
-            fontSize: '0.92rem',
+            fontSize: '0.98rem',
             textTransform: 'uppercase',
             letterSpacing: '0.02em',
             whiteSpace: 'nowrap',
@@ -701,10 +701,12 @@ const AddFund = () => {
           gap: '6px',
           fontWeight: '800',
           fontSize: '0.9rem',
-          background: 'rgba(11, 26, 48, 0.12)',
+          background: 'rgba(255, 255, 255, 0.18)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
           padding: '6px 12px',
           borderRadius: '20px',
           whiteSpace: 'nowrap',
+          color: '#ffffff',
           flexShrink: 0
         }}>
           <Wallet size={16} style={{ flexShrink: 0 }} />
@@ -989,7 +991,7 @@ const AddFund = () => {
                 <div style={{
                   fontSize: '1.75rem',
                   fontWeight: '900',
-                  color: 'var(--color-gold, #d6be66)',
+                  color: '#043490',
                   letterSpacing: '0.01em',
                   lineHeight: 1.2
                 }}>
@@ -1085,8 +1087,8 @@ const AddFund = () => {
                   width: '100%',
                   padding: '13px 20px',
                   borderRadius: '14px',
-                  background: 'var(--app-gradient-primary, linear-gradient(135deg, #d6be66 0%, #10b981 100%))',
-                  color: '#081424',
+                  background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+                  color: '#ffffff',
                   border: 'none',
                   fontWeight: '800',
                   fontSize: '0.94rem',
@@ -1096,16 +1098,16 @@ const AddFund = () => {
                   justifyContent: 'center',
                   gap: '8px',
                   cursor: 'pointer',
-                  boxShadow: '0 6px 20px rgba(16, 185, 129, 0.35)',
+                  boxShadow: '0 6px 20px rgba(4, 52, 144, 0.35)',
                   transition: 'all 0.2s ease'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.5)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(4, 52, 144, 0.5)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.35)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(4, 52, 144, 0.35)';
                 }}
               >
                 <span>Track Deposit Status</span>
@@ -1120,19 +1122,19 @@ const AddFund = () => {
                   style={{
                     padding: '11px 14px',
                     borderRadius: '12px',
-                    background: 'rgba(255, 255, 255, 0.07)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    color: '#ffffff',
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    color: '#334155',
                     fontWeight: '700',
                     fontSize: '0.86rem',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
+                    e.currentTarget.style.background = '#e2e8f0';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.07)';
+                    e.currentTarget.style.background = '#f1f5f9';
                   }}
                 >
                   Go to Home
@@ -1147,9 +1149,9 @@ const AddFund = () => {
                   style={{
                     padding: '11px 14px',
                     borderRadius: '12px',
-                    background: 'transparent',
-                    border: '1px dashed rgba(214, 190, 102, 0.45)',
-                    color: 'var(--color-gold, #d6be66)',
+                    background: '#ffffff',
+                    border: '1px dashed #043490',
+                    color: '#043490',
                     fontWeight: '700',
                     fontSize: '0.86rem',
                     cursor: 'pointer',
@@ -1212,11 +1214,11 @@ const AddFund = () => {
               <span>UPI APP OPENED</span>
             </div>
 
-            <h4 style={{ margin: '0 0 6px 0', fontSize: '1.45rem', fontWeight: '800', color: '#ffffff' }}>
+            <h4 style={{ margin: '0 0 6px 0', fontSize: '1.45rem', fontWeight: '800', color: '#0f172a' }}>
               Paying ₹{Number(activeOrder.amount).toFixed(2)}
             </h4>
 
-            <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.9rem', maxWidth: '420px', marginInline: 'auto' }}>
+            <p style={{ margin: 0, color: '#475569', fontSize: '0.9rem', maxWidth: '420px', marginInline: 'auto' }}>
               1. Complete payment in your UPI app. 2. Enter the 12-digit UTR reference number below to submit your request for Admin verification.
             </p>
           </div>
@@ -1224,8 +1226,8 @@ const AddFund = () => {
           {/* Realtime verification state badge */}
           {verifying ? (
             <div style={{
-              backgroundColor: 'rgba(214, 190, 102, 0.15)',
-              border: '1px solid rgba(214, 190, 102, 0.35)',
+              backgroundColor: 'rgba(4, 52, 144, 0.08)',
+              border: '1px solid rgba(4, 52, 144, 0.25)',
               borderRadius: '12px',
               padding: '14px',
               marginBottom: '18px',
@@ -1233,7 +1235,7 @@ const AddFund = () => {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '10px',
-              color: 'var(--color-gold, #d6be66)',
+              color: '#043490',
               fontWeight: '700',
               fontSize: '0.92rem'
             }}>
@@ -1242,8 +1244,8 @@ const AddFund = () => {
             </div>
           ) : (
             <div style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              backgroundColor: '#f8fafc',
+              border: '1px solid #e2e8f0',
               borderRadius: '12px',
               padding: '12px 14px',
               marginBottom: '18px',
@@ -1251,7 +1253,7 @@ const AddFund = () => {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
-              color: '#94a3b8',
+              color: '#475569',
               fontSize: '0.84rem'
             }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
@@ -1430,7 +1432,7 @@ const AddFund = () => {
                         flexWrap: 'wrap',
                         marginTop: showQrSetting ? '6px' : '0'
                       }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--color-gold, #d6be66)' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: '800', color: '#043490' }}>
                           {activeOrder.upi_id}
                         </span>
                         <button
@@ -1663,18 +1665,18 @@ const AddFund = () => {
 
             {/* Main Deposit Card */}
             <div className="card-glass-v2" style={{ padding: '24px', marginBottom: '22px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Zap size={20} style={{ color: 'var(--color-gold, #d6be66)' }} />
-                  <h5 style={{ color: '#ffffff', fontWeight: '800', margin: 0, fontSize: '1.15rem' }}>
+                  <Zap size={20} style={{ color: 'var(--color-primary, #043490)' }} />
+                  <h5 style={{ color: '#0f172a', fontWeight: '800', margin: 0, fontSize: '1.15rem' }}>
                     Auto UPI Deposit
                   </h5>
                   <span style={{
                     fontSize: '0.68rem',
                     fontWeight: '800',
                     color: '#10b981',
-                    background: 'rgba(16, 185, 129, 0.15)',
-                    border: '1px solid rgba(16, 185, 129, 0.35)',
+                    background: 'rgba(16, 185, 129, 0.12)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
                     padding: '2px 8px',
                     borderRadius: '10px',
                     letterSpacing: '0.04em'
@@ -1684,7 +1686,7 @@ const AddFund = () => {
                 </div>
                 <Link
                   to="/deposit-request-status"
-                  style={{ color: 'var(--color-gold, #d6be66)', fontSize: '0.85rem', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  style={{ color: 'var(--color-primary, #043490)', fontSize: '0.85rem', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
                 >
                   <span>Deposit History</span> <ArrowRight size={14} />
                 </Link>
@@ -1693,11 +1695,11 @@ const AddFund = () => {
               {/* Quick Preset Buttons */}
               <div style={{ marginBottom: '22px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <label className="form-label" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Sparkles size={15} style={{ color: 'var(--color-gold, #d6be66)' }} />
+                  <label className="form-label" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px', color: '#334155', fontWeight: '700' }}>
+                    <Sparkles size={15} style={{ color: 'var(--color-primary, #043490)' }} />
                     <span>Quick Select Amount (₹)</span>
                   </label>
-                  <span style={{ fontSize: '0.74rem', color: 'rgba(255, 255, 255, 0.45)', fontWeight: '600' }}>
+                  <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600' }}>
                     Tap to auto-fill
                   </span>
                 </div>
@@ -1721,12 +1723,12 @@ const AddFund = () => {
                           padding: '12px 6px',
                           borderRadius: '12px',
                           border: isSelected
-                            ? '2px solid var(--color-gold, #d6be66)'
-                            : '1px solid rgba(255, 255, 255, 0.12)',
+                            ? '2px solid #043490'
+                            : '1px solid #cbd5e1',
                           background: isSelected
-                            ? 'linear-gradient(135deg, rgba(214, 190, 102, 0.22) 0%, rgba(214, 190, 102, 0.08) 100%)'
-                            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                          color: isSelected ? 'var(--color-gold, #d6be66)' : '#ffffff',
+                            ? 'rgba(4, 52, 144, 0.08)'
+                            : '#f8fafc',
+                          color: isSelected ? '#043490' : '#0f172a',
                           fontWeight: '800',
                           fontSize: '1.05rem',
                           cursor: 'pointer',
@@ -1737,22 +1739,22 @@ const AddFund = () => {
                           justifyContent: 'center',
                           gap: '2px',
                           boxShadow: isSelected
-                            ? '0 0 16px rgba(214, 190, 102, 0.35), 0 4px 12px rgba(0, 0, 0, 0.4)'
-                            : '0 2px 6px rgba(0, 0, 0, 0.2)',
+                            ? '0 0 16px rgba(4, 52, 144, 0.2), 0 2px 6px rgba(0, 0, 0, 0.05)'
+                            : '0 1px 3px rgba(0, 0, 0, 0.04)',
                           transform: isSelected ? 'translateY(-2px)' : 'none',
                           outline: 'none'
                         }}
                         onMouseEnter={(e) => {
                           if (!isSelected) {
-                            e.currentTarget.style.borderColor = 'rgba(214, 190, 102, 0.5)';
-                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                            e.currentTarget.style.borderColor = '#043490';
+                            e.currentTarget.style.backgroundColor = '#f1f5f9';
                             e.currentTarget.style.transform = 'translateY(-2px)';
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (!isSelected) {
-                            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                            e.currentTarget.style.borderColor = '#cbd5e1';
+                            e.currentTarget.style.backgroundColor = '#f8fafc';
                             e.currentTarget.style.transform = 'none';
                           }
                         }}
@@ -1763,15 +1765,15 @@ const AddFund = () => {
                             position: 'absolute',
                             top: '-8px',
                             right: '8px',
-                            background: 'linear-gradient(135deg, #FFE066 0%, #D4AF37 100%)',
-                            color: '#0b1a30',
+                            background: 'linear-gradient(135deg, #ff7b00 0%, #e65100 100%)',
+                            color: '#ffffff',
                             fontSize: '0.58rem',
                             fontWeight: '900',
                             padding: '1px 6px',
                             borderRadius: '6px',
                             letterSpacing: '0.04em',
                             textTransform: 'uppercase',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.5)'
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
                           }}>
                             POPULAR
                           </span>
@@ -1813,10 +1815,10 @@ const AddFund = () => {
 
               {/* Custom Amount Input */}
               <div className="form-group" style={{ marginBottom: '24px' }}>
-                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#334155' }}>
                   <span style={{ fontWeight: '700' }}>Deposit Amount (₹) *</span>
                   {amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0 && (
-                    <span style={{ fontSize: '0.78rem', color: amountError ? '#ef4444' : 'var(--color-gold, #d6be66)', fontWeight: '700' }}>
+                    <span style={{ fontSize: '0.78rem', color: amountError ? '#ef4444' : '#043490', fontWeight: '700' }}>
                       Entered: ₹{parseFloat(amount).toFixed(2)}
                     </span>
                   )}
@@ -1829,7 +1831,7 @@ const AddFund = () => {
                     transform: 'translateY(-50%)',
                     fontWeight: '800',
                     fontSize: '1.25rem',
-                    color: amountError ? '#ef4444' : 'var(--color-gold, #d6be66)'
+                    color: amountError ? '#ef4444' : '#043490'
                   }}>
                     ₹
                   </span>
@@ -1845,8 +1847,9 @@ const AddFund = () => {
                       borderRadius: '12px',
                       border: amountError
                         ? '1.8px solid #ef4444'
-                        : (amount && !isNaN(parseFloat(amount)) && parseFloat(amount) >= (walletInfo?.min_deposite || 100) ? '1.8px solid rgba(16, 185, 129, 0.6)' : '1.5px solid rgba(214, 190, 102, 0.3)'),
-                      background: 'rgba(11, 26, 48, 0.4)',
+                        : (amount && !isNaN(parseFloat(amount)) && parseFloat(amount) >= (walletInfo?.min_deposite || 100) ? '1.8px solid #10b981' : '1.5px solid #cbd5e1'),
+                      background: '#f8fafc',
+                      color: '#0f172a',
                       boxShadow: amountError ? '0 0 14px rgba(239, 68, 68, 0.35)' : 'none',
                       transition: 'all 0.2s ease'
                     }}
@@ -1869,7 +1872,7 @@ const AddFund = () => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    color: '#fca5a5',
+                    color: '#dc2626',
                     fontSize: '0.84rem',
                     fontWeight: '700',
                     animation: 'fadeIn 0.2s ease-out'
@@ -1878,7 +1881,7 @@ const AddFund = () => {
                     <span>{amountError}</span>
                   </div>
                 ) : (
-                  <small style={{ color: 'rgba(255, 255, 255, 0.55)', fontSize: '0.78rem', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <small style={{ color: '#64748b', fontSize: '0.78rem', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span>Minimum: ₹{Number(walletInfo?.min_deposite || 100).toFixed(2)}</span>
                     <span>•</span>
                     <span>Maximum: ₹{Number(walletInfo?.max_deposite || 50000).toFixed(2)}</span>
@@ -1928,9 +1931,9 @@ const AddFund = () => {
                 gap: '14px',
                 marginTop: '16px',
                 paddingTop: '14px',
-                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                borderTop: '1px solid #e2e8f0',
                 fontSize: '0.76rem',
-                color: 'rgba(255, 255, 255, 0.6)',
+                color: '#64748b',
                 flexWrap: 'wrap'
               }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -1939,12 +1942,12 @@ const AddFund = () => {
                 </span>
                 <span>•</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Smartphone size={14} color="var(--color-gold, #d6be66)" />
+                  <Smartphone size={14} color="#043490" />
                   <span>Supports All UPI Apps</span>
                 </span>
                 <span>•</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Lock size={13} color="#60a5fa" />
+                  <Lock size={13} color="#043490" />
                   <span>NPCI UPI 256-Bit</span>
                 </span>
               </div>
@@ -1959,16 +1962,16 @@ const AddFund = () => {
             {/* Main Container Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <QrCode size={20} style={{ color: 'var(--color-gold, #d6be66)' }} />
-                <h5 style={{ color: '#ffffff', fontWeight: '800', margin: 0, fontSize: '1.15rem' }}>
+                <QrCode size={20} style={{ color: '#043490' }} />
+                <h5 style={{ color: '#0f172a', fontWeight: '800', margin: 0, fontSize: '1.15rem' }}>
                   Manual QR & UPI Deposit
                 </h5>
                 <span style={{
                   fontSize: '0.68rem',
                   fontWeight: '800',
-                  color: '#f59e0b',
-                  background: 'rgba(245, 158, 11, 0.15)',
-                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  color: '#043490',
+                  background: 'rgba(4, 52, 144, 0.08)',
+                  border: '1px solid rgba(4, 52, 144, 0.25)',
                   padding: '2px 8px',
                   borderRadius: '10px',
                   letterSpacing: '0.04em'
@@ -1978,7 +1981,7 @@ const AddFund = () => {
               </div>
               <Link
                 to="/deposit-request-status"
-                style={{ color: 'var(--color-gold, #d6be66)', fontSize: '0.85rem', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                style={{ color: '#043490', fontSize: '0.85rem', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
               >
                 <span>Deposit History</span> <ArrowRight size={14} />
               </Link>
@@ -1992,19 +1995,19 @@ const AddFund = () => {
                 borderRadius: '18px',
                 marginBottom: '20px',
                 textAlign: 'center',
-                border: '1.5px solid rgba(214, 190, 102, 0.35)',
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)'
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 4px 18px rgba(4, 52, 144, 0.06)'
               }}
             >
               <div style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                background: 'rgba(214, 190, 102, 0.15)',
-                border: '1px solid rgba(214, 190, 102, 0.35)',
+                background: 'rgba(4, 52, 144, 0.08)',
+                border: '1px solid rgba(4, 52, 144, 0.25)',
                 padding: '4px 12px',
                 borderRadius: '20px',
-                color: 'var(--color-gold, #d6be66)',
+                color: '#043490',
                 fontSize: '0.78rem',
                 fontWeight: '800',
                 marginBottom: '14px',
@@ -2020,7 +2023,8 @@ const AddFund = () => {
                 padding: '14px',
                 borderRadius: '16px',
                 display: 'inline-block',
-                boxShadow: '0 8px 26px rgba(0, 0, 0, 0.45)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+                border: '1px solid #e2e8f0',
                 marginBottom: '14px'
               }}>
                 <img
@@ -2041,7 +2045,7 @@ const AddFund = () => {
                 />
               </div>
 
-              <div style={{ fontSize: '0.82rem', color: '#cbd5e1', lineHeight: 1.5, marginBottom: '14px' }}>
+              <div style={{ fontSize: '0.84rem', color: '#475569', lineHeight: 1.5, marginBottom: '14px' }}>
                 Scan using <strong>Google Pay, PhonePe, Paytm, BHIM</strong> or any UPI App to transfer the deposit amount.
               </div>
 
@@ -2056,27 +2060,27 @@ const AddFund = () => {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     gap: '8px',
-                    backgroundColor: 'rgba(11, 26, 48, 0.75)',
+                    backgroundColor: '#f8fafc',
                     border: copied
                       ? '1.5px solid #10b981'
-                      : '1.5px solid rgba(214, 190, 102, 0.4)',
+                      : '1.5px solid #cbd5e1',
                     borderRadius: '12px',
                     padding: '10px 12px',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
                     boxShadow: copied
-                      ? '0 0 16px rgba(16, 185, 129, 0.35)'
-                      : 'inset 0 2px 4px rgba(0, 0, 0, 0.35)'
+                      ? '0 0 16px rgba(16, 185, 129, 0.2)'
+                      : '0 2px 6px rgba(0, 0, 0, 0.04)'
                   }}
                 >
                   <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                    <span style={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.55)', fontWeight: '700', textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>
                       Official Payee UPI ID
                     </span>
                     <span style={{
                       fontSize: '0.92rem',
                       fontWeight: '800',
-                      color: '#ffffff',
+                      color: '#043490',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -2108,11 +2112,11 @@ const AddFund = () => {
                       border: 'none',
                       background: copied
                         ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                        : 'linear-gradient(135deg, #FFE066 0%, #D4AF37 100%)',
-                      color: copied ? '#ffffff' : '#0b1a30',
+                        : 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+                      color: '#ffffff',
                       boxShadow: copied
                         ? '0 2px 8px rgba(16, 185, 129, 0.4)'
-                        : '0 2px 8px rgba(214, 190, 102, 0.35)',
+                        : '0 2px 8px rgba(4, 52, 144, 0.35)',
                       transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}
                   >
@@ -2139,18 +2143,19 @@ const AddFund = () => {
                 padding: '24px',
                 borderRadius: '18px',
                 marginBottom: '22px',
-                border: '1.5px solid rgba(255, 255, 255, 0.12)'
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 4px 18px rgba(4, 52, 144, 0.06)'
               }}
             >
               <div style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                background: 'rgba(16, 185, 129, 0.15)',
+                background: 'rgba(16, 185, 129, 0.12)',
                 border: '1px solid rgba(16, 185, 129, 0.35)',
                 padding: '4px 12px',
                 borderRadius: '20px',
-                color: '#10b981',
+                color: '#059669',
                 fontSize: '0.78rem',
                 fontWeight: '800',
                 marginBottom: '12px',
@@ -2160,10 +2165,10 @@ const AddFund = () => {
                 <span>STEP 2: SUBMIT DEPOSIT REQUEST</span>
               </div>
 
-              <h5 style={{ color: '#ffffff', fontWeight: '800', margin: '0 0 6px 0', fontSize: '1.1rem' }}>
+              <h5 style={{ color: '#0f172a', fontWeight: '800', margin: '0 0 6px 0', fontSize: '1.1rem' }}>
                 Submit 12-Digit UTR for Verification
               </h5>
-              <p style={{ color: '#94a3b8', fontSize: '0.82rem', marginBottom: '20px', lineHeight: 1.45 }}>
+              <p style={{ color: '#475569', fontSize: '0.84rem', marginBottom: '20px', lineHeight: 1.45 }}>
                 Enter the amount transferred and the 12-digit UTR reference number from your Google Pay, PhonePe, or Paytm receipt. Admin will verify and approve your request.
               </p>
 
@@ -2174,7 +2179,7 @@ const AddFund = () => {
                     <label className="form-label" style={{ margin: 0, fontSize: '0.84rem' }}>
                       Select Amount (₹) *
                     </label>
-                    <span style={{ fontSize: '0.74rem', color: 'rgba(255, 255, 255, 0.45)', fontWeight: '600' }}>
+                    <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600' }}>
                       Tap to auto-fill
                     </span>
                   </div>
@@ -2195,12 +2200,12 @@ const AddFund = () => {
                             padding: '10px 4px',
                             borderRadius: '10px',
                             border: isSelected
-                              ? '2px solid var(--color-gold, #d6be66)'
-                              : '1px solid rgba(255, 255, 255, 0.12)',
+                              ? '2px solid #043490'
+                              : '1px solid #cbd5e1',
                             background: isSelected
-                              ? 'linear-gradient(135deg, rgba(214, 190, 102, 0.22) 0%, rgba(214, 190, 102, 0.08) 100%)'
-                              : 'rgba(255, 255, 255, 0.04)',
-                            color: isSelected ? 'var(--color-gold, #d6be66)' : '#ffffff',
+                              ? 'rgba(4, 52, 144, 0.08)'
+                              : '#ffffff',
+                            color: isSelected ? '#043490' : '#1e293b',
                             fontWeight: '800',
                             fontSize: '0.96rem',
                             cursor: 'pointer',
@@ -2219,7 +2224,7 @@ const AddFund = () => {
                   <label className="form-label" style={{ fontSize: '0.84rem', display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontWeight: '700' }}>Deposit Amount (₹) *</span>
                     {amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0 && (
-                      <span style={{ fontSize: '0.78rem', color: amountError ? '#ef4444' : 'var(--color-gold, #d6be66)', fontWeight: '700' }}>
+                      <span style={{ fontSize: '0.78rem', color: amountError ? '#ef4444' : '#043490', fontWeight: '700' }}>
                         Entered: ₹{parseFloat(amount).toFixed(2)}
                       </span>
                     )}
@@ -2232,7 +2237,7 @@ const AddFund = () => {
                       transform: 'translateY(-50%)',
                       fontWeight: '800',
                       fontSize: '1.2rem',
-                      color: amountError ? '#ef4444' : 'var(--color-gold, #d6be66)'
+                      color: amountError ? '#ef4444' : '#043490'
                     }}>
                       ₹
                     </span>
@@ -2246,8 +2251,9 @@ const AddFund = () => {
                         fontSize: '1.1rem',
                         fontWeight: '800',
                         borderRadius: '12px',
-                        borderColor: amountError ? '#ef4444' : 'rgba(255, 255, 255, 0.18)',
-                        background: 'rgba(11, 26, 48, 0.45)'
+                        borderColor: amountError ? '#ef4444' : '#cbd5e1',
+                        background: '#ffffff',
+                        color: '#0f172a'
                       }}
                       placeholder={`Min ₹${Number(walletInfo?.min_deposite || 100).toFixed(2)} - Max ₹${Number(walletInfo?.max_deposite || 50000).toFixed(2)}`}
                       value={amount}
@@ -2258,19 +2264,19 @@ const AddFund = () => {
                   </div>
                   {amountError && (
                     <div style={{
-                      backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                      border: '1.5px solid rgba(239, 68, 68, 0.45)',
+                      backgroundColor: '#fef2f2',
+                      border: '1.5px solid #fecaca',
                       borderRadius: '10px',
                       padding: '8px 12px',
                       marginTop: '6px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      color: '#fca5a5',
+                      color: '#b91c1c',
                       fontSize: '0.82rem',
                       fontWeight: '700'
                     }}>
-                      <AlertCircle size={16} color="#ef4444" style={{ flexShrink: 0 }} />
+                      <AlertCircle size={16} color="#dc2626" style={{ flexShrink: 0 }} />
                       <span>{amountError}</span>
                     </div>
                   )}
@@ -2284,8 +2290,8 @@ const AddFund = () => {
                       <span style={{
                         fontSize: '0.74rem',
                         fontWeight: '800',
-                        color: utrNo.length === 12 ? '#10b981' : '#f59e0b',
-                        background: utrNo.length === 12 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                        color: utrNo.length === 12 ? '#059669' : '#d97706',
+                        background: utrNo.length === 12 ? '#ecfdf5' : '#fffbeb',
                         padding: '2px 8px',
                         borderRadius: '8px'
                       }}>
@@ -2303,10 +2309,11 @@ const AddFund = () => {
                       fontSize: '1.1rem',
                       letterSpacing: '0.08em',
                       fontWeight: '800',
-                      borderColor: utrError ? '#ef4444' : (utrNo.length === 12 ? '#10b981' : 'rgba(255, 255, 255, 0.18)'),
-                      boxShadow: utrError ? '0 0 14px rgba(239, 68, 68, 0.35)' : (utrNo.length === 12 ? '0 0 10px rgba(16, 185, 129, 0.3)' : 'none'),
+                      borderColor: utrError ? '#ef4444' : (utrNo.length === 12 ? '#059669' : '#cbd5e1'),
+                      boxShadow: utrError ? '0 0 10px rgba(239, 68, 68, 0.2)' : (utrNo.length === 12 ? '0 0 10px rgba(5, 150, 105, 0.2)' : 'none'),
                       transition: 'all 0.2s ease',
-                      background: 'rgba(11, 26, 48, 0.45)'
+                      background: '#ffffff',
+                      color: '#0f172a'
                     }}
                     placeholder="e.g. 423456789012"
                     value={utrNo}
@@ -2316,23 +2323,23 @@ const AddFund = () => {
                   />
                   {utrError ? (
                     <div style={{
-                      backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                      border: '1.5px solid rgba(239, 68, 68, 0.45)',
+                      backgroundColor: '#fef2f2',
+                      border: '1.5px solid #fecaca',
                       borderRadius: '10px',
                       padding: '8px 12px',
                       marginTop: '6px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      color: '#fca5a5',
+                      color: '#b91c1c',
                       fontSize: '0.82rem',
                       fontWeight: '700'
                     }}>
-                      <AlertCircle size={16} color="#ef4444" style={{ flexShrink: 0 }} />
+                      <AlertCircle size={16} color="#dc2626" style={{ flexShrink: 0 }} />
                       <span>{utrError}</span>
                     </div>
                   ) : (
-                    <small style={{ color: '#94a3b8', fontSize: '0.76rem', marginTop: '6px', display: 'block' }}>
+                    <small style={{ color: '#64748b', fontSize: '0.76rem', marginTop: '6px', display: 'block' }}>
                       12-digit numeric reference number from Google Pay, PhonePe, or Paytm receipt.
                     </small>
                   )}
@@ -2342,7 +2349,7 @@ const AddFund = () => {
                 <div className="form-group" style={{ marginBottom: '22px' }}>
                   <label className="form-label" style={{ fontSize: '0.84rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: '700' }}>Payment Screenshot (Optional)</span>
-                    <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.45)' }}>JPG, PNG, WEBP (Max 5MB)</span>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b' }}>JPG, PNG, WEBP (Max 5MB)</span>
                   </label>
 
                   {!selectedFile ? (
@@ -2352,7 +2359,7 @@ const AddFund = () => {
                       accept="image/jpeg,image/png,image/jpg,image/webp"
                       className="form-input"
                       style={{
-                        borderColor: fileError ? '#ef4444' : 'rgba(255, 255, 255, 0.15)',
+                        borderColor: fileError ? '#ef4444' : '#cbd5e1',
                         padding: '10px',
                         fontSize: '0.85rem'
                       }}
@@ -2364,25 +2371,25 @@ const AddFund = () => {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       padding: '10px 14px',
-                      backgroundColor: 'rgba(16, 185, 129, 0.12)',
-                      border: '1.5px solid rgba(16, 185, 129, 0.4)',
+                      backgroundColor: '#ecfdf5',
+                      border: '1.5px solid #a7f3d0',
                       borderRadius: '10px',
                       gap: '10px'
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-                        <CheckCircle2 size={18} color="#10b981" style={{ flexShrink: 0 }} />
+                        <CheckCircle2 size={18} color="#059669" style={{ flexShrink: 0 }} />
                         <div style={{ minWidth: 0, flex: 1 }}>
                           <div style={{
                             fontSize: '0.85rem',
                             fontWeight: '700',
-                            color: '#ffffff',
+                            color: '#0f172a',
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis'
                           }}>
                             {selectedFile.name}
                           </div>
-                          <div style={{ fontSize: '0.72rem', color: '#a7f3d0' }}>
+                          <div style={{ fontSize: '0.72rem', color: '#047857' }}>
                             {selectedFile.size} • Attached
                           </div>
                         </div>
@@ -2392,40 +2399,33 @@ const AddFund = () => {
                         onClick={handleRemoveFile}
                         title="Remove file"
                         style={{
-                          background: 'rgba(239, 68, 68, 0.2)',
-                          border: '1px solid rgba(239, 68, 68, 0.4)',
-                          color: '#fca5a5',
-                          borderRadius: '6px',
-                          padding: '4px 8px',
+                          background: 'none',
+                          border: 'none',
+                          color: '#dc2626',
                           cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          fontSize: '0.75rem',
-                          fontWeight: '700'
+                          padding: '4px'
                         }}
                       >
-                        <X size={14} />
-                        <span>Remove</span>
+                        <X size={16} />
                       </button>
                     </div>
                   )}
 
                   {fileError && (
                     <div style={{
-                      backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                      border: '1.5px solid rgba(239, 68, 68, 0.45)',
+                      backgroundColor: '#fef2f2',
+                      border: '1.5px solid #fecaca',
                       borderRadius: '10px',
                       padding: '8px 12px',
                       marginTop: '6px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      color: '#fca5a5',
+                      color: '#b91c1c',
                       fontSize: '0.82rem',
                       fontWeight: '700'
                     }}>
-                      <AlertCircle size={16} color="#ef4444" style={{ flexShrink: 0 }} />
+                      <AlertCircle size={16} color="#dc2626" style={{ flexShrink: 0 }} />
                       <span>{fileError}</span>
                     </div>
                   )}
@@ -2435,7 +2435,6 @@ const AddFund = () => {
                 <button
                   type="submit"
                   disabled={submittingUtr || !utrNo || !amount || parseFloat(amount) <= 0}
-                  className="btn-gold"
                   style={{
                     width: '100%',
                     padding: '15px',
@@ -2445,7 +2444,10 @@ const AddFund = () => {
                     letterSpacing: '0.03em',
                     cursor: (submittingUtr || !utrNo || !amount) ? 'not-allowed' : 'pointer',
                     opacity: (utrNo && amount) ? 1 : 0.65,
-                    boxShadow: '0 8px 24px rgba(214, 190, 102, 0.35)',
+                    background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    boxShadow: '0 6px 20px rgba(4, 52, 144, 0.35)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -2474,12 +2476,12 @@ const AddFund = () => {
                 marginTop: '16px',
                 padding: '10px 14px',
                 borderRadius: '10px',
-                backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
                 fontSize: '0.78rem',
-                color: 'rgba(255, 255, 255, 0.65)'
+                color: '#475569'
               }}>
-                <ShieldCheck size={16} color="#10b981" style={{ flexShrink: 0 }} />
+                <ShieldCheck size={16} color="#059669" style={{ flexShrink: 0 }} />
                 <span>Admin verifies deposit requests manually in <strong>Fund Request</strong> tab and credits your wallet.</span>
               </div>
             </div>

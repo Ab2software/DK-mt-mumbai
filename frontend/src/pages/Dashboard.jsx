@@ -200,37 +200,34 @@ const Dashboard = () => {
       {/* Marquee Notice Banner */}
       {alertMsg && (
         <div style={{
-          backgroundColor: 'rgba(13, 22, 36, 0.85)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
+          backgroundColor: '#ffffff',
           borderRadius: '16px',
           padding: '10px 16px',
           marginBottom: '20px',
-          border: '1px solid rgba(214, 190, 102, 0.3)',
+          border: '1px solid #e2e8f0',
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4), 0 0 15px rgba(214, 190, 102, 0.15)',
+          boxShadow: '0 4px 16px rgba(0, 30, 80, 0.06)',
           overflow: 'hidden'
         }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            backgroundColor: 'rgba(214, 190, 102, 0.15)',
-            border: '1px solid rgba(214, 190, 102, 0.35)',
+            backgroundColor: '#043490',
             padding: '6px 12px',
-            borderRadius: '10px',
+            borderRadius: '50px',
             flexShrink: 0
           }}>
-            <Megaphone size={18} style={{ color: 'var(--color-gold, #d6be66)' }} />
-            <span style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--color-gold, #d6be66)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <Megaphone size={16} style={{ color: '#ffffff' }} />
+            <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               NOTICE
             </span>
           </div>
 
-          <marquee style={{ color: '#ffffff', fontWeight: '600', fontSize: '0.92rem', verticalAlign: 'middle' }}>
-            <span style={{ color: 'var(--color-gold, #d6be66)', fontWeight: '700', marginRight: '8px' }}>★</span>
+          <marquee style={{ color: '#1e293b', fontWeight: '600', fontSize: '0.92rem', verticalAlign: 'middle' }}>
+            <span style={{ color: '#ff7607', fontWeight: '800', marginRight: '8px' }}>★</span>
             {alertMsg}
           </marquee>
         </div>
@@ -244,9 +241,9 @@ const Dashboard = () => {
           borderRadius: '20px',
           overflow: 'hidden',
           marginBottom: '24px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-          border: '1px solid rgba(214, 190, 102, 0.25)',
-          backgroundColor: '#0d192b'
+          boxShadow: '0 4px 20px rgba(0, 30, 80, 0.08)',
+          border: '1px solid #e2e8f0',
+          backgroundColor: '#ffffff'
         }}>
           <div style={{
             display: 'flex',
@@ -359,7 +356,7 @@ const Dashboard = () => {
                       width: currentSlide === i ? '18px' : '8px',
                       height: '8px',
                       borderRadius: '4px',
-                      backgroundColor: currentSlide === i ? 'var(--color-gold, #d6be66)' : 'rgba(255, 255, 255, 0.5)',
+                      backgroundColor: currentSlide === i ? '#FF6B00' : 'rgba(255, 255, 255, 0.5)',
                       border: 'none',
                       cursor: 'pointer',
                       transition: 'all 0.3s ease'
@@ -380,25 +377,21 @@ const Dashboard = () => {
         marginBottom: '24px'
       }}>
         <Link to="/add-fund" className="quick-action-pill">
-          <PlusCircle size={18} style={{ color: '#34d399' }} />
+          <PlusCircle size={20} style={{ color: '#00A843' }} />
           <span>Add Points</span>
         </Link>
         <Link to="/withdraw" className="quick-action-pill">
-          <ArrowUpRight size={18} style={{ color: '#fb7185' }} />
+          <ArrowUpRight size={20} style={{ color: '#EF4444' }} />
           <span>Withdraw</span>
         </Link>
         <Link to="/win-history" className="quick-action-pill">
-          <Trophy size={18} style={{ color: '#fbbf24' }} />
+          <Trophy size={20} style={{ color: '#F59E0B' }} />
           <span>Win History</span>
         </Link>
         <Link to="/game-rate" className="quick-action-pill">
-          <Percent size={18} style={{ color: '#38bdf8' }} />
+          <Percent size={20} style={{ color: '#043490' }} />
           <span>Game Rates</span>
         </Link>
-        {/* <Link to="/how-to-play" className="quick-action-pill">
-          <HelpCircle size={18} style={{ color: '#a855f7' }} />
-          <span>How To Play</span>
-        </Link> */}
       </div>
 
       {/* Markets Section Header & Sorting Controls */}
@@ -412,7 +405,7 @@ const Dashboard = () => {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <h4 style={{
-            color: '#ffffff',
+            color: '#043490',
             fontWeight: '800',
             fontSize: '1.25rem',
             letterSpacing: '0.04em',
@@ -422,15 +415,15 @@ const Dashboard = () => {
             alignItems: 'center',
             gap: '8px'
           }}>
-            <Sparkles size={20} style={{ color: 'var(--color-gold, #d6be66)' }} /> Live Game Markets
+            <Sparkles size={20} style={{ color: '#043490' }} /> Live Game Markets
           </h4>
           <span style={{
             fontSize: '0.72rem',
             padding: '3px 8px',
             borderRadius: '12px',
-            background: 'rgba(214, 190, 102, 0.15)',
-            border: '1px solid rgba(214, 190, 102, 0.3)',
-            color: 'var(--color-gold, #d6be66)',
+            background: 'rgba(4, 52, 144, 0.08)',
+            border: '1px solid rgba(4, 52, 144, 0.2)',
+            color: '#043490',
             fontWeight: '700'
           }}>
             {sortedGames.length} Markets
@@ -447,17 +440,17 @@ const Dashboard = () => {
           {/* Quick Filter: All / Open Only */}
           <div style={{
             display: 'inline-flex',
-            backgroundColor: 'rgba(13, 22, 36, 0.85)',
+            backgroundColor: '#f1f5f9',
             borderRadius: '10px',
-            padding: '2px',
-            border: '1px solid rgba(255, 255, 255, 0.08)'
+            padding: '3px',
+            border: '1px solid #e2e8f0'
           }}>
             <button
               type="button"
               onClick={() => setMarketFilter('all')}
               style={{
-                background: marketFilter === 'all' ? 'rgba(214, 190, 102, 0.2)' : 'transparent',
-                color: marketFilter === 'all' ? 'var(--color-gold, #d6be66)' : 'rgba(255, 255, 255, 0.6)',
+                background: marketFilter === 'all' ? '#043490' : 'transparent',
+                color: marketFilter === 'all' ? '#ffffff' : '#64748b',
                 border: 'none',
                 borderRadius: '8px',
                 padding: '4px 10px',
@@ -473,8 +466,8 @@ const Dashboard = () => {
               type="button"
               onClick={() => setMarketFilter('open')}
               style={{
-                background: marketFilter === 'open' ? 'rgba(16, 185, 129, 0.25)' : 'transparent',
-                color: marketFilter === 'open' ? '#34d399' : 'rgba(255, 255, 255, 0.6)',
+                background: marketFilter === 'open' ? '#059669' : 'transparent',
+                color: marketFilter === 'open' ? '#ffffff' : '#64748b',
                 border: 'none',
                 borderRadius: '8px',
                 padding: '4px 10px',
@@ -493,13 +486,13 @@ const Dashboard = () => {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '6px',
-            backgroundColor: 'rgba(13, 22, 36, 0.85)',
-            border: '1px solid rgba(214, 190, 102, 0.3)',
+            backgroundColor: '#ffffff',
+            border: '1px solid #e2e8f0',
             borderRadius: '10px',
             padding: '4px 8px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+            boxShadow: '0 2px 8px rgba(0, 30, 80, 0.04)'
           }}>
-            <Clock size={14} style={{ color: 'var(--color-gold, #d6be66)', flexShrink: 0 }} />
+            <Clock size={14} style={{ color: '#043490', flexShrink: 0 }} />
             <select
               id="market-sort-select"
               aria-label="Sort Live Markets"
@@ -508,7 +501,7 @@ const Dashboard = () => {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: '#ffffff',
+                color: '#1e293b',
                 fontSize: '0.76rem',
                 fontWeight: '700',
                 cursor: 'pointer',
@@ -516,16 +509,16 @@ const Dashboard = () => {
                 paddingRight: '4px'
               }}
             >
-              <option value="time_asc" style={{ backgroundColor: '#0d192b', color: '#ffffff' }}>
+              <option value="time_asc" style={{ backgroundColor: '#ffffff', color: '#1e293b' }}>
                 ⏰ Time: Earliest First
               </option>
-              <option value="open_first" style={{ backgroundColor: '#0d192b', color: '#ffffff' }}>
+              <option value="open_first" style={{ backgroundColor: '#ffffff', color: '#1e293b' }}>
                 🟢 Open Markets First
               </option>
-              <option value="time_desc" style={{ backgroundColor: '#0d192b', color: '#ffffff' }}>
+              <option value="time_desc" style={{ backgroundColor: '#ffffff', color: '#1e293b' }}>
                 ⏰ Time: Latest First
               </option>
-              <option value="name_asc" style={{ backgroundColor: '#0d192b', color: '#ffffff' }}>
+              <option value="name_asc" style={{ backgroundColor: '#ffffff', color: '#1e293b' }}>
                 🔤 Name: A to Z
               </option>
             </select>
@@ -534,25 +527,25 @@ const Dashboard = () => {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'rgba(255, 255, 255, 0.7)' }}>
-          <div className="spinner" style={{ margin: '0 auto 16px' }} />
-          Loading live markets...
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#64748B' }}>
+          <div className="spinner" style={{ margin: '0 auto 16px', borderTopColor: '#043490' }} />
+          <span style={{ fontWeight: '600' }}>Loading live markets...</span>
         </div>
       ) : sortedGames.length === 0 ? (
-        <div className="card-glass-v2" style={{ textAlign: 'center', padding: '40px 20px', color: 'rgba(255,255,255,0.7)' }}>
+        <div className="card-glass-v2" style={{ textAlign: 'center', padding: '40px 20px', color: '#64748B' }}>
           {marketFilter === 'open' ? (
             <div>
-              <p style={{ margin: '0 0 10px', fontSize: '0.95rem' }}>No open markets available right now.</p>
+              <p style={{ margin: '0 0 10px', fontSize: '0.95rem', fontWeight: '600' }}>No open markets available right now.</p>
               <button
                 type="button"
                 onClick={() => setMarketFilter('all')}
                 style={{
-                  background: 'rgba(214, 190, 102, 0.15)',
-                  border: '1px solid var(--color-gold, #d6be66)',
-                  color: 'var(--color-gold, #d6be66)',
+                  background: '#EEF2FF',
+                  border: '1px solid #043490',
+                  color: '#043490',
                   borderRadius: '8px',
-                  padding: '6px 14px',
-                  fontSize: '0.8rem',
+                  padding: '6px 16px',
+                  fontSize: '0.82rem',
                   fontWeight: '700',
                   cursor: 'pointer'
                 }}
@@ -561,7 +554,7 @@ const Dashboard = () => {
               </button>
             </div>
           ) : (
-            'No active games found for today.'
+            <span style={{ fontWeight: '600' }}>No active games found for today.</span>
           )}
         </div>
       ) : (
@@ -581,7 +574,7 @@ const Dashboard = () => {
                 {/* Top Row: Game Name & Status Badge */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <h4 style={{
-                    color: '#ffffff',
+                    color: '#0f172a',
                     fontSize: '1rem',
                     fontWeight: '800',
                     margin: 0,
@@ -600,21 +593,21 @@ const Dashboard = () => {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                  backgroundColor: '#f8fafc',
                   borderRadius: '10px',
                   padding: '8px 12px',
                   marginBottom: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.06)'
+                  border: '1px solid #e2e8f0'
                 }}>
                   {/* Left: Result */}
                   <div>
-                    <span style={{ fontSize: '0.64rem', color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', fontWeight: '600', display: 'block', lineHeight: 1 }}>
+                    <span style={{ fontSize: '0.64rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '600', display: 'block', lineHeight: 1 }}>
                       Result
                     </span>
                     <span style={{
                       fontSize: '1.15rem',
                       fontWeight: '800',
-                      color: 'var(--color-gold, #d6be66)',
+                      color: '#043490',
                       letterSpacing: '1.5px',
                       fontFamily: 'monospace',
                       marginTop: '2px',
@@ -626,12 +619,12 @@ const Dashboard = () => {
 
                   {/* Right: Timings */}
                   <div style={{ textAlign: 'right', fontSize: '0.74rem' }}>
-                    <div style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-                      <span style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.64rem', fontWeight: '600', marginRight: '4px' }}>OPEN:</span>
+                    <div style={{ color: '#334155' }}>
+                      <span style={{ color: '#94a3b8', fontSize: '0.64rem', fontWeight: '600', marginRight: '4px' }}>OPEN:</span>
                       <strong>{g.open_time}</strong>
                     </div>
-                    <div style={{ color: 'var(--color-gold, #d6be66)', marginTop: '2px' }}>
-                      <span style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.64rem', fontWeight: '600', marginRight: '4px' }}>CLOSE:</span>
+                    <div style={{ color: '#043490', marginTop: '2px' }}>
+                      <span style={{ color: '#94a3b8', fontSize: '0.64rem', fontWeight: '600', marginRight: '4px' }}>CLOSE:</span>
                       <strong>{g.close_time}</strong>
                     </div>
                   </div>
@@ -646,7 +639,7 @@ const Dashboard = () => {
                   <Link
                     to={`/chart?game=${encodeURIComponent(g.games_name)}`}
                     style={{
-                      color: 'rgba(255, 255, 255, 0.7)',
+                      color: '#043490',
                       fontSize: '0.8rem',
                       fontWeight: '700',
                       textDecoration: 'none',
@@ -655,7 +648,7 @@ const Dashboard = () => {
                       gap: '4px'
                     }}
                   >
-                    <BarChart3 size={14} style={{ color: 'var(--color-gold, #d6be66)' }} />
+                    <BarChart3 size={14} style={{ color: '#043490' }} />
                     <span>Chart</span>
                   </Link>
 
@@ -664,22 +657,22 @@ const Dashboard = () => {
                       type="button"
                       onClick={() => navigate(`/game-types?game=${encodeURIComponent(g.games_name)}&openTime=${encodeURIComponent(g.open_time || '')}&closeTime=${encodeURIComponent(g.close_time || '')}`)}
                       style={{
-                        background: 'var(--app-gradient-primary, linear-gradient(135deg, #d6be66 0%, #10b981 100%))',
-                        color: '#0b1a30',
+                        background: '#043490',
+                        color: '#ffffff',
                         border: 'none',
-                        borderRadius: '8px',
-                        padding: '6px 14px',
+                        borderRadius: '50px',
+                        padding: '6px 16px',
                         fontWeight: '800',
                         fontSize: '0.82rem',
                         cursor: 'pointer',
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '5px',
-                        boxShadow: '0 3px 10px rgba(16, 185, 129, 0.3)',
+                        boxShadow: '0 3px 10px rgba(4, 52, 144, 0.3)',
                         transition: 'all 0.2s ease'
                       }}
                     >
-                      <Play size={14} fill="#0b1a30" />
+                      <Play size={14} fill="#ffffff" />
                       <span>Play Now</span>
                     </button>
                   ) : (
@@ -687,11 +680,11 @@ const Dashboard = () => {
                       type="button"
                       disabled
                       style={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                        color: 'rgba(255, 255, 255, 0.35)',
+                        backgroundColor: '#f1f5f9',
+                        color: '#94a3b8',
                         border: 'none',
-                        borderRadius: '8px',
-                        padding: '6px 12px',
+                        borderRadius: '50px',
+                        padding: '6px 14px',
                         fontWeight: '600',
                         fontSize: '0.78rem',
                         cursor: 'not-allowed'

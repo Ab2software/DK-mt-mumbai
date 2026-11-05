@@ -209,27 +209,27 @@ const PullToRefresh = ({ children, onRefresh, themeColor = 'gold' }) => {
             gap: '8px',
             padding: '8px 18px',
             borderRadius: '25px',
-            background: 'rgba(11, 26, 48, 0.96)',
-            border: `1.5px solid ${isReady || refreshing ? 'var(--color-gold, #d6be66)' : 'rgba(255, 255, 255, 0.25)'}`,
+            background: '#ffffff',
+            border: `1.5px solid ${isReady || refreshing ? '#043490' : '#cbd5e1'}`,
             boxShadow:
               isReady || refreshing
-                ? '0 8px 30px rgba(0, 0, 0, 0.75), 0 0 20px rgba(214, 190, 102, 0.4)'
-                : '0 6px 20px rgba(0, 0, 0, 0.5)',
+                ? '0 8px 24px rgba(4, 52, 144, 0.2)'
+                : '0 6px 18px rgba(0, 0, 0, 0.08)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
-            color: '#ffffff',
+            color: '#0f172a',
             fontSize: '0.84rem',
             fontWeight: '700',
             userSelect: 'none'
           }}
         >
           {isSuccess ? (
-            <Check size={16} style={{ color: '#10b981' }} />
+            <Check size={16} style={{ color: '#059669' }} />
           ) : refreshing ? (
             <RefreshCw
               size={16}
               style={{
-                color: 'var(--color-gold, #d6be66)',
+                color: '#043490',
                 animation: 'ptrSpin 0.75s linear infinite'
               }}
             />
@@ -237,7 +237,7 @@ const PullToRefresh = ({ children, onRefresh, themeColor = 'gold' }) => {
             <RefreshCw
               size={16}
               style={{
-                color: 'var(--color-gold, #d6be66)',
+                color: '#043490',
                 transform: 'rotate(180deg)',
                 transition: 'transform 0.2s ease'
               }}
@@ -246,14 +246,14 @@ const PullToRefresh = ({ children, onRefresh, themeColor = 'gold' }) => {
             <ArrowDown
               size={16}
               style={{
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: '#64748b',
                 transform: `rotate(${progressRatio * 180}deg)`,
                 transition: 'transform 0.1s linear'
               }}
             />
           )}
 
-          <span style={{ color: isSuccess ? '#10b981' : isReady || refreshing ? 'var(--color-gold, #d6be66)' : 'rgba(255, 255, 255, 0.85)' }}>
+          <span style={{ color: isSuccess ? '#059669' : '#043490', fontWeight: '800' }}>
             {isSuccess
               ? 'Updated!'
               : refreshing

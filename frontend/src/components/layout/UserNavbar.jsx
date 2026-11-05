@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, PlusCircle, Wallet, LogOut } from 'lucide-react';
+import { Menu, PlusCircle, Wallet } from 'lucide-react';
 import api from '../../utils/api';
 
-const UserNavbar = ({ onOpenSidebar, wallet = '0', themeColor = 'gold', onThemeChange, onLogout }) => {
+const UserNavbar = ({ onOpenSidebar, wallet = '0', themeColor = 'blue', onThemeChange, onLogout }) => {
   const [appName, setAppName] = useState('Bharat Matka');
 
   useEffect(() => {
@@ -21,16 +21,14 @@ const UserNavbar = ({ onOpenSidebar, wallet = '0', themeColor = 'gold', onThemeC
       left: 0,
       right: 0,
       height: '64px',
-      backgroundColor: 'rgba(9, 18, 31, 0.85)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+      background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '0 16px',
       zIndex: 1000,
-      boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+      boxShadow: '0 4px 18px rgba(4, 52, 144, 0.28)'
     }}>
       {/* Left: Hamburger Menu & Brand Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -39,8 +37,8 @@ const UserNavbar = ({ onOpenSidebar, wallet = '0', themeColor = 'gold', onThemeC
           onClick={onOpenSidebar}
           aria-label="Toggle Menu"
           style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
+            background: 'rgba(255, 255, 255, 0.15)',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
             cursor: 'pointer',
             padding: '8px',
             display: 'flex',
@@ -56,20 +54,28 @@ const UserNavbar = ({ onOpenSidebar, wallet = '0', themeColor = 'gold', onThemeC
         </button>
 
         <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-          <img
-            src="/img/logo.png"
-            alt="Bharat Matka Logo"
-            style={{
-              height: '46px',
-              width: 'auto',
-              maxWidth: '160px',
-              objectFit: 'contain',
-              filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.5))'
-            }}
-            onError={(e) => {
-              e.target.src = '/img/logo.png';
-            }}
-          />
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '12px',
+            padding: '4px 10px',
+            display: 'flex',
+            alignItems: 'center',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.18)'
+          }}>
+            <img
+              src="/img/logo.png"
+              alt={`${appName} Logo`}
+              style={{
+                height: '38px',
+                width: 'auto',
+                maxWidth: '140px',
+                objectFit: 'contain'
+              }}
+              onError={(e) => {
+                e.target.src = '/img/logo.png';
+              }}
+            />
+          </div>
         </Link>
       </div>
 
@@ -82,15 +88,15 @@ const UserNavbar = ({ onOpenSidebar, wallet = '0', themeColor = 'gold', onThemeC
             alignItems: 'center',
             justifyContent: 'center',
             gap: '5px',
-            height: '34px',
-            padding: '0 12px',
-            borderRadius: '10px',
-            background: themeColor === 'cyan' ? 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)' : themeColor === 'crimson' ? 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)' : 'linear-gradient(135deg, #d6be66 0%, #bca54e 100%)',
-            color: themeColor === 'gold' ? '#0b1a30' : '#ffffff',
-            fontSize: '0.8rem',
-            fontWeight: '700',
+            height: '36px',
+            padding: '0 14px',
+            borderRadius: '50px',
+            background: 'linear-gradient(135deg, #FF7A00 0%, #E65A00 100%)',
+            color: '#ffffff',
+            fontSize: '0.82rem',
+            fontWeight: '800',
             textDecoration: 'none',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+            boxShadow: '0 3px 12px rgba(255, 107, 0, 0.4)',
             boxSizing: 'border-box'
           }}
         >
@@ -105,21 +111,21 @@ const UserNavbar = ({ onOpenSidebar, wallet = '0', themeColor = 'gold', onThemeC
             alignItems: 'center',
             justifyContent: 'center',
             gap: '6px',
-            height: '34px',
-            padding: '0 12px',
-            borderRadius: '10px',
-            backgroundColor: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            color: 'var(--color-gold, #d6be66)',
-            fontSize: '0.82rem',
+            height: '36px',
+            padding: '0 14px',
+            borderRadius: '50px',
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            border: '1px solid rgba(255, 255, 255, 0.35)',
+            color: '#ffffff',
+            fontSize: '0.88rem',
             fontWeight: '800',
             textDecoration: 'none',
-            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.15)',
             boxSizing: 'border-box'
           }}
         >
-          <Wallet size={16} />
-          <span>₹{wallet}</span>
+          <Wallet size={16} style={{ color: '#FCD34D' }} />
+          <span>₹ {wallet}</span>
         </Link>
       </div>
     </header>

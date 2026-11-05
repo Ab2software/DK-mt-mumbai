@@ -2809,43 +2809,15 @@ const AdminDashboard = ({ setAdminAuth }) => {
             )}
           </div>
 
-          {/* Live Support Chat */}
+          {/* Direct WhatsApp Support */}
           <div onClick={() => handleTabClick('support_chat')} style={sidebarItemStyle(activeTab === 'support_chat')}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
                 <div style={{ position: 'relative', display: 'inline-flex' }}>
-                  <MessageSquare size={18} style={{ flexShrink: 0, color: activeTab === 'support_chat' ? '#f1673e' : '#a6b0cf' }} />
-                  {(badgeCounts.unread_chats > 0 || chatUnreadCount > 0) && isDesktopSidebarCollapsed && !isMobile && (
-                    <span style={{
-                      position: 'absolute',
-                      top: -2,
-                      right: -2,
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      backgroundColor: '#ef4444',
-                      boxShadow: '0 0 6px #ef4444'
-                    }} />
-                  )}
+                  <MessageSquare size={18} style={{ flexShrink: 0, color: activeTab === 'support_chat' ? '#25D366' : '#a6b0cf' }} />
                 </div>
-                {(!isDesktopSidebarCollapsed || isMobile) && <span style={{ whiteSpace: 'nowrap' }}>Live Support Chat</span>}
+                {(!isDesktopSidebarCollapsed || isMobile) && <span style={{ whiteSpace: 'nowrap' }}>WhatsApp Support</span>}
               </div>
-              {(badgeCounts.unread_chats > 0 || chatUnreadCount > 0) && (!isDesktopSidebarCollapsed || isMobile) && (
-                <span
-                  className="admin-badge-pulse"
-                  style={{
-                    backgroundColor: '#ef4444',
-                    color: '#ffffff',
-                    fontSize: '0.7rem',
-                    fontWeight: '700',
-                    padding: '2px 7px',
-                    borderRadius: '10px',
-                    boxShadow: '0 2px 6px rgba(239, 68, 68, 0.4)'
-                  }}
-                >
-                  {(badgeCounts.unread_chats || chatUnreadCount) > 99 ? '99+' : (badgeCounts.unread_chats || chatUnreadCount)}
-                </span>
-              )}
             </div>
           </div>
 
@@ -2877,9 +2849,7 @@ const AdminDashboard = ({ setAdminAuth }) => {
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        overflowY: activeTab === 'support_chat' ? 'hidden' : 'auto',
-        height: activeTab === 'support_chat' ? 'calc(100vh - 70px)' : 'auto',
-        maxHeight: activeTab === 'support_chat' ? 'calc(100dvh - 70px)' : 'none',
+        overflowY: 'auto',
         minWidth: 0,
         width: '100%',
         maxWidth: '100%'
@@ -3128,7 +3098,7 @@ const AdminDashboard = ({ setAdminAuth }) => {
                       )}
                     </div>
 
-                    {/* Live Support Chat */}
+                    {/* WhatsApp Support Hub */}
                     <div
                       onClick={() => {
                         setShowNotificationsDropdown(false);
@@ -3147,21 +3117,15 @@ const AdminDashboard = ({ setAdminAuth }) => {
                       onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#e8fdf0', color: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <MessageSquare size={16} />
                         </div>
                         <div>
-                          <div style={{ fontSize: '0.84rem', fontWeight: '600', color: '#1e293b' }}>Support Chat Messages</div>
-                          <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Unread client inquiries</div>
+                          <div style={{ fontSize: '0.84rem', fontWeight: '600', color: '#1e293b' }}>WhatsApp Support Hub</div>
+                          <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Connect with users directly</div>
                         </div>
                       </div>
-                      {(badgeCounts.unread_chats > 0 || chatUnreadCount > 0) ? (
-                        <span style={{ backgroundColor: '#3b82f6', color: '#fff', fontSize: '0.7rem', fontWeight: '700', padding: '2px 8px', borderRadius: '10px' }}>
-                          {badgeCounts.unread_chats || chatUnreadCount}
-                        </span>
-                      ) : (
-                        <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>0</span>
-                      )}
+                      <span style={{ color: '#25D366', fontSize: '0.75rem', fontWeight: 'bold' }}>Direct</span>
                     </div>
 
                     {/* Unapproved Users */}
@@ -3417,19 +3381,12 @@ const AdminDashboard = ({ setAdminAuth }) => {
 
         {/* 3. Screen Views */}
         <div style={{
-          padding: activeTab === 'support_chat'
-            ? (isMobile ? '6px 8px' : '10px 16px')
-            : (isMobile ? '12px 14px' : '24px 28px'),
+          padding: isMobile ? '12px 14px' : '24px 28px',
           flex: 1,
           minWidth: 0,
           width: '100%',
           maxWidth: '100%',
-          boxSizing: 'border-box',
-          display: activeTab === 'support_chat' ? 'flex' : 'block',
-          flexDirection: activeTab === 'support_chat' ? 'column' : undefined,
-          height: activeTab === 'support_chat' ? '100%' : 'auto',
-          minHeight: 0,
-          overflow: activeTab === 'support_chat' ? 'hidden' : 'visible'
+          boxSizing: 'border-box'
         }}>
 
 
@@ -4690,7 +4647,33 @@ const AdminDashboard = ({ setAdminAuth }) => {
                         <tr key={u.id} style={{ borderBottom: '1px solid #eff2f7' }}>
                           <td style={{ padding: '12px' }}>{(userPage - 1) * userPerPage + idx + 1}</td>
                           <td style={{ padding: '12px', color: '#f1673e', fontWeight: '500' }}>{u.name || 'User'}</td>
-                          <td style={{ padding: '12px' }}>{u.phone}</td>
+                          <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                              <span>{u.phone}</span>
+                              {u.phone && (
+                                <a
+                                  href={`https://wa.me/91${String(u.phone).replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(`Hello ${u.name || 'User'}, greeting from Bharat Matka Admin.`)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title={`Chat with ${u.name || 'User'} on WhatsApp`}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: '#25D366',
+                                    color: '#ffffff',
+                                    borderRadius: '50%',
+                                    width: '24px',
+                                    height: '24px',
+                                    textDecoration: 'none',
+                                    boxShadow: '0 2px 6px rgba(37, 211, 102, 0.4)'
+                                  }}
+                                >
+                                  <MessageCircle size={14} />
+                                </a>
+                              )}
+                            </div>
+                          </td>
                           <td style={{ padding: '12px' }}>{u.email || '-'}</td>
                           <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>{u.date || '-'}</td>
                           <td style={{ padding: '12px', fontWeight: 'bold' }}>{u.wallet || 0}</td>
@@ -4946,9 +4929,37 @@ const AdminDashboard = ({ setAdminAuth }) => {
                           <h5 style={{ margin: '0 0 2px 0', fontSize: '1.05rem', color: '#495057', fontWeight: '700' }}>
                             {userDetailsData.user.name || 'User Profile'}
                           </h5>
-                          <span style={{ fontSize: '0.8rem', color: '#74788d' }}>
-                            Phone: <strong>{userDetailsData.user.phone}</strong> | Email: {userDetailsData.user.email || 'N/A'}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '3px' }}>
+                            <span style={{ fontSize: '0.8rem', color: '#74788d' }}>
+                              Phone: <strong style={{ color: '#2a3042' }}>{userDetailsData.user.phone}</strong>
+                            </span>
+                            {userDetailsData.user.phone && (
+                              <a
+                                href={`https://wa.me/91${String(userDetailsData.user.phone).replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(`Hello ${userDetailsData.user.name || 'Member'}, greeting from Bharat Matka Support!`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  backgroundColor: '#25D366',
+                                  color: '#ffffff',
+                                  fontSize: '0.72rem',
+                                  fontWeight: '700',
+                                  padding: '2px 8px',
+                                  borderRadius: '12px',
+                                  textDecoration: 'none',
+                                  boxShadow: '0 2px 4px rgba(37,211,102,0.25)'
+                                }}
+                                title="Chat on WhatsApp"
+                              >
+                                💬 WhatsApp Chat
+                              </a>
+                            )}
+                            <span style={{ fontSize: '0.8rem', color: '#74788d' }}>
+                              | Email: {userDetailsData.user.email || 'N/A'}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
@@ -7870,7 +7881,45 @@ const AdminDashboard = ({ setAdminAuth }) => {
                       </div>
                     )
                   },
-                  { title: 'Phone Number', key: 'username', render: (item) => item.username },
+                  {
+                    title: 'Phone Number',
+                    key: 'username',
+                    render: (item) => {
+                      const rawPhone = item.phone || item.user_phone || item.username || '';
+                      const cleanPhone = String(rawPhone).replace(/\D/g, '').slice(-10);
+                      const depositAmount = item.amount || item.points || '';
+                      const utr = item.trans_details || '';
+                      const msg = `Hello ${item.user_name || 'Member'}, regarding your Bharat Matka Deposit request of ₹${depositAmount}${utr ? ` (UTR: ${utr})` : ''}:`;
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontWeight: '500' }}>{rawPhone}</span>
+                          {cleanPhone.length === 10 && (
+                            <a
+                              href={`https://wa.me/91${cleanPhone}?text=${encodeURIComponent(msg)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Chat on WhatsApp"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: '22px',
+                                height: '22px',
+                                borderRadius: '50%',
+                                backgroundColor: '#25D366',
+                                color: '#ffffff',
+                                fontSize: '11px',
+                                textDecoration: 'none',
+                                flexShrink: 0
+                              }}
+                            >
+                              💬
+                            </a>
+                          )}
+                        </div>
+                      );
+                    }
+                  },
                   { title: 'Amount', key: 'amount', render: (item) => <strong style={{ color: '#28a745' }}>₹ {item.amount}</strong> },
                   { title: 'Points', key: 'points', render: (item) => item.points || item.amount },
                   {
@@ -8111,7 +8160,43 @@ const AdminDashboard = ({ setAdminAuth }) => {
                               <span style={{ fontSize: '0.8rem', opacity: 0.85 }}>🔗</span>
                             </button>
                           </td>
-                          <td style={{ padding: '10px 12px' }}>{item.username}</td>
+                          <td style={{ padding: '10px 12px' }}>
+                            {(() => {
+                              const rawPhone = item.phone || item.user_phone || item.username || '';
+                              const cleanPhone = String(rawPhone).replace(/\D/g, '').slice(-10);
+                              const wAmt = item.request_amount || item.amount || '';
+                              const reqNum = item.request_number || item.id || '';
+                              const msg = `Hello ${item.user_name || 'Member'}, regarding your Bharat Matka Withdrawal request of ₹${wAmt}${reqNum ? ` (Req #${reqNum})` : ''}:`;
+                              return (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ fontWeight: '500' }}>{rawPhone}</span>
+                                  {cleanPhone.length === 10 && (
+                                    <a
+                                      href={`https://wa.me/91${cleanPhone}?text=${encodeURIComponent(msg)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      title="Chat on WhatsApp"
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: '22px',
+                                        height: '22px',
+                                        borderRadius: '50%',
+                                        backgroundColor: '#25D366',
+                                        color: '#ffffff',
+                                        fontSize: '11px',
+                                        textDecoration: 'none',
+                                        flexShrink: 0
+                                      }}
+                                    >
+                                      💬
+                                    </a>
+                                  )}
+                                </div>
+                              );
+                            })()}
+                          </td>
                           <td style={{ padding: '10px 12px', fontSize: '0.8rem' }}>
                             {item.account_number || item.bank_name || item.paytm || item.phonepay || item.googlepay ? (
                               <div style={{ lineHeight: '1.4' }}>

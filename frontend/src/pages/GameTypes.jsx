@@ -232,12 +232,12 @@ const GameTypes = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        background: 'linear-gradient(135deg, #ffa726 0%, #fb8c00 100%)',
+        background: 'linear-gradient(135deg, #043490 0%, #002663 100%)',
         padding: '14px 18px',
         borderRadius: '16px',
         marginBottom: '20px',
-        color: '#0b1a30',
-        boxShadow: '0 8px 24px rgba(251, 140, 0, 0.35)',
+        color: '#ffffff',
+        boxShadow: '0 4px 14px rgba(4, 52, 144, 0.25)',
         position: 'sticky',
         top: '10px',
         zIndex: 20
@@ -252,7 +252,7 @@ const GameTypes = () => {
               padding: 0,
               display: 'flex',
               alignItems: 'center',
-              color: '#0b1a30',
+              color: '#ffffff',
               cursor: 'pointer'
             }}
           >
@@ -263,7 +263,7 @@ const GameTypes = () => {
             fontSize: '1.15rem',
             textTransform: 'uppercase',
             letterSpacing: '0.04em',
-            color: '#0b1a30'
+            color: '#ffffff'
           }}>
             {gameName}
           </span>
@@ -274,13 +274,14 @@ const GameTypes = () => {
           alignItems: 'center',
           gap: '6px',
           fontWeight: '900',
-          fontSize: '1.05rem',
-          color: '#0b1a30',
-          background: 'rgba(255, 255, 255, 0.25)',
+          fontSize: '1rem',
+          color: '#ffffff',
+          background: 'rgba(255, 255, 255, 0.18)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
           padding: '6px 14px',
           borderRadius: '20px'
         }}>
-          <Wallet size={19} strokeWidth={2.5} />
+          <Wallet size={18} strokeWidth={2.5} />
           <span>₹ {wallet}</span>
         </div>
       </div>
@@ -291,20 +292,21 @@ const GameTypes = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
           borderRadius: '12px',
           padding: '10px 16px',
           marginBottom: '16px',
           fontSize: '0.82rem',
-          color: 'rgba(255, 255, 255, 0.85)'
+          color: '#475569',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Clock size={15} style={{ color: '#ffa726' }} />
-            <span>Open: <strong>{openTime || '-'}</strong></span>
+            <Clock size={15} style={{ color: '#043490' }} />
+            <span>Open: <strong style={{ color: '#0f172a' }}>{openTime || '-'}</strong></span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>Close: <strong>{closeTime || '-'}</strong></span>
+            <span>Close: <strong style={{ color: '#0f172a' }}>{closeTime || '-'}</strong></span>
           </div>
         </div>
       )}
@@ -313,10 +315,10 @@ const GameTypes = () => {
       {marketStatus.isClosed && (
         <div style={{
           padding: '12px 16px',
-          backgroundColor: 'rgba(239, 68, 68, 0.18)',
-          border: '1px solid #ef4444',
+          backgroundColor: '#FEF2F2',
+          border: '1px solid #FECACA',
           borderRadius: '12px',
-          color: '#fca5a5',
+          color: '#B91C1C',
           fontSize: '0.88rem',
           fontWeight: '700',
           marginBottom: '18px',
@@ -332,12 +334,12 @@ const GameTypes = () => {
       {!marketStatus.isClosed && !marketStatus.isOpenSession && (
         <div style={{
           padding: '10px 14px',
-          backgroundColor: 'rgba(245, 158, 11, 0.15)',
-          border: '1px solid rgba(245, 158, 11, 0.4)',
+          backgroundColor: '#FFFBEB',
+          border: '1px solid #FDE68A',
           borderRadius: '12px',
-          color: '#fcd34d',
+          color: '#92400E',
           fontSize: '0.82rem',
-          fontWeight: '600',
+          fontWeight: '700',
           marginBottom: '18px',
           display: 'flex',
           alignItems: 'center',
@@ -351,11 +353,11 @@ const GameTypes = () => {
       {warningMsg && (
         <div style={{
           padding: '10px 14px',
-          backgroundColor: 'rgba(239, 68, 68, 0.2)',
-          border: '1px solid #ef4444',
+          backgroundColor: '#FEF2F2',
+          border: '1px solid #FECACA',
           borderRadius: '12px',
-          color: '#f87171',
-          fontSize: '0.82rem',
+          color: '#B91C1C',
+          fontSize: '0.85rem',
           fontWeight: '700',
           marginBottom: '18px',
           textAlign: 'center'

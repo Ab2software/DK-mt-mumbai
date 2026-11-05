@@ -167,7 +167,7 @@ const WalletPage = () => {
   return (
     <div style={{ maxWidth: '1080px', margin: '0 auto', padding: '20px 16px 32px' }}>
       <div style={{ marginBottom: '18px' }}>
-        <Link to="/" style={{ color: 'var(--color-gold, #d6be66)', textDecoration: 'none', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
+        <Link to="/" style={{ color: '#043490', textDecoration: 'none', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
           <ArrowLeft size={18} /> BACK TO HOME
         </Link>
       </div>
@@ -176,16 +176,16 @@ const WalletPage = () => {
         {/* Main Wallet UI Panel */}
         <div className="card-glass-v2">
           <div style={{ 
-            background: 'linear-gradient(135deg, rgba(214, 190, 102, 0.18) 0%, rgba(16, 185, 129, 0.18) 100%)',
+            background: 'linear-gradient(135deg, rgba(4, 52, 144, 0.08) 0%, rgba(0, 168, 67, 0.08) 100%)',
             padding: '20px',
             borderRadius: '14px',
-            border: '1px solid rgba(214, 190, 102, 0.25)',
+            border: '1px solid rgba(4, 52, 144, 0.15)',
             marginBottom: '20px'
           }}>
-            <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Wallet size={16} style={{ color: 'var(--color-gold, #d6be66)' }} /> Current Digital Wallet Balance
+            <span style={{ color: '#475569', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Wallet size={16} style={{ color: '#043490' }} /> Current Digital Wallet Balance
             </span>
-            <h1 style={{ color: 'var(--color-gold, #d6be66)', fontSize: '2.6rem', margin: '6px 0 0 0', fontWeight: '800' }}>₹{walletInfo?.wallet || '0'}</h1>
+            <h1 style={{ color: '#043490', fontSize: '2.6rem', margin: '6px 0 0 0', fontWeight: '800' }}>₹{walletInfo?.wallet || '0'}</h1>
           </div>
 
           <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
@@ -218,23 +218,23 @@ const WalletPage = () => {
           {/* Transactions Tab */}
           {activeTab === 'history' && (
             <div>
-              <h3 style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '14px', fontWeight: '700' }}>Recent Wallet Transactions</h3>
+              <h3 style={{ color: '#0f172a', fontSize: '1.1rem', marginBottom: '14px', fontWeight: '800' }}>Recent Wallet Transactions</h3>
               <div style={{ maxHeight: '350px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {history.length === 0 ? (
-                  <p style={{ color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center', padding: '24px' }}>No transactions recorded</p>
+                  <p style={{ color: '#64748b', textAlign: 'center', padding: '24px' }}>No transactions recorded</p>
                 ) : (
                   history.map((item, idx) => {
                     const isDebit = String(item.amount || '').trim().startsWith('-') ||
                       String(item.status || '') === '0' ||
                       /deduct|debit|revert|withdraw|bid/i.test(item.remark || '');
                     const rawAmt = String(item.amount || '0').replace(/^[+-]/, '').trim();
-                    const badgeColor = isDebit ? '#f87171' : '#34d399';
+                    const badgeColor = isDebit ? '#ef4444' : '#10b981';
 
                     return (
-                      <div key={item.id || idx} className="flex-between" style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', borderLeft: `4px solid ${badgeColor}` }}>
+                      <div key={item.id || idx} className="flex-between" style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', borderLeft: `4px solid ${badgeColor}` }}>
                         <div>
-                          <p style={{ color: '#fff', fontWeight: '600', fontSize: '0.92rem', margin: '0 0 2px 0' }}>{item.remark}</p>
-                          <span style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '0.75rem' }}>
+                          <p style={{ color: '#0f172a', fontWeight: '700', fontSize: '0.92rem', margin: '0 0 2px 0' }}>{item.remark}</p>
+                          <span style={{ color: '#64748b', fontSize: '0.75rem' }}>
                             {formatDisplayDateTime(item.date, item.time)}
                           </span>
                         </div>
@@ -252,12 +252,12 @@ const WalletPage = () => {
           {/* Add Funds Tab */}
           {activeTab === 'deposit' && (
             <form onSubmit={handleDepositSubmit}>
-              <h3 style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '14px', fontWeight: '700' }}>Deposit Funds Request</h3>
+              <h3 style={{ color: '#0f172a', fontSize: '1.1rem', marginBottom: '14px', fontWeight: '800' }}>Deposit Funds Request</h3>
               
               <div className="form-group">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                   <label className="form-label" style={{ margin: 0 }}>Amount (Min: ₹{walletInfo?.min_deposite || 100})</label>
-                  <Link to="/add-fund" style={{ color: 'var(--color-gold, #d6be66)', fontSize: '0.8rem', fontWeight: '700', textDecoration: 'none' }}>
+                  <Link to="/add-fund" style={{ color: '#043490', fontSize: '0.8rem', fontWeight: '700', textDecoration: 'none' }}>
                     Open Full UPI Page &gt;
                   </Link>
                 </div>
@@ -370,8 +370,8 @@ const WalletPage = () => {
         {/* UPI Details & Instructions Side panel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div className="card-glass-v2">
-            <h3 style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
-              <QrCode size={20} style={{ color: 'var(--color-gold, #d6be66)' }} /> Official UPI Payment Info
+            <h3 style={{ color: '#0f172a', fontSize: '1.1rem', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800' }}>
+              <QrCode size={20} style={{ color: '#043490' }} /> Official UPI Payment Info
             </h3>
             
             {(() => {
@@ -388,25 +388,25 @@ const WalletPage = () => {
               };
 
               if (!showUpi && !showQr) {
-                return <p style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Payment details currently disabled by admin.</p>;
+                return <p style={{ color: '#64748b' }}>Payment details currently disabled by admin.</p>;
               }
 
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   {showUpi && upiId && (
-                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px 14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <span style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.6)' }}>OFFICIAL UPI ID</span>
-                      <p style={{ color: 'var(--color-gold, #d6be66)', fontSize: '1.1rem', fontWeight: '700', margin: '4px 0 0 0', wordBreak: 'break-all' }}>{upiId}</p>
+                    <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                      <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '700' }}>OFFICIAL UPI ID</span>
+                      <p style={{ color: '#043490', fontSize: '1.1rem', fontWeight: '800', margin: '4px 0 0 0', wordBreak: 'break-all' }}>{upiId}</p>
                     </div>
                   )}
 
                   {showQr && rawQrImage && (
                     <div style={{ textAlign: 'center', marginTop: '6px' }}>
-                      <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)', display: 'block', marginBottom: '10px', fontWeight: '600' }}>Scan QR Code to Pay Instantly</span>
+                      <span style={{ fontSize: '0.8rem', color: '#475569', display: 'block', marginBottom: '10px', fontWeight: '700' }}>Scan QR Code to Pay Instantly</span>
                       <img 
                         src={getQrSrc(rawQrImage)} 
                         alt="Payment QR Code" 
-                        style={{ width: '190px', height: '190px', objectFit: 'contain', background: '#ffffff', padding: '10px', borderRadius: '14px', boxShadow: '0 8px 25px rgba(0,0,0,0.5)' }}
+                        style={{ width: '190px', height: '190px', objectFit: 'contain', background: '#ffffff', padding: '10px', borderRadius: '14px', border: '1px solid #e2e8f0', boxShadow: '0 8px 25px rgba(0,0,0,0.06)' }}
                         onError={(e) => {
                           if (!e.target.dataset.triedFallback && !rawQrImage.startsWith('http') && !rawQrImage.startsWith('data:')) {
                             e.target.dataset.triedFallback = 'true';
@@ -424,14 +424,14 @@ const WalletPage = () => {
           </div>
 
           <div className="card-glass-v2">
-            <h3 style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
-              <MessageCircle size={20} style={{ color: '#10b981' }} /> Live Chat & Support
+            <h3 style={{ color: '#0f172a', fontSize: '1.1rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800' }}>
+              <MessageCircle size={20} style={{ color: '#00a843' }} /> Official WhatsApp Support
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.92rem' }}>
-              <p style={{ margin: 0 }}>For deposit or withdrawal inquiries, contact us:</p>
-              {walletInfo?.admin_mobile && <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}><PhoneCall size={14} /> Helpline: <strong>{walletInfo.admin_mobile}</strong></p>}
-              <Link to="/support" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '6px', background: 'linear-gradient(135deg, #059669, #10b981)', color: '#fff', padding: '10px 16px', borderRadius: '10px', textDecoration: 'none', fontWeight: 600, width: 'fit-content' }}>
-                <MessageCircle size={16} /> Open Live Support Chat
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', color: '#475569', fontSize: '0.92rem' }}>
+              <p style={{ margin: 0 }}>For deposit or withdrawal inquiries, contact us directly on WhatsApp:</p>
+              {walletInfo?.admin_mobile && <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}><PhoneCall size={14} /> Helpline: <strong style={{ color: '#0f172a' }}>{walletInfo.admin_mobile}</strong></p>}
+              <Link to="/support" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '6px', background: 'linear-gradient(135deg, #25D366, #128C7E)', color: '#fff', padding: '10px 18px', borderRadius: '50px', textDecoration: 'none', fontWeight: 700, width: 'fit-content', boxShadow: '0 4px 12px rgba(37, 211, 102, 0.35)' }}>
+                <MessageCircle size={16} /> Chat on WhatsApp
               </Link>
             </div>
           </div>

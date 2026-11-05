@@ -2,11 +2,12 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, History, Trophy, Wallet, MessageCircle } from 'lucide-react';
 
-const BottomNav = ({ themeColor = 'gold' }) => {
+const BottomNav = ({ themeColor = 'blue' }) => {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const activeColor = themeColor === 'cyan' ? '#38bdf8' : themeColor === 'crimson' ? '#fb7185' : 'var(--color-gold, #ffd700)';
+  const activeColor = '#043490';
+  const inactiveColor = '#64748B';
 
   const navItems = [
     {
@@ -64,7 +65,7 @@ const BottomNav = ({ themeColor = 'gold' }) => {
                 textDecoration: 'none',
                 flex: 1,
                 height: '100%',
-                color: isActive ? activeColor : 'rgba(255, 255, 255, 0.55)',
+                color: isActive ? activeColor : inactiveColor,
                 transition: 'all 0.2s ease',
                 position: 'relative'
               }}
@@ -83,17 +84,13 @@ const BottomNav = ({ themeColor = 'gold' }) => {
                   width: '48px',
                   height: '48px',
                   borderRadius: '50%',
-                  background: themeColor === 'cyan' 
-                    ? 'linear-gradient(135deg, #06b6d4 0%, #a855f7 100%)' 
-                    : themeColor === 'crimson' 
-                      ? 'linear-gradient(135deg, #f43f5e 0%, #f97316 100%)' 
-                      : 'linear-gradient(135deg, #ffd700 0%, #d4af37 50%, #10b981 100%)',
+                  background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 6px 18px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 215, 0, 0.25)',
-                  border: '3px solid #08111e',
-                  color: themeColor === 'gold' ? '#0b1a30' : '#ffffff',
+                  boxShadow: '0 6px 18px rgba(4, 52, 144, 0.35)',
+                  border: '3px solid #ffffff',
+                  color: '#ffffff',
                   transition: 'transform 0.2s ease'
                 }}>
                   <Home size={22} />
@@ -101,10 +98,11 @@ const BottomNav = ({ themeColor = 'gold' }) => {
               </div>
               <span style={{
                 fontSize: '0.68rem',
-                fontWeight: isActive ? '700' : '500',
+                fontWeight: isActive ? '800' : '600',
                 letterSpacing: '0.01em',
                 lineHeight: 1,
-                marginTop: '4px'
+                marginTop: '4px',
+                color: isActive ? activeColor : inactiveColor
               }}>
                 {item.label}
               </span>
@@ -124,7 +122,7 @@ const BottomNav = ({ themeColor = 'gold' }) => {
               textDecoration: 'none',
               flex: 1,
               height: '100%',
-              color: isActive ? activeColor : 'rgba(255, 255, 255, 0.55)',
+              color: isActive ? activeColor : inactiveColor,
               transition: 'all 0.2s ease'
             }}
           >
@@ -135,11 +133,11 @@ const BottomNav = ({ themeColor = 'gold' }) => {
               justifyContent: 'center',
               width: '100%'
             }}>
-              <IconComponent size={20} />
+              <IconComponent size={20} style={{ strokeWidth: isActive ? 2.5 : 2 }} />
             </div>
             <span style={{
               fontSize: '0.68rem',
-              fontWeight: isActive ? '700' : '500',
+              fontWeight: isActive ? '800' : '600',
               letterSpacing: '0.01em',
               lineHeight: 1,
               marginTop: '4px'

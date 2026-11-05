@@ -21,10 +21,17 @@ import {
   Download,
   FileText,
   X,
-  Maximize2
+  Maximize2,
+  ExternalLink
 } from 'lucide-react';
 import api from '../utils/api';
 import chatSocket from '../utils/chatSocket';
+
+const WhatsAppIcon = ({ size = 18, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+    <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 15 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.67 12.05 3.67M9.11 7.03C8.92 7.03 8.61 7.1 8.36 7.37C8.11 7.64 7.41 8.3 7.41 9.64C7.41 10.98 8.39 12.27 8.52 12.45C8.66 12.63 10.43 15.36 13.15 16.53C13.79 16.81 14.3 16.98 14.69 17.11C15.34 17.31 15.93 17.29 16.4 17.22C16.92 17.14 18 16.56 18.23 15.91C18.46 15.26 18.46 14.7 18.39 14.59C18.32 14.47 18.13 14.41 17.85 14.27C17.57 14.13 16.2 13.45 15.94 13.36C15.69 13.27 15.5 13.22 15.32 13.5C15.13 13.77 14.6 14.41 14.44 14.59C14.28 14.78 14.12 14.8 13.84 14.66C13.56 14.53 12.67 14.23 11.62 13.29C10.79 12.55 10.23 11.64 10.07 11.36C9.91 11.09 10.05 10.93 10.2 10.79C10.32 10.67 10.48 10.46 10.62 10.3C10.76 10.13 10.8 10.02 10.89 9.83C10.99 9.65 10.94 9.48 10.87 9.35C10.8 9.21 10.24 7.84 10.01 7.28C9.78 6.74 9.55 6.81 9.38 6.81C9.22 6.81 9.03 6.8 8.85 6.8L9.11 7.03Z" />
+  </svg>
+);
 
 const QUICK_QUERIES = [
   '⚡ Deposit Not Reflected',
@@ -69,7 +76,7 @@ const ChatAudioPlayer = ({ src, isUser }) => {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+      audioRef.current.play().then(() => setIsPlaying(true)).catch(() => { });
     }
   };
 
@@ -98,14 +105,15 @@ const ChatAudioPlayer = ({ src, isUser }) => {
           width: '36px',
           height: '36px',
           borderRadius: '50%',
-          backgroundColor: isUser ? '#ffffff' : 'var(--color-gold, #d6be66)',
-          color: isUser ? '#10b981' : '#09121f',
+          backgroundColor: isUser ? '#ffffff' : '#043490',
+          color: isUser ? '#00a843' : '#ffffff',
           border: 'none',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          flexShrink: 0
+          flexShrink: 0,
+          boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
         }}
       >
         {isPlaying ? <Pause size={16} /> : <Play size={16} style={{ marginLeft: '2px' }} />}
@@ -123,7 +131,7 @@ const ChatAudioPlayer = ({ src, isUser }) => {
           }}
           style={{
             height: '6px',
-            backgroundColor: isUser ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.15)',
+            backgroundColor: isUser ? 'rgba(255,255,255,0.35)' : '#e2e8f0',
             borderRadius: '4px',
             cursor: 'pointer',
             overflow: 'hidden',
@@ -133,7 +141,7 @@ const ChatAudioPlayer = ({ src, isUser }) => {
           <div style={{
             height: '100%',
             width: `${progress}%`,
-            backgroundColor: isUser ? '#ffffff' : 'var(--color-gold, #d6be66)',
+            backgroundColor: isUser ? '#ffffff' : '#043490',
             borderRadius: '4px',
             transition: 'width 0.1s linear'
           }} />
@@ -144,7 +152,8 @@ const ChatAudioPlayer = ({ src, isUser }) => {
           justifyContent: 'space-between',
           fontSize: '0.7rem',
           marginTop: '4px',
-          opacity: 0.8
+          color: isUser ? 'rgba(255,255,255,0.85)' : '#64748b',
+          fontWeight: '600'
         }}>
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
@@ -161,13 +170,14 @@ const Support = () => {
   const [isSending, setIsSending] = useState(false);
   const [adminTyping, setAdminTyping] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
+  const [wpNumber, setWpNumber] = useState('');
 
   // User and Guest Auth
   const [userPhone, setUserPhone] = useState(() => {
     return localStorage.getItem('phone') || sessionStorage.getItem('support_guest_phone') || '';
   });
   const [userName, setUserName] = useState(() => {
-    return localStorage.getItem('name') || sessionStorage.getItem('support_guest_name') || 'Guest Player';
+    return localStorage.getItem('name') || sessionStorage.getItem('support_guest_name') || 'Player';
   });
   const [guestPhoneInput, setGuestPhoneInput] = useState('');
 
@@ -204,12 +214,24 @@ const Support = () => {
     }
   };
 
-  // 1. Load chat history & admin helpline
+  // 1. Load chat history & admin contact info
   useEffect(() => {
     let isMounted = true;
 
     const fetchHistoryAndInfo = async () => {
       try {
+        const [appRes, walletRes] = await Promise.all([
+          api.get('/app-info').catch(() => null),
+          api.get('/wallet/info').catch(() => null)
+        ]);
+
+        if (isMounted) {
+          const appData = appRes?.data?.data || {};
+          const walletData = walletRes?.data?.data || {};
+          const num = appData.wp_mobile || walletData.admin_wp || walletData.admin_mobile || appData.mobile || '';
+          if (num) setWpNumber(num);
+        }
+
         if (userPhone) {
           const res = await api.get(`/chat/history?phone=${userPhone}`);
           if (isMounted && res.data?.success === '1' && Array.isArray(res.data.data)) {
@@ -230,6 +252,16 @@ const Support = () => {
       isMounted = false;
     };
   }, [userPhone]);
+
+  // Direct WhatsApp Connect Handler
+  const handleOpenWhatsApp = (customText = '') => {
+    const cleanWp = String(wpNumber || '').replace(/\D/g, '');
+    const finalWp = cleanWp.startsWith('91') && cleanWp.length > 10 ? cleanWp : (cleanWp ? `91${cleanWp}` : '919876543210');
+    const defaultMsg = `Hello Bharat Matka Support, I need assistance.${userName ? ` My name is ${userName}.` : ''}${userPhone ? ` Registered Mobile: ${userPhone}.` : ''}`;
+    const textToSend = customText || defaultMsg;
+    const url = `https://wa.me/${finalWp}?text=${encodeURIComponent(textToSend)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   // 2. Connect to In-App WebSocket Chat
   useEffect(() => {
@@ -488,13 +520,13 @@ const Support = () => {
 
   return (
     <div style={{
-      maxWidth: '720px',
+      maxWidth: '740px',
       margin: '0 auto',
       padding: '12px 14px 20px',
       display: 'flex',
       flexDirection: 'column',
-      height: 'calc(100vh - 80px)',
-      maxHeight: '840px'
+      height: 'calc(100vh - 84px)',
+      maxHeight: '860px'
     }}>
       {/* Hidden File Picker Input */}
       <input
@@ -507,15 +539,17 @@ const Support = () => {
 
       {/* Top Header Card */}
       <div
-        className="card-glass-v2"
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '12px 16px',
+          padding: '12px 18px',
           marginBottom: '10px',
-          borderRadius: '18px',
-          flexShrink: 0
+          borderRadius: '16px',
+          flexShrink: 0,
+          background: 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)',
+          color: '#ffffff',
+          boxShadow: '0 4px 16px rgba(4, 52, 144, 0.25)'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -528,7 +562,7 @@ const Support = () => {
               width: '36px',
               height: '36px',
               borderRadius: '50%',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              backgroundColor: 'rgba(255, 255, 255, 0.18)',
               color: '#ffffff',
               textDecoration: 'none'
             }}
@@ -537,17 +571,17 @@ const Support = () => {
           </Link>
           <div style={{ position: 'relative' }}>
             <div style={{
-              width: '42px',
-              height: '42px',
+              width: '40px',
+              height: '40px',
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #d6be66 0%, #10b981 100%)',
+              background: 'linear-gradient(135deg, #FF6B00 0%, #E65A00 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#09121f',
-              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)'
+              color: '#ffffff',
+              boxShadow: '0 3px 12px rgba(255, 107, 0, 0.35)'
             }}>
-              <Headphones size={22} />
+              <Headphones size={20} />
             </div>
             <span style={{
               position: 'absolute',
@@ -556,8 +590,8 @@ const Support = () => {
               width: '12px',
               height: '12px',
               borderRadius: '50%',
-              backgroundColor: connectionStatus === 'connected' ? '#10b981' : '#ef4444',
-              border: '2px solid #09121f'
+              backgroundColor: connectionStatus === 'connected' ? '#10b981' : '#f59e0b',
+              border: '2px solid #ffffff'
             }} />
           </div>
           <div>
@@ -566,24 +600,50 @@ const Support = () => {
                 Live Support Chat
               </h3>
               <span style={{
-                fontSize: '0.68rem',
+                fontSize: '0.66rem',
                 padding: '2px 8px',
                 borderRadius: '10px',
-                background: connectionStatus === 'connected' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                color: connectionStatus === 'connected' ? '#10b981' : '#ef4444',
-                fontWeight: '700'
+                background: connectionStatus === 'connected' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(245, 158, 11, 0.25)',
+                color: connectionStatus === 'connected' ? '#34d399' : '#fde68a',
+                fontWeight: '800'
               }}>
                 {connectionStatus === 'connected' ? 'ONLINE' : 'CONNECTING'}
               </span>
             </div>
-            <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.65)', margin: '2px 0 0 0' }}>
-              Instant response from Bharat Matka Help Desk
+            <p style={{ fontSize: '0.74rem', color: 'rgba(255, 255, 255, 0.82)', margin: '2px 0 0 0' }}>
+              Official Bharat Matka Help Desk
             </p>
           </div>
         </div>
+
+        {/* 1-Tap Direct WhatsApp Connect Button */}
+        <button
+          type="button"
+          onClick={() => handleOpenWhatsApp()}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            backgroundColor: '#25D366',
+            color: '#ffffff',
+            border: 'none',
+            padding: '7px 14px',
+            borderRadius: '50px',
+            fontSize: '0.78rem',
+            fontWeight: '800',
+            cursor: 'pointer',
+            boxShadow: '0 3px 10px rgba(37, 211, 102, 0.35)',
+            transition: 'transform 0.15s ease'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.04)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+        >
+          <WhatsAppIcon size={16} color="#ffffff" />
+          <span>WhatsApp</span>
+        </button>
       </div>
 
-      {/* Main Chat Box Container */}
+      {/* Main Chat Box Card */}
       <div
         className="card-glass-v2"
         style={{
@@ -591,10 +651,12 @@ const Support = () => {
           display: 'flex',
           flexDirection: 'column',
           minHeight: 0,
-          borderRadius: '20px',
-          padding: '12px',
+          borderRadius: '18px',
+          padding: '12px 14px',
           overflow: 'hidden',
-          backgroundColor: 'rgba(8, 16, 30, 0.78)'
+          backgroundColor: '#ffffff',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 4px 20px rgba(4, 52, 144, 0.06)'
         }}
       >
         {/* Messages Scroll Area */}
@@ -602,26 +664,72 @@ const Support = () => {
           flex: 1,
           overflowY: 'auto',
           paddingRight: '6px',
+          paddingBottom: '8px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px'
+          gap: '12px',
+          backgroundColor: '#f8fafc',
+          borderRadius: '14px',
+          padding: '12px'
         }}>
-          {/* Welcome Intro Banner */}
+          {/* Welcome & Fast WhatsApp Banner */}
           <div style={{
-            textAlign: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            flexWrap: 'wrap',
             padding: '12px 14px',
-            borderRadius: '14px',
-            background: 'rgba(214, 190, 102, 0.08)',
-            border: '1px dashed rgba(214, 190, 102, 0.3)',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, rgba(4, 52, 144, 0.05) 0%, rgba(37, 211, 102, 0.08) 100%)',
+            border: '1px solid rgba(4, 52, 144, 0.15)',
             marginBottom: '4px'
           }}>
-            <Sparkles size={18} style={{ color: 'var(--color-gold)', margin: '0 auto 4px' }} />
-            <h4 style={{ fontSize: '0.88rem', color: '#ffffff', margin: '0 0 2px', fontWeight: '700' }}>
-              Welcome to Bharat Matka Live Support
-            </h4>
-            <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)', margin: 0 }}>
-              Send text messages, screenshot photos, or voice audio notes. We are here to help 24/7!
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(4, 52, 144, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#043490',
+                flexShrink: 0
+              }}>
+                <Sparkles size={16} />
+              </div>
+              <div>
+                <h4 style={{ fontSize: '0.84rem', color: '#0f172a', margin: '0 0 2px', fontWeight: '800' }}>
+                  24×7 Instant Support
+                </h4>
+                <p style={{ fontSize: '0.74rem', color: '#64748b', margin: 0 }}>
+                  Chat live here, or connect directly on WhatsApp with our team.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleOpenWhatsApp()}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '6px 12px',
+                borderRadius: '20px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+                color: '#ffffff',
+                fontSize: '0.76rem',
+                fontWeight: '800',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(37, 211, 102, 0.3)'
+              }}
+            >
+              <WhatsAppIcon size={14} color="#ffffff" />
+              <span>Connect on WhatsApp</span>
+            </button>
           </div>
 
           {!userPhone ? (
@@ -630,15 +738,16 @@ const Support = () => {
               maxWidth: '380px',
               padding: '24px 20px',
               borderRadius: '16px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              textAlign: 'center'
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              textAlign: 'center',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.05)'
             }}>
-              <Headphones size={36} style={{ color: 'var(--color-gold)', margin: '0 auto 12px' }} />
-              <h3 style={{ fontSize: '1.05rem', color: '#fff', margin: '0 0 6px', fontWeight: '700' }}>
+              <Headphones size={36} style={{ color: '#043490', margin: '0 auto 12px' }} />
+              <h3 style={{ fontSize: '1.05rem', color: '#0f172a', margin: '0 0 6px', fontWeight: '800' }}>
                 Start Live Support Chat
               </h3>
-              <p style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)', margin: '0 0 16px', lineHeight: '1.4' }}>
+              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0 0 16px', lineHeight: '1.4' }}>
                 Please enter your 10-digit mobile number to connect directly with our support team in real time.
               </p>
               <form onSubmit={handleGuestSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -651,11 +760,13 @@ const Support = () => {
                   style={{
                     padding: '12px 14px',
                     borderRadius: '10px',
-                    background: 'rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    color: '#fff',
-                    fontSize: '0.92rem',
+                    background: '#f8fafc',
+                    border: '1.5px solid #cbd5e1',
+                    color: '#0f172a',
+                    fontSize: '0.95rem',
                     textAlign: 'center',
+                    fontWeight: '700',
+                    outline: 'none',
                     letterSpacing: '1px'
                   }}
                   required
@@ -665,13 +776,14 @@ const Support = () => {
                   disabled={guestPhoneInput.length < 10}
                   style={{
                     padding: '12px',
-                    borderRadius: '10px',
+                    borderRadius: '50px',
                     border: 'none',
-                    background: guestPhoneInput.length >= 10 ? 'linear-gradient(135deg, #d6be66, #10b981)' : 'rgba(255,255,255,0.1)',
-                    color: '#fff',
-                    fontWeight: '700',
+                    background: guestPhoneInput.length >= 10 ? 'linear-gradient(135deg, #053FA8 0%, #03256C 100%)' : '#e2e8f0',
+                    color: guestPhoneInput.length >= 10 ? '#ffffff' : '#94a3b8',
+                    fontWeight: '800',
                     fontSize: '0.92rem',
                     cursor: guestPhoneInput.length >= 10 ? 'pointer' : 'not-allowed',
+                    boxShadow: guestPhoneInput.length >= 10 ? '0 4px 14px rgba(4, 52, 144, 0.25)' : 'none',
                     transition: 'all 0.2s'
                   }}
                 >
@@ -680,14 +792,16 @@ const Support = () => {
               </form>
             </div>
           ) : loading ? (
-            <div style={{ textAlign: 'center', padding: '30px 0', color: 'rgba(255,255,255,0.5)' }}>
-              <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite', margin: '0 auto 8px' }} />
-              <div style={{ fontSize: '0.85rem' }}>Loading conversation history...</div>
+            <div style={{ textAlign: 'center', padding: '30px 0', color: '#64748b' }}>
+              <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite', margin: '0 auto 8px', color: '#043490' }} />
+              <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>Loading conversation history...</div>
             </div>
           ) : messages.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 16px', color: 'rgba(255,255,255,0.45)' }}>
-              <HelpCircle size={32} style={{ margin: '0 auto 10px', opacity: 0.5 }} />
-              <p style={{ fontSize: '0.86rem', margin: 0 }}>No messages yet. Ask a question or send a screenshot to get started!</p>
+            <div style={{ textAlign: 'center', padding: '40px 16px', color: '#64748b' }}>
+              <HelpCircle size={36} style={{ margin: '0 auto 10px', color: '#043490', opacity: 0.5 }} />
+              <p style={{ fontSize: '0.9rem', fontWeight: '600', margin: 0, color: '#334155' }}>
+                No messages yet. Ask a question or send a screenshot to get started!
+              </p>
             </div>
           ) : (
             messages.map((m, index) => {
@@ -712,22 +826,24 @@ const Support = () => {
                       padding: isImage ? '6px' : '10px 14px',
                       borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
                       background: isUser
-                        ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)'
-                        : 'rgba(255, 255, 255, 0.1)',
-                      color: '#ffffff',
-                      border: isUser ? 'none' : '1px solid rgba(255, 255, 255, 0.14)',
+                        ? 'linear-gradient(135deg, #00A843 0%, #008736 100%)'
+                        : '#ffffff',
+                      color: isUser ? '#ffffff' : '#0f172a',
+                      border: isUser ? 'none' : '1px solid #e2e8f0',
                       fontSize: '0.88rem',
                       lineHeight: '1.45',
                       wordBreak: 'break-word',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
+                      boxShadow: isUser
+                        ? '0 3px 12px rgba(0, 168, 67, 0.2)'
+                        : '0 2px 10px rgba(0, 0, 0, 0.05)',
                       overflow: 'hidden'
                     }}
                   >
                     {!isUser && (
                       <div style={{
                         fontSize: '0.72rem',
-                        fontWeight: '700',
-                        color: 'var(--color-gold, #d6be66)',
+                        fontWeight: '800',
+                        color: '#043490',
                         marginBottom: '4px',
                         padding: isImage ? '4px 6px' : '0'
                       }}>
@@ -753,13 +869,13 @@ const Support = () => {
                           position: 'absolute',
                           right: '8px',
                           bottom: '8px',
-                          background: 'rgba(0,0,0,0.6)',
-                          borderRadius: '4px',
-                          padding: '3px',
+                          background: 'rgba(0,0,0,0.65)',
+                          borderRadius: '6px',
+                          padding: '4px',
                           color: '#fff',
                           display: 'flex'
                         }}>
-                          <Maximize2 size={12} />
+                          <Maximize2 size={13} />
                         </div>
                       </div>
                     )}
@@ -780,12 +896,14 @@ const Support = () => {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '8px',
-                          padding: '8px 10px',
-                          background: 'rgba(0,0,0,0.25)',
+                          padding: '8px 12px',
+                          background: isUser ? 'rgba(255,255,255,0.2)' : '#f8fafc',
+                          border: isUser ? 'none' : '1px solid #e2e8f0',
                           borderRadius: '8px',
-                          color: '#fff',
+                          color: isUser ? '#ffffff' : '#043490',
                           textDecoration: 'none',
-                          fontSize: '0.82rem'
+                          fontSize: '0.82rem',
+                          fontWeight: '700'
                         }}
                       >
                         <FileText size={18} />
@@ -798,7 +916,11 @@ const Support = () => {
 
                     {/* Text Message Content */}
                     {m.message && (!isImage || m.message !== '📷 Photo') && (!isAudio || m.message !== '🎤 Voice Message') && (!isFile || m.message !== '📎 Attachment') && (
-                      <div style={{ marginTop: (isImage || isAudio || isFile) ? '6px' : '0', padding: isImage ? '0 6px 4px' : '0' }}>
+                      <div style={{
+                        marginTop: (isImage || isAudio || isFile) ? '6px' : '0',
+                        padding: isImage ? '0 6px 4px' : '0',
+                        fontWeight: '500'
+                      }}>
                         {m.message}
                       </div>
                     )}
@@ -810,18 +932,19 @@ const Support = () => {
                     alignItems: 'center',
                     gap: '4px',
                     fontSize: '0.68rem',
-                    color: 'rgba(255, 255, 255, 0.45)',
+                    color: '#64748b',
                     marginTop: '3px',
-                    padding: '0 4px'
+                    padding: '0 4px',
+                    fontWeight: '600'
                   }}>
                     <span>
                       {m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'}
                     </span>
                     {isUser && (
                       m.is_read ? (
-                        <CheckCheck size={14} style={{ color: '#38bdf8' }} />
+                        <CheckCheck size={14} style={{ color: '#043490' }} />
                       ) : (
-                        <Check size={14} style={{ color: 'rgba(255, 255, 255, 0.45)' }} />
+                        <Check size={14} style={{ color: '#94a3b8' }} />
                       )
                     )}
                   </div>
@@ -838,14 +961,14 @@ const Support = () => {
               gap: '6px',
               padding: '8px 14px',
               borderRadius: '16px 16px 16px 4px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
               width: 'fit-content'
             }}>
-              <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)' }}>
-                Support is typing
+              <span style={{ fontSize: '0.75rem', color: '#043490', fontWeight: '700' }}>
+                Support is typing...
               </span>
-              <span className="dot-typing" />
             </div>
           )}
 
@@ -859,10 +982,10 @@ const Support = () => {
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '8px 12px',
-            backgroundColor: 'rgba(16, 185, 129, 0.12)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
+            backgroundColor: '#ecfdf5',
+            border: '1px solid #a7f3d0',
             borderRadius: '12px',
-            margin: '6px 0',
+            margin: '8px 0 4px',
             flexShrink: 0
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
@@ -873,13 +996,13 @@ const Support = () => {
                   style={{ width: '38px', height: '38px', borderRadius: '6px', objectFit: 'cover' }}
                 />
               ) : (
-                <FileText size={24} style={{ color: '#10b981' }} />
+                <FileText size={24} style={{ color: '#00a843' }} />
               )}
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: '0.82rem', color: '#fff', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: '0.82rem', color: '#0f172a', fontWeight: '700', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {selectedFile.name}
                 </div>
-                <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)' }}>
+                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
                   {selectedFile.size}
                 </div>
               </div>
@@ -889,9 +1012,9 @@ const Support = () => {
               type="button"
               onClick={() => setSelectedFile(null)}
               style={{
-                background: 'rgba(239, 68, 68, 0.2)',
+                background: '#fee2e2',
                 border: 'none',
-                color: '#ef4444',
+                color: '#dc2626',
                 padding: '4px',
                 borderRadius: '50%',
                 cursor: 'pointer',
@@ -908,7 +1031,7 @@ const Support = () => {
           display: 'flex',
           gap: '8px',
           overflowX: 'auto',
-          padding: '6px 0 4px',
+          padding: '8px 0 6px',
           flexShrink: 0,
           scrollbarWidth: 'none'
         }}>
@@ -920,15 +1043,23 @@ const Support = () => {
               style={{
                 flexShrink: 0,
                 padding: '5px 12px',
-                borderRadius: '16px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: 'rgba(255, 255, 255, 0.8)',
+                borderRadius: '20px',
+                background: '#f8fafc',
+                border: '1px solid #cbd5e1',
+                color: '#334155',
                 fontSize: '0.75rem',
-                fontWeight: '600',
+                fontWeight: '700',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 whiteSpace: 'nowrap'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#043490';
+                e.currentTarget.style.color = '#043490';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#cbd5e1';
+                e.currentTarget.style.color = '#334155';
               }}
             >
               {q}
@@ -947,8 +1078,8 @@ const Support = () => {
             marginTop: '6px',
             padding: '10px 14px',
             borderRadius: '14px',
-            backgroundColor: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.35)',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
             flexShrink: 0
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -956,10 +1087,10 @@ const Support = () => {
                 width: '12px',
                 height: '12px',
                 borderRadius: '50%',
-                backgroundColor: '#ef4444',
+                backgroundColor: '#dc2626',
                 animation: 'pulse 1s infinite'
               }} />
-              <span style={{ color: '#fff', fontSize: '0.88rem', fontWeight: '700' }}>
+              <span style={{ color: '#b91c1c', fontSize: '0.88rem', fontWeight: '800' }}>
                 Recording Audio... {Math.floor(recordingTime / 60)}:{(recordingTime % 60) < 10 ? '0' : ''}{recordingTime % 60}
               </span>
             </div>
@@ -973,8 +1104,8 @@ const Support = () => {
                   padding: '8px',
                   borderRadius: '8px',
                   border: 'none',
-                  backgroundColor: 'rgba(255,255,255,0.1)',
-                  color: '#ef4444',
+                  backgroundColor: '#fee2e2',
+                  color: '#dc2626',
                   cursor: 'pointer',
                   display: 'flex'
                 }}
@@ -987,17 +1118,18 @@ const Support = () => {
                 onClick={stopAndSendRecording}
                 title="Send Voice Note"
                 style={{
-                  padding: '8px 14px',
+                  padding: '8px 16px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  color: '#fff',
-                  fontWeight: '700',
+                  background: 'linear-gradient(135deg, #00A843 0%, #008736 100%)',
+                  color: '#ffffff',
+                  fontWeight: '800',
                   fontSize: '0.84rem',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px'
+                  gap: '6px',
+                  boxShadow: '0 2px 8px rgba(0, 168, 67, 0.3)'
                 }}
               >
                 <Send size={16} />
@@ -1013,7 +1145,7 @@ const Support = () => {
             gap: '8px',
             marginTop: '6px',
             paddingTop: '8px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            borderTop: '1px solid #f1f5f9',
             flexShrink: 0
           }}>
             {/* File Attachment Button */}
@@ -1023,17 +1155,18 @@ const Support = () => {
               disabled={!userPhone}
               title="Attach Photo or Document"
               style={{
-                width: '40px',
-                height: '40px',
+                width: '42px',
+                height: '42px',
                 borderRadius: '12px',
-                border: 'none',
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                color: 'var(--color-gold, #d6be66)',
+                border: '1px solid #e2e8f0',
+                backgroundColor: '#f8fafc',
+                color: '#043490',
                 cursor: userPhone ? 'pointer' : 'not-allowed',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                flexShrink: 0
+                flexShrink: 0,
+                transition: 'all 0.15s ease'
               }}
             >
               <Paperclip size={18} />
@@ -1046,17 +1179,18 @@ const Support = () => {
               disabled={!userPhone}
               title="Record Voice Note"
               style={{
-                width: '40px',
-                height: '40px',
+                width: '42px',
+                height: '42px',
                 borderRadius: '12px',
-                border: 'none',
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                color: '#38bdf8',
+                border: '1px solid #e2e8f0',
+                backgroundColor: '#f8fafc',
+                color: '#00a843',
                 cursor: userPhone ? 'pointer' : 'not-allowed',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                flexShrink: 0
+                flexShrink: 0,
+                transition: 'all 0.15s ease'
               }}
             >
               <Mic size={18} />
@@ -1065,7 +1199,6 @@ const Support = () => {
             {/* Input Field */}
             <input
               type="text"
-              className="form-input"
               placeholder={userPhone ? (selectedFile ? "Add caption to file..." : "Type your message...") : "Enter mobile number above..."}
               value={inputText}
               disabled={!userPhone}
@@ -1073,12 +1206,15 @@ const Support = () => {
               onKeyDown={handleKeyDown}
               style={{
                 flex: 1,
-                borderRadius: '14px',
-                padding: '12px 14px',
-                fontSize: '0.88rem',
-                backgroundColor: 'rgba(6, 12, 22, 0.8)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: '#ffffff',
+                height: '44px',
+                borderRadius: '12px',
+                padding: '0 14px',
+                fontSize: '0.9rem',
+                backgroundColor: '#f8fafc',
+                border: '1.5px solid #cbd5e1',
+                color: '#0f172a',
+                fontWeight: '600',
+                outline: 'none',
                 opacity: userPhone ? 1 : 0.6
               }}
             />
@@ -1094,14 +1230,15 @@ const Support = () => {
                 borderRadius: '12px',
                 border: 'none',
                 background: (inputText.trim() || selectedFile) && userPhone
-                  ? 'linear-gradient(135deg, #d6be66 0%, #10b981 100%)'
-                  : 'rgba(255, 255, 255, 0.08)',
-                color: (inputText.trim() || selectedFile) && userPhone ? '#09121f' : 'rgba(255, 255, 255, 0.3)',
+                  ? 'linear-gradient(135deg, #ff7a00 0%, #e65a00 100%)'
+                  : '#e2e8f0',
+                color: (inputText.trim() || selectedFile) && userPhone ? '#ffffff' : '#94a3b8',
                 cursor: (inputText.trim() || selectedFile) && userPhone ? 'pointer' : 'not-allowed',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
+                boxShadow: (inputText.trim() || selectedFile) && userPhone ? '0 4px 12px rgba(255, 122, 0, 0.3)' : 'none',
                 transition: 'all 0.2s ease'
               }}
             >
@@ -1135,7 +1272,7 @@ const Support = () => {
                 right: '0',
                 background: 'none',
                 border: 'none',
-                color: '#fff',
+                color: '#ffffff',
                 cursor: 'pointer'
               }}
             >
