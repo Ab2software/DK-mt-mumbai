@@ -24,6 +24,7 @@ const AddFund = () => {
   const [submittingUtr, setSubmittingUtr] = useState(false);
   const [paymentSuccessData, setPaymentSuccessData] = useState(null);
   const [activeOrder, setActiveOrder] = useState(null);
+  const [selectedPaymentApp, setSelectedPaymentApp] = useState('phonepe');
   const [showManualSection, setShowManualSection] = useState(false);
   const [showDirectManualSection, setShowDirectManualSection] = useState(false);
   const [msg, setMsg] = useState('');
@@ -332,14 +333,13 @@ const AddFund = () => {
     }
   };
 
-  // SUCCESS API CALL: Verify payment with backend & credit wallet
-  const callVerifyPayment = async (orderToVerify = null) => {
+  // Realtime Automated Payment Status Polling (Webhook & Gateway Check)
+  const callVerifyPayment = async (orderToVerify = null, isManualSubmit = false) => {
     const targetOrder = orderToVerify || activeOrderRef.current;
     if (!targetOrder || isVerifyingRef.current) return;
 
     setVerifying(true);
     isVerifyingRef.current = true;
-    setError('');
 
     try {
       const res = await api.post('/payment/verify-payment', {
@@ -349,7 +349,7 @@ const AddFund = () => {
       });
 
       if (res.data?.success === '1' && res.data?.approved) {
-        // Admin already approved it!
+        // Webhook or Gateway verified & approved payment!
         try {
           sessionStorage.removeItem('pending_upi_order');
         } catch (e) { }
@@ -357,7 +357,7 @@ const AddFund = () => {
         setActiveOrder(null);
         activeOrderRef.current = null;
 
-        // Update local wallet state
+        // Update local wallet balance
         if (res.data.wallet !== undefined) {
           setWalletInfo(prev => prev ? { ...prev, wallet: res.data.wallet } : prev);
         } else {
@@ -376,8 +376,8 @@ const AddFund = () => {
           dateFormatted: `${dateStr}, ${timeStr}`,
           msg: res.data.msg || `₹${targetOrder.amount} has been successfully added to your wallet!`
         });
-      } else if (res.data?.pending || res.data?.status === '0') {
-        // PENDING Admin approval (only when user has actually submitted UTR)
+      } else if (isManualSubmit && (res.data?.pending || res.data?.status === '0')) {
+        // Manual mode: admin approval pending
         try {
           sessionStorage.removeItem('pending_upi_order');
         } catch (e) { }
@@ -392,49 +392,49 @@ const AddFund = () => {
         setPaymentSuccessData({
           amount: targetOrder.amount,
           orderId: targetOrder.order_id,
-          isManual: true, // triggers the amber "Pending Admin Approval" view
+          isManual: true,
           dateFormatted: `${dateStr}, ${timeStr}`,
           msg: res.data.msg || 'Deposit request submitted successfully! It is currently PENDING Admin approval.'
         });
       } else if (res.data?.rejected) {
-        setError(res.data?.msg || 'Your deposit request was declined by Admin.');
-      } else {
-        // Not submitted yet: prompt user to enter 12-digit UTR reference number
-        setShowManualSection(true);
-        setError('');
-        if (utrInputRef.current) {
-          utrInputRef.current.focus();
-        }
+        setError(res.data?.msg || 'Your deposit request was declined.');
       }
+      // If still pending in Auto Gateway mode, we keep activeOrder alive so polling continues!
     } catch (err) {
-      console.error('Verify payment error:', err);
-      const serverMsg = err.response?.data?.msg || err.response?.data?.error;
-      setError(serverMsg || 'Verification check in progress. Please enter your 12-digit UTR below.');
+      console.warn('Verify payment poll notice:', err.message);
     } finally {
       setVerifying(false);
       isVerifyingRef.current = false;
     }
   };
 
+  // Auto-polling for Webhook / Gateway Payment Status when activeOrder is active
+  useEffect(() => {
+    if (!activeOrder) return;
+
+    // Check status immediately
+    callVerifyPayment(activeOrder);
+
+    // Poll every 3 seconds for webhook confirmation
+    const pollInterval = setInterval(() => {
+      callVerifyPayment(activeOrder);
+    }, 3000);
+
+    return () => clearInterval(pollInterval);
+  }, [activeOrder]);
+
   // RETURN DETECTION: When user switches back from UPI app to this browser/app
   useEffect(() => {
     const handleReturn = () => {
-      if (document.visibilityState === 'visible' && activeOrderRef.current && !isVerifyingRef.current) {
-        // When user returns from UPI app:
-        // Do NOT auto-submit fake requests to Admin!
-        // Instead, open the UTR input and focus it so user can enter the 12-digit UTR
-        setShowManualSection(true);
-        setTimeout(() => {
-          if (utrInputRef.current) {
-            utrInputRef.current.focus();
-          }
-        }, 300);
+      if (document.visibilityState === 'visible' && activeOrderRef.current) {
+        // User switched back from UPI app: check status immediately!
+        callVerifyPayment(activeOrderRef.current);
       }
     };
 
     const handleFocus = () => {
-      if (activeOrderRef.current && !isVerifyingRef.current) {
-        setShowManualSection(true);
+      if (activeOrderRef.current) {
+        callVerifyPayment(activeOrderRef.current);
       }
     };
 
@@ -467,7 +467,7 @@ const AddFund = () => {
     };
   }, []);
 
-  // Primary Action: PAY NOW Button Click
+  // Primary Action: PROCEED TO PAY / Create Order (Called from initial amount screen)
   const handlePayNow = async () => {
     setError('');
     setMsg('');
@@ -521,16 +521,7 @@ const AddFund = () => {
         }));
       } catch (e) { }
 
-      // Open gateway checkout page or mobile UPI app intent
-      const launchUrl = orderData.intent_url || orderData.payment_url || orderData.generic_upi_url || orderData.upi_url;
-      if (launchUrl) {
-        if (launchUrl.startsWith('http://') || launchUrl.startsWith('https://')) {
-          window.location.href = launchUrl;
-        } else {
-          triggerUpiLaunch(launchUrl);
-        }
-      }
-
+      // DO NOT auto-redirect: let user select which app to pay from the generated order screen
     } catch (err) {
       console.error(err);
       const serverMsg = err.response?.data?.msg || err.response?.data?.error;
@@ -647,7 +638,7 @@ const AddFund = () => {
   const amtQuery = formattedAmt ? `&am=${formattedAmt}` : '';
 
   const targetQrUpiId = activeOrder?.upi_id || activeUpiId;
-  const currentQrUpiUrl = activeOrder?.generic_upi_url || activeOrder?.upi_url || (targetQrUpiId ? `upi://pay?pa=${encodeURIComponent(targetQrUpiId)}&pn=${encodeURIComponent(payeeName)}${amtQuery}&cu=INR` : '');
+  const currentQrUpiUrl = activeOrder?.bhim_url || activeOrder?.generic_upi_url || activeOrder?.upi_url || (targetQrUpiId ? `upi://pay?pa=${encodeURIComponent(targetQrUpiId)}&pn=${encodeURIComponent(payeeName)}${amtQuery}&cu=INR` : '');
   const dynamicQrCodeSrc = currentQrUpiUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(currentQrUpiUrl)}` : '';
 
   const manualBarcodeImage = paymentConfig?.payment_barcode_image || walletInfo?.payment_barcode_image || '';
@@ -1186,159 +1177,386 @@ const AddFund = () => {
       {activeOrder ? (
         <div className="card-glass-v2" style={{ padding: '24px', animation: 'fadeIn 0.2s ease-out', marginBottom: '22px' }}>
 
-          <div style={{ textAlign: 'center', marginBottom: '22px' }}>
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '20px',
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
-              margin: '0 auto 14px',
-              boxShadow: '0 8px 24px rgba(16, 185, 129, 0.45)',
-              animation: 'pulse 2s infinite'
-            }}>
-              <Smartphone size={32} />
-            </div>
-
+          {/* ORDER SUMMARY HEADER */}
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
             <div style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
               background: 'rgba(16, 185, 129, 0.15)',
-              border: '1px solid rgba(16, 185, 129, 0.35)',
-              color: '#10b981',
-              padding: '4px 12px',
+              border: '1.5px solid rgba(16, 185, 129, 0.4)',
+              color: '#059669',
+              padding: '5px 14px',
               borderRadius: '20px',
-              fontSize: '0.75rem',
+              fontSize: '0.78rem',
               fontWeight: '800',
               marginBottom: '10px',
               letterSpacing: '0.04em'
             }}>
-              <Sparkles size={14} />
-              <span>UPI APP OPENED</span>
+              <CheckCircle2 size={15} color="#10b981" />
+              <span>PAYMENT ORDER CREATED</span>
             </div>
 
-            <h4 style={{ margin: '0 0 6px 0', fontSize: '1.45rem', fontWeight: '800', color: '#0f172a' }}>
-              Paying ₹{Number(activeOrder.amount).toFixed(2)}
-            </h4>
+            <h3 style={{ margin: '0 0 6px 0', fontSize: '1.65rem', fontWeight: '900', color: '#0f172a' }}>
+              Pay ₹{Number(activeOrder.amount).toFixed(2)}
+            </h3>
 
-            <p style={{ margin: 0, color: '#475569', fontSize: '0.9rem', maxWidth: '420px', marginInline: 'auto' }}>
-              1. Complete payment in your UPI app. 2. Enter the 12-digit UTR reference number below to submit your request for Admin verification.
-            </p>
-          </div>
-
-          {/* Realtime verification state badge */}
-          {verifying ? (
             <div style={{
-              backgroundColor: 'rgba(4, 52, 144, 0.08)',
-              border: '1px solid rgba(4, 52, 144, 0.25)',
-              borderRadius: '12px',
-              padding: '14px',
-              marginBottom: '18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px',
-              color: '#043490',
-              fontWeight: '700',
-              fontSize: '0.92rem'
-            }}>
-              <RefreshCw size={20} className="animate-spin" />
-              <span>Checking payment with server...</span>
-            </div>
-          ) : (
-            <div style={{
-              backgroundColor: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '12px 14px',
-              marginBottom: '18px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
-              color: '#475569',
-              fontSize: '0.84rem'
+              fontSize: '0.8rem',
+              color: '#64748b',
+              fontWeight: '600'
             }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
-              <span>After paying in UPI app, enter your 12-digit UTR below</span>
-            </div>
-          )}
-
-          {/* Primary Action Buttons */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '18px' }}>
-
-            {/* MANUAL VERIFY / SUBMIT BUTTON */}
-            <button
-              type="button"
-              disabled={verifying || submittingUtr}
-              onClick={(e) => {
-                if (utrNo && utrNo.length === 12) {
-                  handleSubmitUtr(e, 'active');
-                } else {
-                  setShowManualSection(true);
-                  setUtrError('Please enter your 12-digit UTR reference number from PhonePe/GooglePay to submit your deposit request.');
-                  if (utrInputRef.current) {
-                    utrInputRef.current.focus();
-                    utrInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
-                }
-              }}
-              className="btn-gold"
-              style={{
-                width: '100%',
-                padding: '15px',
-                borderRadius: '12px',
-                fontSize: '1.02rem',
-                fontWeight: '800',
-                letterSpacing: '0.02em',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                boxShadow: '0 6px 20px rgba(214, 190, 102, 0.35)'
-              }}
-            >
-              {submittingUtr ? (
+              <span>Order ID: <strong style={{ color: '#043490' }}>{activeOrder.order_id}</strong></span>
+              {activeOrder.gateway_name && (
                 <>
-                  <RefreshCw size={18} className="animate-spin" />
-                  <span>SUBMITTING DEPOSIT REQUEST...</span>
+                  <span>•</span>
+                  <span>Gateway: <strong>{activeOrder.gateway_name}</strong></span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* STEP 1: PAYMENT BUTTONS ACCORDING TO RESPONSE */}
+          <div style={{
+            backgroundColor: '#ffffff',
+            border: '1.5px solid #e2e8f0',
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '18px',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.04)'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '12px'
+            }}>
+              <span style={{ fontSize: '0.88rem', fontWeight: '800', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Zap size={16} color="#043490" />
+                <span>STEP 1: Tap to Pay with Your UPI App</span>
+              </span>
+              <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '8px' }}>
+                ⚡ 1-Click Launch
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* 1. PhonePe Button (if available) */}
+              {(activeOrder.phonepe_url || activeOrder.phonepe_link || activeOrder.bhim_url || activeOrder.generic_upi_url) && (
+                <button
+                  type="button"
+                  onClick={() => triggerUpiLaunch(activeOrder.phonepe_url || activeOrder.phonepe_link || (activeOrder.bhim_url ? activeOrder.bhim_url.replace(/^upi:\/\/pay\?/, 'phonepe://pay?') : activeOrder.generic_upi_url))}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '13px 16px',
+                    borderRadius: '13px',
+                    background: 'linear-gradient(135deg, #5f259f 0%, #441179 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    fontWeight: '800',
+                    fontSize: '0.96rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(95, 37, 159, 0.35)',
+                    transition: 'transform 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <div style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <svg width="22" height="22" viewBox="0 0 36 36" fill="none">
+                      <path d="M19.5 9v3.5h3.8c1.8 0 3.2 1.4 3.2 3.2v0.5c0 1.8-1.4 3.2-3.2 3.2H20.8l-5.6 9.6H11l4.8-8.2c-2.3-.4-4-2.4-4-4.8 0-2.7 2.2-4.9 4.9-4.9H19.5V9h-3V7h7v2h-4zm-3 5.5c-1.6 0-2.9 1.3-2.9 2.9 0 1.6 1.3 2.9 2.9 2.9h6.8c.6 0 1.1-.5 1.1-1.1v-.5c0-.6-.5-1.1-1.1-1.1H16.5v-3.1z" fill="#ffffff"/>
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <div style={{ fontWeight: '800', fontSize: '0.96rem' }}>Pay with PhonePe</div>
+                    <div style={{ fontSize: '0.73rem', opacity: 0.9 }}>1-Click Instant App Transfer</div>
+                  </div>
+                  <ExternalLink size={18} />
+                </button>
+              )}
+
+              {/* 2. Paytm Button (if available) */}
+              {(activeOrder.paytm_url || activeOrder.paytm_link) && (
+                <button
+                  type="button"
+                  onClick={() => triggerUpiLaunch(activeOrder.paytm_url || activeOrder.paytm_link)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '13px 16px',
+                    borderRadius: '13px',
+                    background: 'linear-gradient(135deg, #002e6e 0%, #001f4d 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    fontWeight: '800',
+                    fontSize: '0.96rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(0, 46, 110, 0.35)',
+                    transition: 'transform 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <div style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: '900',
+                    color: '#00b9f1',
+                    fontSize: '0.78rem',
+                    letterSpacing: '-0.5px',
+                    flexShrink: 0
+                  }}>
+                    Paytm
+                  </div>
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <div style={{ fontWeight: '800', fontSize: '0.96rem' }}>Pay with Paytm</div>
+                    <div style={{ fontSize: '0.73rem', opacity: 0.9 }}>Paytm UPI & Wallet</div>
+                  </div>
+                  <ExternalLink size={18} />
+                </button>
+              )}
+
+              {/* 3. Google Pay Button (if available) */}
+              {(activeOrder.gpay_url || activeOrder.bhim_url || activeOrder.generic_upi_url) && (
+                <button
+                  type="button"
+                  onClick={() => triggerUpiLaunch(activeOrder.gpay_url || (activeOrder.bhim_url ? activeOrder.bhim_url.replace(/^upi:\/\/pay\?/, 'tez://upi/pay?') : activeOrder.generic_upi_url))}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '13px 16px',
+                    borderRadius: '13px',
+                    background: 'linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    fontWeight: '800',
+                    fontSize: '0.96rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(26, 115, 232, 0.35)',
+                    transition: 'transform 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <div style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '10px',
+                    backgroundColor: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 36 36" fill="none">
+                      <path d="M26.4 18.2c0-.6-.1-1.2-.2-1.8H18v3.4h4.7c-.2 1.1-.9 2.1-1.8 2.8v2.3h2.9c1.7-1.6 2.6-3.9 2.6-6.7z" fill="#4285F4"/>
+                      <path d="M18 26.8c2.4 0 4.4-.8 5.8-2.1l-2.9-2.3c-.8.5-1.8.8-2.9.8-2.3 0-4.2-1.5-4.9-3.6H10.1v2.3c1.5 3 4.5 4.9 7.9 4.9z" fill="#34A853"/>
+                      <path d="M13.1 19.6c-.2-.5-.3-1.1-.3-1.6 0-.6.1-1.1.3-1.6V14.1H10.1C9.5 15.3 9.1 16.6 9.1 18s.4 2.7 1 3.9l3-2.3z" fill="#FBBC05"/>
+                      <path d="M18 12.4c1.3 0 2.5.4 3.4 1.3l2.6-2.6C22.4 9.6 20.4 9 18 9c-3.4 0-6.4 1.9-7.9 4.9l3 2.3c.7-2.1 2.6-3.8 4.9-3.8z" fill="#EA4335"/>
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <div style={{ fontWeight: '800', fontSize: '0.96rem' }}>Pay with Google Pay</div>
+                    <div style={{ fontSize: '0.73rem', opacity: 0.9 }}>GPay 1-Click Fast Pay</div>
+                  </div>
+                  <ExternalLink size={18} />
+                </button>
+              )}
+
+              {/* 4. Other UPI (BHIM, CRED, Any UPI App) */}
+              {(activeOrder.bhim_url || activeOrder.generic_upi_url || activeOrder.upi_url) && (
+                <button
+                  type="button"
+                  onClick={() => triggerUpiLaunch(activeOrder.bhim_url || activeOrder.generic_upi_url || activeOrder.upi_url)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '13px 16px',
+                    borderRadius: '13px',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    fontWeight: '800',
+                    fontSize: '0.96rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
+                    transition: 'transform 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <div style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <QrCode size={20} />
+                  </div>
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <div style={{ fontWeight: '800', fontSize: '0.96rem' }}>Pay with Any Other UPI App</div>
+                    <div style={{ fontSize: '0.73rem', opacity: 0.9 }}>BHIM, CRED, Navi & All Installed Apps</div>
+                  </div>
+                  <ExternalLink size={18} />
+                </button>
+              )}
+
+              {/* 5. Hosted Gateway Payment Page (if payment_url is provided) */}
+              {activeOrder.payment_url && (activeOrder.payment_url.startsWith('http://') || activeOrder.payment_url.startsWith('https://')) && (
+                <button
+                  type="button"
+                  onClick={() => window.location.href = activeOrder.payment_url}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '13px 16px',
+                    borderRadius: '13px',
+                    background: 'linear-gradient(135deg, #043490 0%, #1e40af 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    fontWeight: '800',
+                    fontSize: '0.96rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(4, 52, 144, 0.35)',
+                    transition: 'transform 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <div style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <ExternalLink size={20} />
+                  </div>
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <div style={{ fontWeight: '800', fontSize: '0.96rem' }}>Open Gateway Payment Page</div>
+                    <div style={{ fontSize: '0.73rem', opacity: 0.9 }}>Cards / NetBanking / Dynamic Gateway Page</div>
+                  </div>
+                  <ArrowRight size={18} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* REALTIME AUTOMATED WEBHOOK STATUS CHECK (AUTO-APPROVE) */}
+          <div style={{
+            backgroundColor: '#ffffff',
+            border: '1.5px solid #e2e8f0',
+            borderRadius: '16px',
+            padding: '20px 16px',
+            marginBottom: '16px',
+            textAlign: 'center',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.04)'
+          }}>
+            {/* Live Status Badge */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              backgroundColor: verifying ? 'rgba(4, 52, 144, 0.08)' : 'rgba(245, 158, 11, 0.12)',
+              border: verifying ? '1px solid rgba(4, 52, 144, 0.25)' : '1px solid rgba(245, 158, 11, 0.35)',
+              marginBottom: '12px'
+            }}>
+              {verifying ? (
+                <>
+                  <RefreshCw size={14} className="animate-spin" color="#043490" />
+                  <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#043490' }}>
+                    CHECKING PAYMENT WITH GATEWAY...
+                  </span>
                 </>
               ) : (
                 <>
-                  <CheckCircle2 size={18} />
-                  <span>I HAVE PAID — SUBMIT UTR FOR ADMIN APPROVAL</span>
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: '#f59e0b',
+                    display: 'inline-block',
+                    boxShadow: '0 0 8px #f59e0b',
+                    animation: 'pulse 1.5s infinite'
+                  }} />
+                  <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#b45309' }}>
+                    STATUS: PENDING CONFIRMATION
+                  </span>
                 </>
               )}
-            </button>
+            </div>
 
-            {/* RE-OPEN APP & CANCEL BUTTONS */}
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <h4 style={{ margin: '0 0 6px 0', fontSize: '1.08rem', fontWeight: '900', color: '#0f172a' }}>
+              Waiting for Payment from UPI App...
+            </h4>
+            <p style={{ margin: '0 0 16px 0', fontSize: '0.82rem', color: '#64748b', lineHeight: 1.5 }}>
+              Upar diye gaye kisi bhi App (PhonePe, Paytm, GPay) par click karke payment transfer karein. Webhook se verify hote hi wallet me <strong>Instant Auto Credit</strong> ho jayega.
+            </p>
+
+            {/* Check Status Button & Cancel Button */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <button
                 type="button"
-                onClick={() => triggerUpiLaunch(activeOrder.generic_upi_url || activeOrder.upi_url)}
+                disabled={verifying}
+                onClick={() => callVerifyPayment()}
+                className="btn-gold"
                 style={{
-                  flex: 1,
-                  background: 'linear-gradient(135deg, #f1673e 0%, #f59e0b 100%)',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '12px',
+                  width: '100%',
+                  padding: '13px',
                   borderRadius: '12px',
+                  fontSize: '0.96rem',
                   fontWeight: '800',
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px',
-                  boxShadow: '0 4px 15px rgba(241, 103, 62, 0.3)'
+                  gap: '8px',
+                  cursor: verifying ? 'not-allowed' : 'pointer'
                 }}
               >
-                <ExternalLink size={16} />
-                <span>Re-Open UPI App</span>
+                {verifying ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" />
+                    <span>CHECKING STATUS...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw size={16} />
+                    <span>CHECK PAYMENT STATUS NOW</span>
+                  </>
+                )}
               </button>
 
               <button
@@ -1351,30 +1569,30 @@ const AddFund = () => {
                   activeOrderRef.current = null;
                 }}
                 style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  color: '#cbd5e1',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
+                  backgroundColor: 'transparent',
+                  border: '1px solid #cbd5e1',
+                  color: '#64748b',
+                  padding: '10px 16px',
+                  borderRadius: '10px',
                   fontWeight: '700',
-                  fontSize: '0.88rem',
+                  fontSize: '0.84rem',
                   cursor: 'pointer'
                 }}
               >
-                Cancel / Change
+                Cancel / Change Amount
               </button>
             </div>
           </div>
 
-          {/* FALLBACK / SCAN QR CODE OR ENTER UTR TOGGLE */}
-          <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '14px' }}>
+          {/* OPTIONAL: SCAN DYNAMIC QR CODE TOGGLE */}
+          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}>
             <button
               type="button"
               onClick={() => setShowManualSection(!showManualSection)}
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: 'rgba(255, 255, 255, 0.65)',
+                color: '#64748b',
                 fontSize: '0.82rem',
                 fontWeight: '700',
                 cursor: 'pointer',
@@ -1385,278 +1603,82 @@ const AddFund = () => {
                 padding: '6px 0'
               }}
             >
-              <span>Scan QR Code or Submit UTR Reference</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <QrCode size={16} color="#043490" />
+                <span>Or Scan Dynamic QR Code on Another Phone</span>
+              </span>
               {showManualSection ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
 
             {showManualSection && (
-              <div style={{ marginTop: '16px', animation: 'fadeIn 0.2s ease-out' }}>
+              <div style={{ marginTop: '14px', animation: 'fadeIn 0.2s ease-out' }}>
+                <div style={{
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '14px',
+                  padding: '16px',
+                  textAlign: 'center'
+                }}>
+                  {qrImageSrc && (
+                    <>
+                      <span style={{ fontSize: '0.78rem', color: '#475569', display: 'block', marginBottom: '8px', fontWeight: '800' }}>
+                        SCAN WITH ANY UPI APP TO PAY ₹{Number(activeOrder.amount).toFixed(2)}
+                      </span>
 
-                {/* Dynamic QR Code & UPI ID Copy (Controlled by Admin Checkboxes) */}
-                {(showQrSetting || showUpiSetting) && (
-                  <div style={{
-                    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '14px',
-                    padding: '16px',
-                    textAlign: 'center',
-                    marginBottom: '18px'
-                  }}>
-                    {showQrSetting && qrImageSrc && (
-                      <>
-                        <span style={{ fontSize: '0.78rem', color: '#94a3b8', display: 'block', marginBottom: '8px', fontWeight: '700' }}>
-                          SCAN QR CODE TO PAY ₹{Number(activeOrder.amount).toFixed(2)}
-                        </span>
-
-                        <div style={{
-                          backgroundColor: '#ffffff',
-                          padding: '10px',
-                          borderRadius: '12px',
-                          display: 'inline-block',
-                          marginBottom: '10px',
-                          boxShadow: '0 4px 15px rgba(0,0,0,0.4)'
-                        }}>
-                          <img
-                            src={qrImageSrc}
-                            alt="UPI QR Code"
-                            style={{ width: '160px', height: '160px', objectFit: 'contain', display: 'block' }}
-                            onError={(e) => {
-                              if (dynamicQrCodeSrc && e.target.src !== dynamicQrCodeSrc) {
-                                e.target.src = dynamicQrCodeSrc;
-                              }
-                            }}
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    {showUpiSetting && (
                       <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        flexWrap: 'wrap',
-                        marginTop: showQrSetting ? '6px' : '0'
+                        backgroundColor: '#ffffff',
+                        padding: '10px',
+                        borderRadius: '12px',
+                        display: 'inline-block',
+                        marginBottom: '10px',
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.06)'
                       }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: '800', color: '#043490' }}>
-                          {activeOrder.upi_id}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyUpi(activeOrder.upi_id)}
-                          className="btn-gold"
-                          style={{
-                            padding: '5px 10px',
-                            borderRadius: '6px',
-                            fontSize: '0.75rem',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px'
+                        <img
+                          src={qrImageSrc}
+                          alt="UPI QR Code"
+                          style={{ width: '160px', height: '160px', objectFit: 'contain', display: 'block' }}
+                          onError={(e) => {
+                            if (dynamicQrCodeSrc && e.target.src !== dynamicQrCodeSrc) {
+                              e.target.src = dynamicQrCodeSrc;
+                            }
                           }}
-                        >
-                          {copied ? <Check size={12} /> : <Copy size={12} />}
-                          <span>{copied ? 'COPIED' : 'COPY'}</span>
-                        </button>
+                        />
                       </div>
-                    )}
-                  </div>
-                )}
+                    </>
+                  )}
 
-                {/* UTR Submission Form */}
-                <form onSubmit={(e) => handleSubmitUtr(e, 'active')}>
-                  <div className="form-group" style={{ marginBottom: '16px' }}>
-                    <label className="form-label" style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: '700' }}>12-Digit UTR / Transaction ID *</span>
-                      {utrNo && (
-                        <span style={{
-                          fontSize: '0.74rem',
-                          fontWeight: '800',
-                          color: utrNo.length === 12 ? '#10b981' : '#f59e0b',
-                          background: utrNo.length === 12 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                          padding: '2px 8px',
-                          borderRadius: '8px'
-                        }}>
-                          {utrNo.length} / 12 digits
-                        </span>
-                      )}
-                    </label>
-                    <input
-                      ref={utrInputRef}
-                      type="text"
-                      maxLength="12"
-                      inputMode="numeric"
-                      className="form-input"
-                      style={{
-                        fontSize: '1.1rem',
-                        letterSpacing: '0.08em',
-                        fontWeight: '800',
-                        borderColor: utrError ? '#ef4444' : (utrNo.length === 12 ? '#10b981' : 'rgba(255, 255, 255, 0.15)'),
-                        boxShadow: utrError ? '0 0 14px rgba(239, 68, 68, 0.35)' : (utrNo.length === 12 ? '0 0 10px rgba(16, 185, 129, 0.3)' : 'none'),
-                        transition: 'all 0.2s ease'
-                      }}
-                      placeholder="e.g. 423456789012"
-                      value={utrNo}
-                      onChange={handleUtrChange}
-                      onBlur={handleUtrBlur}
-                      required
-                    />
-
-                    {/* Inline Validation Message Near UTR Field */}
-                    {utrError ? (
-                      <div style={{
-                        backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                        border: '1.5px solid rgba(239, 68, 68, 0.45)',
-                        borderRadius: '10px',
-                        padding: '10px 12px',
-                        marginTop: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        color: '#fca5a5',
-                        fontSize: '0.84rem',
-                        fontWeight: '700',
-                        animation: 'fadeIn 0.2s ease-out'
-                      }}>
-                        <AlertCircle size={18} color="#ef4444" style={{ flexShrink: 0 }} />
-                        <span>{utrError}</span>
-                      </div>
-                    ) : (
-                      <small style={{ color: '#94a3b8', fontSize: '0.78rem', marginTop: '6px', display: 'block' }}>
-                        Enter the 12-digit numeric UTR/Ref number from your Google Pay, PhonePe or Paytm payment receipt.
-                      </small>
-                    )}
-                  </div>
-
-                  {/* Payment Screenshot File Input with Validation */}
-                  <div className="form-group" style={{ marginBottom: '18px' }}>
-                    <label className="form-label" style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: '700' }}>Payment Screenshot (Optional)</span>
-                      <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.45)' }}>JPG, PNG, WEBP (Max 5MB)</span>
-                    </label>
-
-                    {!selectedFile ? (
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/jpeg,image/png,image/jpg,image/webp"
-                        className="form-input"
-                        style={{
-                          borderColor: fileError ? '#ef4444' : 'rgba(255, 255, 255, 0.15)',
-                          padding: '10px',
-                          fontSize: '0.85rem'
-                        }}
-                        onChange={handleFileChange}
-                      />
-                    ) : (
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '10px 14px',
-                        backgroundColor: 'rgba(16, 185, 129, 0.12)',
-                        border: '1.5px solid rgba(16, 185, 129, 0.4)',
-                        borderRadius: '10px',
-                        gap: '10px'
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-                          <CheckCircle2 size={18} color="#10b981" style={{ flexShrink: 0 }} />
-                          <div style={{ minWidth: 0, flex: 1 }}>
-                            <div style={{
-                              fontSize: '0.85rem',
-                              fontWeight: '700',
-                              color: '#ffffff',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}>
-                              {selectedFile.name}
-                            </div>
-                            <div style={{ fontSize: '0.72rem', color: '#a7f3d0' }}>
-                              {selectedFile.size} • Attached
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleRemoveFile}
-                          title="Remove file"
-                          style={{
-                            background: 'rgba(239, 68, 68, 0.2)',
-                            border: '1px solid rgba(239, 68, 68, 0.4)',
-                            color: '#fca5a5',
-                            borderRadius: '6px',
-                            padding: '4px 8px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            fontSize: '0.75rem',
-                            fontWeight: '700'
-                          }}
-                        >
-                          <X size={14} />
-                          <span>Remove</span>
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Inline Validation Message Near File Input */}
-                    {fileError && (
-                      <div style={{
-                        backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                        border: '1.5px solid rgba(239, 68, 68, 0.45)',
-                        borderRadius: '10px',
-                        padding: '10px 12px',
-                        marginTop: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        color: '#fca5a5',
-                        fontSize: '0.84rem',
-                        fontWeight: '700',
-                        animation: 'fadeIn 0.2s ease-out'
-                      }}>
-                        <AlertCircle size={18} color="#ef4444" style={{ flexShrink: 0 }} />
-                        <span>{fileError}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={submittingUtr || !utrNo}
-                    className="btn-gold"
-                    style={{
-                      width: '100%',
-                      padding: '13px',
-                      borderRadius: '12px',
-                      fontSize: '0.95rem',
-                      fontWeight: '800',
-                      letterSpacing: '0.02em',
-                      cursor: utrNo ? 'pointer' : 'not-allowed',
-                      opacity: utrNo ? 1 : 0.6,
-                      boxShadow: '0 4px 15px rgba(214, 190, 102, 0.3)',
+                  {activeOrder.upi_id && (
+                    <div style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '8px'
-                    }}
-                  >
-                    {submittingUtr ? (
-                      <>
-                        <RefreshCw size={16} className="animate-spin" />
-                        <span>SUBMITTING UTR...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 size={16} />
-                        <span>SUBMIT UTR TO CREDIT WALLET</span>
-                      </>
-                    )}
-                  </button>
-                </form>
-
+                      gap: '8px',
+                      flexWrap: 'wrap',
+                      marginTop: '6px'
+                    }}>
+                      <span style={{ fontSize: '0.88rem', fontWeight: '800', color: '#043490' }}>
+                        {activeOrder.upi_id}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyUpi(activeOrder.upi_id)}
+                        className="btn-gold"
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          fontSize: '0.72rem',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        {copied ? <Check size={12} /> : <Copy size={12} />}
+                        <span>{copied ? 'COPIED' : 'COPY UPI ID'}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -1917,7 +1939,7 @@ const AddFund = () => {
                 </div>
               )}
 
-              {/* BIG PRIMARY "PAY NOW" BUTTON (OPENS MOBILE UPI APP DIRECTLY) */}
+              {/* PRIMARY "PROCEED TO PAY / GENERATE ORDER" BUTTON */}
               <button
                 type="button"
                 disabled={processingPayment || !amount || parseFloat(amount) <= 0}
@@ -1927,9 +1949,9 @@ const AddFund = () => {
                   width: '100%',
                   padding: '16px',
                   borderRadius: '14px',
-                  fontSize: '1.1rem',
+                  fontSize: '1.08rem',
                   fontWeight: '900',
-                  letterSpacing: '0.04em',
+                  letterSpacing: '0.03em',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1941,7 +1963,7 @@ const AddFund = () => {
                 {processingPayment ? (
                   <>
                     <RefreshCw size={22} className="animate-spin" />
-                    <span>OPENING UPI APP...</span>
+                    <span>GENERATING PAYMENT ORDER...</span>
                   </>
                 ) : (
                   <>

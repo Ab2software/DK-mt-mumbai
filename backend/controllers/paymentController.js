@@ -1062,6 +1062,16 @@ exports.createOrder = async (req, res) => {
           const intentUrl = apiData.intent_url || apiData.data?.intent_url || apiData.upi_intent_url || paymentUrl;
           const qrCode = apiData.qr_code || apiData.data?.qr_code || apiData.qr || '';
 
+          let phonepeUrl = '';
+          let paytmUrl = '';
+          let gpayUrl = '';
+          const upiBase = (intentUrl && intentUrl.startsWith('upi://pay?')) ? intentUrl : (paymentUrl && paymentUrl.startsWith('upi://pay?') ? paymentUrl : '');
+          if (upiBase) {
+            phonepeUrl = upiBase.replace(/^upi:\/\/pay\?/, 'phonepe://pay?');
+            paytmUrl = upiBase.replace(/^upi:\/\/pay\?/, 'paytmmp://pay?');
+            gpayUrl = upiBase.replace(/^upi:\/\/pay\?/, 'tez://upi/pay?');
+          }
+
           if (isSuccess && (paymentUrl || intentUrl)) {
             const todayDateTime = getISTDateTimeStr();
             await db.query(
@@ -1080,6 +1090,9 @@ exports.createOrder = async (req, res) => {
                 amount: numAmount,
                 payment_url: paymentUrl,
                 intent_url: intentUrl,
+                phonepe_url: phonepeUrl,
+                paytm_url: paytmUrl,
+                gpay_url: gpayUrl,
                 qr_code: qrCode,
                 generic_upi_url: intentUrl || paymentUrl,
                 upi_url: intentUrl || paymentUrl,
@@ -1154,12 +1167,18 @@ exports.createOrder = async (req, res) => {
 
           const result = apiData.result || apiData.data || {};
           const paymentUrl = result.payment_url || apiData.payment_url || '';
-          const phonepeLink = result.phonepe_link || '';
           const paytmLink = result.paytm_link || '';
           const bhimLink = result.bhim_link || '';
+          const phonepeLink = result.phonepe_link || (bhimLink && bhimLink.startsWith('upi://pay?') ? bhimLink.replace(/^upi:\/\/pay\?/, 'phonepe://pay?') : '');
           const checkLink = result.check_link || '';
           const intentUrl = paymentUrl || phonepeLink || paytmLink || bhimLink;
           const genericUpiUrl = bhimLink || intentUrl;
+          let gpayLink = '';
+          if (bhimLink && bhimLink.startsWith('upi://pay?')) {
+            gpayLink = bhimLink.replace(/^upi:\/\/pay\?/, 'tez://upi/pay?');
+          } else if (phonepeLink && phonepeLink.startsWith('phonepe://pay?')) {
+            gpayLink = phonepeLink.replace(/^phonepe:\/\/pay\?/, 'tez://upi/pay?');
+          }
 
           if (isSuccess && (paymentUrl || bhimLink || phonepeLink || paytmLink)) {
             const todayDateTime = getISTDateTimeStr();
@@ -1181,6 +1200,7 @@ exports.createOrder = async (req, res) => {
                 intent_url: intentUrl,
                 phonepe_url: phonepeLink,
                 paytm_url: paytmLink,
+                gpay_url: gpayLink,
                 bhim_url: bhimLink,
                 generic_upi_url: genericUpiUrl,
                 upi_url: genericUpiUrl,
@@ -1277,6 +1297,9 @@ exports.createOrder = async (req, res) => {
 
     const orderId = `UPI_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
     const urls = buildUpiUri(targetAppCode, targetUpiId, targetPayee, numAmount, orderId);
+    const phonepeUrls = buildUpiUri('phonepe', targetUpiId, targetPayee, numAmount, orderId);
+    const paytmUrls = buildUpiUri('paytm', targetUpiId, targetPayee, numAmount, orderId);
+    const gpayUrls = buildUpiUri('gpay', targetUpiId, targetPayee, numAmount, orderId);
 
     return res.json({
       success: '1',
@@ -1289,6 +1312,9 @@ exports.createOrder = async (req, res) => {
         app_name: targetAppName,
         app_code: targetAppCode,
         upi_url: urls.scheme_url,
+        phonepe_url: phonepeUrls.scheme_url,
+        paytm_url: paytmUrls.scheme_url,
+        gpay_url: gpayUrls.scheme_url,
         generic_upi_url: urls.generic_url,
         intent_url: urls.intent_url,
         user: { name, phone }
@@ -1650,10 +1676,11 @@ exports.verifyPayment = async (req, res) => {
 
     if (pendingAuto.length > 0 || pendingFund.length > 0) {
       return res.json({
-        success: '0',
+        success: '1',
+        approved: false,
         pending: true,
         status: '0',
-        msg: 'Payment request received! It is currently PENDING Admin approval. Points will be credited once Admin verifies.'
+        msg: 'Payment is pending confirmation from UPI gateway. Please complete payment in your UPI app.'
       });
     }
 
