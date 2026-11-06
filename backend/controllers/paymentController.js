@@ -146,6 +146,50 @@ async function initUpiSchema() {
     const [debugSettings] = await db.query('SELECT id, deposit_mode, payment_upi_id, upi_payment_id, auto_upi_id FROM admin_settings LIMIT 1');
     console.log('[DEBUG admin_settings]:', debugSettings && debugSettings[0]);
 
+    // 3. Create auto_payment_gateways table for multiple automated gateways (NiceUpi, IMB, ZenUpi)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS auto_payment_gateways (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        gateway_code VARCHAR(50) UNIQUE NOT NULL,
+        gateway_name VARCHAR(100) NOT NULL,
+        api_token TEXT,
+        user_token TEXT,
+        merchant_id VARCHAR(150) DEFAULT '',
+        webhook_url VARCHAR(255) DEFAULT '',
+        is_active TINYINT(1) DEFAULT 0,
+        extra_config JSON NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Ensure user_token column exists in existing deployments
+    try {
+      await db.query(`ALTER TABLE auto_payment_gateways ADD COLUMN user_token TEXT`);
+    } catch (e) {}
+
+    // Ensure default 3 gateways exist
+    const defaultGateways = [
+      { code: 'niceupi', name: 'NiceUpi', active: 1 },
+      { code: 'imb', name: 'IMB Payment getway', active: 0 },
+      { code: 'zenupi', name: 'ZenUpi', active: 0 }
+    ];
+
+    for (const gw of defaultGateways) {
+      const [exists] = await db.query('SELECT id FROM auto_payment_gateways WHERE gateway_code = ?', [gw.code]);
+      if (exists.length === 0) {
+        await db.query(
+          'INSERT INTO auto_payment_gateways (gateway_code, gateway_name, is_active) VALUES (?, ?, ?)',
+          [gw.code, gw.name, gw.active]
+        );
+      }
+    }
+
+    const [anyActive] = await db.query('SELECT id FROM auto_payment_gateways WHERE is_active = 1 LIMIT 1');
+    if (anyActive.length === 0) {
+      await db.query("UPDATE auto_payment_gateways SET is_active = 1 WHERE gateway_code = 'niceupi'");
+    }
+
     // Clean up ghost unconfirmed intent requests created merely by clicking Pay Now (txt_id = '0' and status = '0')
     try {
       await db.query("DELETE FROM user_auto_deposite WHERE txt_id = '0' AND status = '0' AND txt_request LIKE 'UPI_%'");
@@ -187,6 +231,11 @@ exports.getAdminGateways = async (req, res) => {
     // 2. Get all UPI Apps
     const [upiApps] = await db.query('SELECT * FROM upi_gateways ORDER BY display_order ASC, id ASC');
 
+    // 3. Get multiple Auto Payment Gateways (NiceUpi, IMB Payment getway, ZenUpi)
+    const [autoGateways] = await db.query('SELECT * FROM auto_payment_gateways ORDER BY id ASC');
+    const activeGwRow = autoGateways.find(g => g.is_active === 1) || autoGateways[0];
+    const activeGatewayCode = activeGwRow?.gateway_code || settings?.active_payment_gateway || 'niceupi';
+
     return res.json({
       success: '1',
       deposit_mode: depositMode,
@@ -199,9 +248,8 @@ exports.getAdminGateways = async (req, res) => {
       min_deposite: settings?.min_deposite || '100',
       max_deposite: settings?.max_deposite || '50000',
       upi_apps: upiApps,
-      // Backward compatibility fields
-      active_payment_gateway: 'upi_intent',
-      gateways: []
+      active_payment_gateway: activeGatewayCode,
+      gateways: autoGateways
     });
   } catch (err) {
     console.error('getAdminGateways error:', err);
@@ -452,13 +500,359 @@ exports.setDepositMode = async (req, res) => {
   }
 };
 
-// Legacy compatibility stubs for admin
-exports.updateGatewayConfig = async (req, res) => {
-  return exports.updateUpiApp(req, res);
+// Helper: Direct wallet credit & transaction settlement for automated payments
+async function creditUserWalletDirect(username, amount, orderId, utr, note) {
+  const cleanPhone = String(username || '').replace(/\D/g, '').slice(-10);
+  const [users] = await db.query(
+    "SELECT id, phone, name, wallet FROM user_info WHERE phone = ? OR RIGHT(phone, 10) = ? OR id = ? LIMIT 1",
+    [username, cleanPhone, username]
+  );
+  if (users.length === 0) return { credited: false, msg: 'User account not found' };
+
+  const user = users[0];
+  const oldWallet = parseFloat(user.wallet || '0');
+  const addAmt = parseFloat(amount || '0');
+  const safeOldWallet = isNaN(oldWallet) ? 0 : oldWallet;
+  const newWallet = safeOldWallet + addAmt;
+
+  // 1. Update user_info wallet balance
+  await db.query("UPDATE user_info SET wallet = ? WHERE id = ?", [newWallet, user.id]);
+
+  const todayDateTime = getISTDateTimeStr();
+  const currentDateStr = getISTDateStr();
+
+  // 2. Mark user_auto_deposite status as 1 (Approved)
+  await db.query(
+    "UPDATE user_auto_deposite SET status = '1', txt_id = ? WHERE txt_request = ? AND (username = ? OR RIGHT(username, 10) = ?)",
+    [utr || orderId, orderId, username, cleanPhone]
+  );
+
+  // 3. Insert or update user_fund_request so it shows in reports & passes through statement
+  await db.query(
+    "INSERT INTO user_fund_request (username, points, amount, trans_details, receipe_image, date, status, action) VALUES (?, ?, ?, ?, '', ?, '1', 'auto')",
+    [user.phone, addAmt, addAmt, `${note || 'Auto Payment'} | Ref: ${utr || orderId}`, currentDateStr]
+  );
+
+  // 4. Broadcast live notification to Admin & User socket
+  try {
+    const { broadcastToAdmins } = require('../socket/chatSocket');
+    broadcastToAdmins({
+      type: 'badge_update',
+      event: 'auto_deposit_approved',
+      user: user.phone,
+      amount: addAmt,
+      utr: utr || orderId,
+      message: `Auto Deposit Success: ₹${addAmt} credited to ${user.phone}`
+    });
+  } catch (wsErr) {}
+
+  return { credited: true, newWallet };
+}
+
+// Admin: Set Active Auto Payment Gateway (NiceUpi, IMB, ZenUpi)
+exports.setActiveGateway = async (req, res) => {
+  const { gateway_code } = req.body;
+  if (!gateway_code) {
+    return res.status(400).json({ success: '0', msg: 'Gateway code is required (e.g. niceupi, imb, zenupi)' });
+  }
+
+  const cleanCode = String(gateway_code).trim().toLowerCase();
+  try {
+    await initUpiSchema();
+
+    const [found] = await db.query('SELECT * FROM auto_payment_gateways WHERE gateway_code = ?', [cleanCode]);
+    if (found.length === 0) {
+      return res.status(404).json({ success: '0', msg: `Unknown gateway: ${cleanCode}` });
+    }
+
+    const gateway = found[0];
+
+    // Deactivate all, activate selected
+    await db.query('UPDATE auto_payment_gateways SET is_active = 0');
+    await db.query('UPDATE auto_payment_gateways SET is_active = 1 WHERE gateway_code = ?', [cleanCode]);
+
+    // Sync admin_settings
+    const settingsRow = await getAdminSettingsRow();
+    if (settingsRow && settingsRow.id !== undefined) {
+      await db.query('UPDATE admin_settings SET active_payment_gateway = ?, deposit_mode = "upi_intent" WHERE id = ?', [cleanCode, settingsRow.id]);
+    } else {
+      await db.query('UPDATE admin_settings SET active_payment_gateway = ?, deposit_mode = "upi_intent"', [cleanCode]);
+    }
+
+    return res.json({
+      success: '1',
+      msg: `"${gateway.gateway_name}" is now the ACTIVE payment gateway on User End!`,
+      active_payment_gateway: cleanCode
+    });
+  } catch (err) {
+    console.error('setActiveGateway error:', err);
+    return res.status(500).json({ success: '0', error: err.message });
+  }
 };
 
-exports.setActiveGateway = async (req, res) => {
-  return res.json({ success: '1', msg: 'UPI Intent Gateway Active' });
+// Admin: Update Gateway API Token & Configuration
+exports.updateGatewayConfig = async (req, res) => {
+  const { gateway_code, api_token, user_token, merchant_id, webhook_url, is_active } = req.body;
+  if (!gateway_code) {
+    return res.status(400).json({ success: '0', msg: 'Gateway code is required' });
+  }
+
+  const cleanCode = String(gateway_code).trim().toLowerCase();
+  try {
+    await initUpiSchema();
+
+    const [found] = await db.query('SELECT * FROM auto_payment_gateways WHERE gateway_code = ?', [cleanCode]);
+    if (found.length === 0) {
+      return res.status(404).json({ success: '0', msg: 'Gateway not found' });
+    }
+
+    const current = found[0];
+    const newApiToken = api_token !== undefined ? String(api_token).trim() : current.api_token;
+    const newUserToken = user_token !== undefined ? String(user_token).trim() : (current.user_token || '');
+    const newMerchantId = merchant_id !== undefined ? String(merchant_id).trim() : current.merchant_id;
+    const newWebhookUrl = webhook_url !== undefined ? String(webhook_url).trim() : current.webhook_url;
+
+    await db.query(
+      'UPDATE auto_payment_gateways SET api_token = ?, user_token = ?, merchant_id = ?, webhook_url = ? WHERE gateway_code = ?',
+      [newApiToken, newUserToken, newMerchantId, newWebhookUrl, cleanCode]
+    );
+
+    if (is_active) {
+      await db.query('UPDATE auto_payment_gateways SET is_active = 0');
+      await db.query('UPDATE auto_payment_gateways SET is_active = 1 WHERE gateway_code = ?', [cleanCode]);
+      const settingsRow = await getAdminSettingsRow();
+      if (settingsRow && settingsRow.id !== undefined) {
+        await db.query('UPDATE admin_settings SET active_payment_gateway = ? WHERE id = ?', [cleanCode, settingsRow.id]);
+      } else {
+        await db.query('UPDATE admin_settings SET active_payment_gateway = ?', [cleanCode]);
+      }
+    }
+
+    return res.json({
+      success: '1',
+      msg: `"${current.gateway_name}" credentials (User_token & API Token) saved successfully!`,
+      gateway_code: cleanCode
+    });
+  } catch (err) {
+    console.error('updateGatewayConfig error:', err);
+    return res.status(500).json({ success: '0', error: err.message });
+  }
+};
+
+// Admin: Test Gateway API Connection
+exports.testGatewayConnection = async (req, res) => {
+  const { gateway_code, api_token, user_token } = req.body;
+  if (!gateway_code) {
+    return res.status(400).json({ success: '0', msg: 'Gateway code is required' });
+  }
+
+  const cleanCode = String(gateway_code).trim().toLowerCase();
+  try {
+    await initUpiSchema();
+    const [found] = await db.query('SELECT * FROM auto_payment_gateways WHERE gateway_code = ?', [cleanCode]);
+    const gateway = found[0] || {};
+    const aToken = (api_token || gateway.api_token || '').trim();
+    const uToken = (user_token || gateway.user_token || '').trim();
+
+    if (!aToken && !uToken) {
+      return res.json({ success: '0', msg: 'Please enter User Token or API Token first.' });
+    }
+
+    if (cleanCode === 'niceupi') {
+      try {
+        const postData = new URLSearchParams();
+        if (uToken) postData.append('user_token', uToken);
+        else if (aToken) postData.append('user_token', aToken);
+
+        if (aToken) postData.append('api_token', aToken);
+        else if (uToken) postData.append('api_token', uToken);
+
+        postData.append('order_id', 'TEST_' + Date.now());
+
+        const response = await fetch('https://niceupi.com/api/check-order-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: postData.toString()
+        });
+
+        const data = await response.json();
+        if (data.status === 'ERROR' && /token|auth|unauthorized|invalid/i.test(data.message || data.msg || '')) {
+          return res.json({ success: '0', msg: `NiceUpi API rejected token: ${data.message || data.msg || 'Invalid Token'}` });
+        }
+
+        return res.json({
+          success: '1',
+          msg: 'Connection to NiceUpi API successful! Tokens verified.',
+          details: data
+        });
+      } catch (connErr) {
+        return res.json({
+          success: '0',
+          msg: `Could not reach NiceUpi API: ${connErr.message}`
+        });
+      }
+    }
+
+    if (cleanCode === 'imb') {
+      try {
+        const postData = new URLSearchParams();
+        postData.append('customer_mobile', '9999999999');
+        postData.append('user_token', uToken || aToken);
+        postData.append('amount', '1');
+        postData.append('order_id', 'TEST_' + Date.now());
+        postData.append('redirect_url', 'https://bharat-matka.onrender.com');
+        postData.append('remark1', 'test@bharatmatka.com');
+        postData.append('remark2', 'Test Connection');
+
+        const response = await fetch('https://api.imbpay.in/v2/create-order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+          },
+          body: postData.toString()
+        });
+
+        const data = await response.json();
+        if (data.status === false && /token|auth|unauthorized|invalid/i.test(data.message || data.msg || '')) {
+          return res.json({ success: '0', msg: `IMB API rejected token: ${data.message || 'Invalid user_token'}` });
+        }
+
+        return res.json({
+          success: '1',
+          msg: 'Connection to IMB Payment Gateway verified successfully!',
+          details: data
+        });
+      } catch (connErr) {
+        return res.json({
+          success: '0',
+          msg: `Could not reach IMB API: ${connErr.message}`
+        });
+      }
+    }
+
+    return res.json({
+      success: '1',
+      msg: `Tokens validated for ${gateway.gateway_name || cleanCode}.`
+    });
+  } catch (err) {
+    return res.status(500).json({ success: '0', error: err.message });
+  }
+};
+
+// Public/Webhook: Handle Inbound Gateway Webhooks (NiceUpi, IMB, ZenUpi)
+exports.handleWebhook = async (req, res) => {
+  try {
+    await initUpiSchema();
+    const gateway = (req.params.gateway || '').toLowerCase();
+    const payload = req.body || {};
+    console.log(`[Webhook Received for ${gateway}]:`, payload);
+
+    const resultObj = payload.result || {};
+    const orderId =
+      payload.order_id ||
+      payload.orderId ||
+      resultObj.orderId ||
+      resultObj.order_id ||
+      payload.client_txn_id ||
+      payload.txn_id ||
+      payload.txId;
+
+    const utr =
+      resultObj.utr ||
+      payload.utr ||
+      payload.utr_number ||
+      payload.bank_ref_no ||
+      payload.ref_id ||
+      'WEBHOOK_PAID';
+
+    const amount = parseFloat(
+      resultObj.amount ||
+      payload.amount ||
+      payload.txn_amount ||
+      payload.points ||
+      0
+    );
+
+    const status = String(
+      resultObj.txnStatus ||
+      payload.status ||
+      payload.txn_status ||
+      ''
+    ).toUpperCase();
+
+    const isSuccess =
+      status === 'COMPLETED' ||
+      status === 'SUCCESS' ||
+      status === 'SUCCESSFUL' ||
+      status === 'PAID' ||
+      payload.status === true ||
+      payload.status === 1 ||
+      payload.status === '1';
+
+    if (!orderId) {
+      return res.status(400).json({ status: 'error', message: 'Order ID is required' });
+    }
+
+    if (!isSuccess) {
+      console.log(`[Webhook]: Order ${orderId} status is ${status}, skipping credit.`);
+      return res.json({ status: 'ignored', message: `Order status is ${status}` });
+    }
+
+    // Check if order already in user_auto_deposite
+    let [existing] = await db.query(
+      "SELECT * FROM user_auto_deposite WHERE txt_request = ? LIMIT 1",
+      [orderId]
+    );
+
+    let targetUsername = null;
+    let targetAmount = amount;
+
+    if (existing.length > 0) {
+      const order = existing[0];
+      if (order.status === '1') {
+        return res.json({ status: 'already_processed', message: 'Order already credited' });
+      }
+      targetUsername = order.username;
+      targetAmount = amount > 0 ? amount : parseFloat(order.amount || 0);
+    } else {
+      // Fallback: look up by customer_mobile
+      const mob = resultObj.customer_mobile || payload.customer_mobile;
+      if (mob) {
+        const cleanMob = String(mob).replace(/\D/g, '').slice(-10);
+        const [userPending] = await db.query(
+          "SELECT * FROM user_auto_deposite WHERE (username = ? OR RIGHT(username, 10) = ?) AND status = '0' ORDER BY id DESC LIMIT 1",
+          [mob, cleanMob]
+        );
+        if (userPending.length > 0) {
+          const matchedOrder = userPending[0];
+          targetUsername = matchedOrder.username;
+          targetAmount = amount > 0 ? amount : parseFloat(matchedOrder.amount || 0);
+        }
+      }
+    }
+
+    if (!targetUsername) {
+      return res.status(404).json({ status: 'error', message: 'Order not found' });
+    }
+
+    const creditResult = await creditUserWalletDirect(
+      targetUsername,
+      targetAmount,
+      orderId,
+      utr,
+      `${(gateway || 'IMB').toUpperCase()} Webhook`
+    );
+
+    return res.json({
+      status: 'success',
+      message: 'Deposit credited successfully',
+      wallet: creditResult.newWallet
+    });
+  } catch (err) {
+    console.error('handleWebhook error:', err);
+    return res.status(500).json({ status: 'error', message: err.message });
+  }
 };
 
 // User/Public: Get Active UPI Apps & Deposit Configuration
@@ -472,8 +866,19 @@ exports.getPublicPaymentConfig = async (req, res) => {
     const isAuto = depositMode === 'upi_intent' || depositMode === 'auto';
     const autoUpi = settings?.auto_upi_id || '';
     const defaultUpi = settings?.payment_upi_id || settings?.upi_payment_id || '';
-    const activeUpi = isAuto ? (autoUpi || defaultUpi) : (defaultUpi || autoUpi);
+    // In auto mode, automated gateway handles orders - do NOT fall back to manual default UPI ID!
+    const activeUpi = isAuto ? (autoUpi || '') : defaultUpi;
     const payeeName = settings?.ac_name || 'Pravesh Online';
+
+    // Get active gateway from auto_payment_gateways
+    const [activeGwRows] = await db.query('SELECT * FROM auto_payment_gateways WHERE is_active = 1 LIMIT 1');
+    const activeGw = activeGwRows && activeGwRows[0] ? activeGwRows[0] : null;
+    const activeGatewayCode = activeGw?.gateway_code || settings?.active_payment_gateway || 'niceupi';
+    const activeGatewayName = activeGw?.gateway_name || 'NiceUpi';
+    const isConfigured = Boolean((activeGw?.api_token && activeGw.api_token.trim().length > 3) || (activeGw?.user_token && activeGw.user_token.trim().length > 3));
+
+    // Get all auto gateways safe public summary
+    const [allAutoGws] = await db.query('SELECT gateway_code, gateway_name, is_active FROM auto_payment_gateways ORDER BY id ASC');
 
     // Get active UPI apps
     const [upiApps] = await db.query(
@@ -493,14 +898,17 @@ exports.getPublicPaymentConfig = async (req, res) => {
       show_upi: settings?.show_upi ?? 1,
       show_qr: settings?.show_qr ?? 1,
       upi_apps: upiApps,
-      // Backward compatibility stub for existing auto deposit code
+      active_payment_gateway: activeGatewayCode,
       active_gateway: {
-        id: 'upi_intent',
-        name: 'Direct UPI App',
-        icon: 'Zap',
-        category: 'UPI Direct',
-        description: 'Instant UPI App Payment (PhonePe, GPay, Paytm, BHIM)'
-      }
+        id: activeGatewayCode,
+        gateway_code: activeGatewayCode,
+        name: activeGatewayName,
+        gateway_name: activeGatewayName,
+        is_configured: isConfigured,
+        category: 'Automated Gateway',
+        description: `Automated instant payment via ${activeGatewayName}`
+      },
+      gateways_list: allAutoGws
     });
   } catch (err) {
     console.error('getPublicPaymentConfig error:', err);
@@ -551,7 +959,7 @@ function buildUpiUri(appCode, upiId, payeeName, amount, orderId) {
   }
 }
 
-// User Protected: Create UPI Order & Return Deep Links
+// User Protected: Create Payment Order (NiceUpi, IMB, ZenUpi or Direct UPI Intent)
 exports.createOrder = async (req, res) => {
   const phone = req.user.phone;
   const name = req.user.name || 'User';
@@ -576,7 +984,261 @@ exports.createOrder = async (req, res) => {
       return res.json({ success: '0', msg: `Maximum deposit amount is ₹${maxDep.toFixed(2)}.` });
     }
 
-    // Determine target UPI ID (prioritize auto_upi_id for auto deposit flow)
+    const depositMode = settings?.deposit_mode || 'upi_intent';
+    const isAuto = depositMode === 'upi_intent' || depositMode === 'auto';
+
+    // 1. If in Auto Deposit Mode, route through the Admin's selected Active Gateway
+    if (isAuto) {
+      const [activeGwRows] = await db.query(
+        'SELECT * FROM auto_payment_gateways WHERE is_active = 1 LIMIT 1'
+      );
+      const activeGw = activeGwRows && activeGwRows[0] ? activeGwRows[0] : null;
+      const gwCode = activeGw?.gateway_code || settings?.active_payment_gateway || 'niceupi';
+
+      const cleanPhone = String(phone || '').replace(/\D/g, '').slice(-10) || '9999999999';
+      const host = req.get('host') || 'bharat-matka.onrender.com';
+      const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+      const redirectUrl = `${protocol}://${host}/wallet`;
+
+      // ----------------------------------------------------
+      // GATEWAY 1: NiceUpi Automated Gateway
+      // ----------------------------------------------------
+      if (gwCode === 'niceupi') {
+        const uToken = (activeGw?.user_token || '').trim();
+        const aToken = (activeGw?.api_token || '').trim();
+        const primaryToken = uToken || aToken;
+
+        if (!primaryToken) {
+          return res.json({
+            success: '0',
+            msg: 'NiceUpi User_token is not configured by Admin. Please enter User_token in Admin Panel -> Payment Gateway.'
+          });
+        }
+
+        const orderId = `BM_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
+
+        try {
+          const postData = new URLSearchParams();
+          // NiceUpi expects user_token parameter
+          if (uToken) {
+            postData.append('user_token', uToken);
+          } else if (aToken) {
+            postData.append('user_token', aToken);
+          }
+
+          // Also supply api_token for full compatibility
+          if (aToken) {
+            postData.append('api_token', aToken);
+          } else if (uToken) {
+            postData.append('api_token', uToken);
+          }
+
+          postData.append('customer_mobile', cleanPhone);
+          postData.append('amount', String(numAmount));
+          postData.append('order_id', orderId);
+          postData.append('redirect_url', redirectUrl);
+          postData.append('remark', 'Bharat Matka Fund');
+
+          const apiRes = await fetch('https://niceupi.com/api/create-order', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json'
+            },
+            body: postData.toString()
+          });
+
+          const apiData = await apiRes.json();
+          console.log('[NiceUpi create-order response]:', apiData);
+
+          const isSuccess =
+            apiData.status === true ||
+            apiData.status === 'success' ||
+            apiData.status === 'SUCCESS' ||
+            apiData.status === 200 ||
+            apiData.status === '1';
+
+          const paymentUrl = apiData.payment_url || apiData.data?.payment_url || apiData.url || apiData.checkout_url;
+          const intentUrl = apiData.intent_url || apiData.data?.intent_url || apiData.upi_intent_url || paymentUrl;
+          const qrCode = apiData.qr_code || apiData.data?.qr_code || apiData.qr || '';
+
+          if (isSuccess && (paymentUrl || intentUrl)) {
+            const todayDateTime = getISTDateTimeStr();
+            await db.query(
+              `INSERT INTO user_auto_deposite (username, transaction_note, amount, txt_request, txt_id, txt_date, status)
+               VALUES (?, ?, ?, ?, '0', ?, '0')`,
+              [phone, `NiceUpi Auto Deposit | Order: ${orderId}`, numAmount, orderId, todayDateTime]
+            );
+
+            return res.json({
+              success: '1',
+              msg: 'NiceUpi payment order created successfully',
+              data: {
+                gateway: 'niceupi',
+                gateway_name: 'NiceUpi',
+                order_id: orderId,
+                amount: numAmount,
+                payment_url: paymentUrl,
+                intent_url: intentUrl,
+                qr_code: qrCode,
+                generic_upi_url: intentUrl || paymentUrl,
+                upi_url: intentUrl || paymentUrl,
+                user: { name, phone }
+              }
+            });
+          } else {
+            const errReason = apiData.message || apiData.msg || apiData.error || 'Failed to create NiceUpi payment order';
+            let friendlyMsg = `NiceUpi Gateway: ${errReason}`;
+            if (String(errReason).toLowerCase().includes('merchant not linked')) {
+              friendlyMsg = 'NiceUpi Gateway: Merchant Not Linked. Please log in to your NiceUpi Merchant Dashboard (https://niceupi.com/merchant/dashboard), go to the "Merchants" section, and connect/link your UPI Merchant account.';
+            }
+            return res.json({
+              success: '0',
+              msg: friendlyMsg
+            });
+          }
+        } catch (fetchErr) {
+          console.error('NiceUpi create-order error:', fetchErr);
+          return res.json({
+            success: '0',
+            msg: `Unable to connect to NiceUpi API: ${fetchErr.message}`
+          });
+        }
+      }
+
+      // ----------------------------------------------------
+      // GATEWAY 2: IMB Payment Gateway
+      // ----------------------------------------------------
+      if (gwCode === 'imb') {
+        const uToken = (activeGw?.user_token || '').trim();
+        const aToken = (activeGw?.api_token || '').trim();
+        const primaryToken = uToken || aToken;
+
+        if (!primaryToken) {
+          return res.json({
+            success: '0',
+            msg: 'IMB Payment Gateway user_token is not configured by Admin. Please enter User Token / API Token in Admin Panel -> Payment Gateway.'
+          });
+        }
+
+        const orderId = `IMB_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
+
+        try {
+          const postData = new URLSearchParams();
+          postData.append('customer_mobile', cleanPhone);
+          postData.append('user_token', primaryToken);
+          postData.append('amount', String(numAmount));
+          postData.append('order_id', orderId);
+          postData.append('redirect_url', redirectUrl);
+          postData.append('remark1', `${cleanPhone}@bharatmatka.com`);
+          postData.append('remark2', 'Bharat Matka Fund');
+
+          const apiRes = await fetch('https://api.imbpay.in/v2/create-order', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json'
+            },
+            body: postData.toString()
+          });
+
+          const apiData = await apiRes.json();
+          console.log('[IMB create-order response]:', apiData);
+
+          const isSuccess =
+            apiData.status === true ||
+            apiData.status === 'true' ||
+            apiData.status === 'SUCCESS' ||
+            apiData.status === 'success' ||
+            apiData.status === 200;
+
+          const result = apiData.result || apiData.data || {};
+          const paymentUrl = result.payment_url || apiData.payment_url || '';
+          const phonepeLink = result.phonepe_link || '';
+          const paytmLink = result.paytm_link || '';
+          const bhimLink = result.bhim_link || '';
+          const checkLink = result.check_link || '';
+          const intentUrl = paymentUrl || phonepeLink || paytmLink || bhimLink;
+          const genericUpiUrl = bhimLink || intentUrl;
+
+          if (isSuccess && (paymentUrl || bhimLink || phonepeLink || paytmLink)) {
+            const todayDateTime = getISTDateTimeStr();
+            await db.query(
+              `INSERT INTO user_auto_deposite (username, transaction_note, amount, txt_request, txt_id, txt_date, status)
+               VALUES (?, ?, ?, ?, '0', ?, '0')`,
+              [phone, `IMB Auto Deposit | Order: ${orderId}`, numAmount, orderId, todayDateTime]
+            );
+
+            return res.json({
+              success: '1',
+              msg: 'IMB payment order created successfully',
+              data: {
+                gateway: 'imb',
+                gateway_name: 'IMB Payment Gateway',
+                order_id: result.orderId || orderId,
+                amount: numAmount,
+                payment_url: paymentUrl,
+                intent_url: intentUrl,
+                phonepe_url: phonepeLink,
+                paytm_url: paytmLink,
+                bhim_url: bhimLink,
+                generic_upi_url: genericUpiUrl,
+                upi_url: genericUpiUrl,
+                check_link: checkLink,
+                user: { name, phone }
+              }
+            });
+          } else {
+            const errReason = apiData.message || apiData.msg || apiData.error || 'Failed to create IMB payment order';
+            return res.json({
+              success: '0',
+              msg: `IMB Payment Gateway: ${errReason}`
+            });
+          }
+        } catch (fetchErr) {
+          console.error('IMB create-order error:', fetchErr);
+          return res.json({
+            success: '0',
+            msg: `Unable to connect to IMB API: ${fetchErr.message}`
+          });
+        }
+      }
+
+      // ----------------------------------------------------
+      // GATEWAY 3: ZenUpi Gateway
+      // ----------------------------------------------------
+      if (gwCode === 'zenupi') {
+        const token = (activeGw?.api_token || '').trim();
+        if (!token) {
+          return res.json({
+            success: '0',
+            msg: 'ZenUpi API Token is not configured by Admin. Please configure API Token in Admin Panel.'
+          });
+        }
+
+        const orderId = `ZEN_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
+        const todayDateTime = getISTDateTimeStr();
+        await db.query(
+          `INSERT INTO user_auto_deposite (username, transaction_note, amount, txt_request, txt_id, txt_date, status)
+           VALUES (?, ?, ?, ?, '0', ?, '0')`,
+          [phone, `ZenUpi Auto Deposit | Order: ${orderId}`, numAmount, orderId, todayDateTime]
+        );
+
+        return res.json({
+          success: '1',
+          msg: 'ZenUpi payment order initiated',
+          data: {
+            gateway: 'zenupi',
+            gateway_name: 'ZenUpi',
+            order_id: orderId,
+            amount: numAmount,
+            user: { name, phone }
+          }
+        });
+      }
+    }
+
+    // Determine target UPI ID (fallback for manual intent or direct UPI flow)
     let targetUpiId = settings?.auto_upi_id || upi_id || settings?.payment_upi_id || settings?.upi_payment_id || '';
     let targetPayee = settings?.ac_name || 'Pravesh Online';
     let targetAppName = 'UPI App';
@@ -610,16 +1272,10 @@ exports.createOrder = async (req, res) => {
     }
 
     if (!targetUpiId) {
-      return res.json({ success: '0', msg: 'UPI ID is not configured by Admin. Please contact support.' });
+      return res.json({ success: '0', msg: 'Payment Gateway is not configured. Please contact support.' });
     }
 
-    // Generate unique order ID
     const orderId = `UPI_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
-    const todayDateTime = getISTDateTimeStr();
-
-    // NOTE: Do NOT insert pending record into user_auto_deposite or user_fund_request here!
-    // A payment request should ONLY reach Admin when the user has actually sent payment and submitted UTR.
-
     const urls = buildUpiUri(targetAppCode, targetUpiId, targetPayee, numAmount, orderId);
 
     return res.json({
@@ -857,9 +1513,73 @@ exports.verifyPayment = async (req, res) => {
         success: '1', 
         approved: true,
         status: '1',
-        msg: 'Payment has been approved and credited by Admin!',
+        msg: 'Payment has been approved and credited to your wallet!',
         wallet: uRows.length > 0 ? parseFloat(uRows[0].wallet || '0') : undefined
       });
+    }
+
+    // 2. Real-time Status Verification with NiceUpi API
+    const targetOrderId = order_id || refId;
+    if (targetOrderId && String(targetOrderId).startsWith('BM_')) {
+      try {
+        const [niceRows] = await db.query("SELECT api_token, user_token FROM auto_payment_gateways WHERE gateway_code = 'niceupi' LIMIT 1");
+        const niceRow = niceRows[0];
+        const uToken = (niceRow?.user_token || '').trim();
+        const aToken = (niceRow?.api_token || '').trim();
+        const primaryToken = uToken || aToken;
+
+        if (primaryToken) {
+          const postData = new URLSearchParams();
+          if (uToken) postData.append('user_token', uToken);
+          else if (aToken) postData.append('user_token', aToken);
+
+          if (aToken) postData.append('api_token', aToken);
+          else if (uToken) postData.append('api_token', uToken);
+
+          postData.append('order_id', targetOrderId);
+
+          const statusRes = await fetch('https://niceupi.com/api/check-order-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: postData.toString()
+          });
+
+          const statusData = await statusRes.json();
+          console.log('[NiceUpi real-time status check]:', statusData);
+
+          const isCompleted =
+            statusData.status === 'COMPLETED' ||
+            statusData.status === 'SUCCESS' ||
+            statusData.status === true ||
+            statusData.data?.status === 'COMPLETED' ||
+            statusData.data?.status === 'SUCCESS';
+
+          if (isCompleted) {
+            const utr = statusData.utr || statusData.data?.utr || statusData.utr_number || 'NICEUPI_AUTO';
+            const orderAmt = parseFloat(statusData.amount || statusData.data?.amount || amount || 0);
+
+            const creditRes = await creditUserWalletDirect(
+              phone,
+              orderAmt,
+              targetOrderId,
+              utr,
+              'NiceUpi Auto Payment'
+            );
+
+            if (creditRes.credited) {
+              return res.json({
+                success: '1',
+                approved: true,
+                status: '1',
+                msg: `Payment of ₹${orderAmt} verified successfully via NiceUpi!`,
+                wallet: creditRes.newWallet
+              });
+            }
+          }
+        }
+      } catch (niceErr) {
+        console.warn('NiceUpi check status API notice:', niceErr.message);
+      }
     }
 
     // 2. Check if Admin rejected this record

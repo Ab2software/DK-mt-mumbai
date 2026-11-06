@@ -169,6 +169,8 @@ router.post('/set-default-upi', verifyAdmin, paymentController.setDefaultUpi);
 router.post('/payment-gateways/set-auto-upi', verifyAdmin, paymentController.setAutoUpi);
 router.post('/set-auto-upi', verifyAdmin, paymentController.setAutoUpi);
 router.post('/payment-gateways/set-active', verifyAdmin, paymentController.setActiveGateway);
+router.post('/payment-gateways/update-gateway', verifyAdmin, paymentController.updateGatewayConfig);
+router.post('/payment-gateways/test-gateway', verifyAdmin, paymentController.testGatewayConnection);
 router.post('/payment-gateways/set-mode', verifyAdmin, paymentController.setDepositMode);
 
 module.exports = router;

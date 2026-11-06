@@ -186,10 +186,15 @@ try {
 const apiRoutes = require('./routes/api');
 const adminRoutes = require('./routes/admin');
 const chatRoutes = require('./routes/chat');
+const paymentController = require('./controllers/paymentController');
 
 app.use('/api', apiRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/chat', chatRoutes);
+
+// IMB Payment Gateway Webhook direct aliases
+app.post('/imb/webhook.php', paymentController.handleWebhook);
+app.post('/imb/webhook', paymentController.handleWebhook);
 
 // Mount Public Declared Result API
 try {
@@ -214,7 +219,8 @@ if (fs.existsSync(frontendDistPath)) {
       req.path.startsWith('/api') ||
       req.path.startsWith('/uploads') ||
       req.path.startsWith('/apk') ||
-      req.path.startsWith('/health')
+      req.path.startsWith('/health') ||
+      req.path.startsWith('/imb')
     ) {
       return next();
     }

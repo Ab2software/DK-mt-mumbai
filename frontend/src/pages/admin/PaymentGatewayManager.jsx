@@ -3,7 +3,7 @@ import {
   CreditCard, Zap, QrCode, CheckCircle2, ShieldCheck, Key, Plus,
   Settings, Check, AlertCircle, RefreshCw, Trash2, Edit2, Copy,
   ExternalLink, Smartphone, Sparkles, ArrowRight, ArrowUpRight,
-  HelpCircle, Info, Eye, Upload, CheckCheck, Layers, ChevronRight
+  HelpCircle, Info, Eye, EyeOff, Upload, CheckCheck, Layers, ChevronRight
 } from 'lucide-react';
 import api from '../../utils/api';
 
@@ -89,6 +89,18 @@ const PaymentGatewayManager = ({ isMobile: propIsMobile }) => {
   const [savingDefault, setSavingDefault] = useState(false);
   const [copiedKey, setCopiedKey] = useState(null);
 
+  // Multiple Automated Gateways State (NiceUpi, IMB Payment getway, ZenUpi)
+  const [autoGateways, setAutoGateways] = useState([
+    { gateway_code: 'niceupi', gateway_name: 'NiceUpi', api_token: '', user_token: '', is_active: 1 },
+    { gateway_code: 'imb', gateway_name: 'IMB Payment getway', api_token: '', user_token: '', is_active: 0 },
+    { gateway_code: 'zenupi', gateway_name: 'ZenUpi', api_token: '', user_token: '', is_active: 0 }
+  ]);
+  const [activeGatewayCode, setActiveGatewayCode] = useState('niceupi');
+  const [savingGateway, setSavingGateway] = useState({});
+  const [testingGateway, setTestingGateway] = useState({});
+  const [showTokenMap, setShowTokenMap] = useState({});
+  const [showUserTokenMap, setShowUserTokenMap] = useState({});
+
   // Modal State for Add / Edit
   const [modalOpen, setModalOpen] = useState(false);
   const [editingApp, setEditingApp] = useState(null);
@@ -137,6 +149,13 @@ const PaymentGatewayManager = ({ isMobile: propIsMobile }) => {
         setQrImage(res.data.payment_barcode_image || DEFAULT_SAMPLE_QR);
         setShowUpi(res.data.show_upi === undefined ? true : (res.data.show_upi === 1 || res.data.show_upi === '1' || res.data.show_upi === true));
         setShowQr(res.data.show_qr === undefined ? true : (res.data.show_qr === 1 || res.data.show_qr === '1' || res.data.show_qr === true));
+
+        if (res.data.gateways && Array.isArray(res.data.gateways) && res.data.gateways.length > 0) {
+          setAutoGateways(res.data.gateways);
+        }
+        if (res.data.active_payment_gateway) {
+          setActiveGatewayCode(res.data.active_payment_gateway);
+        }
       }
     } catch (err) {
       console.warn('GET /admin/payment-gateways failed, trying /admin/settings fallback...', err);
@@ -149,6 +168,7 @@ const PaymentGatewayManager = ({ isMobile: propIsMobile }) => {
           setDefaultUpiId(upi || '9982778833@paytm');
           setPayeeName(s.ac_name || 'Pravesh Online');
           setDepositMode(s.deposit_mode || 'upi_intent');
+          if (s.active_payment_gateway) setActiveGatewayCode(s.active_payment_gateway);
           if (s.payment_barcode_image) setQrImage(s.payment_barcode_image);
           if (s.show_upi !== undefined) setShowUpi(s.show_upi === 1 || s.show_upi === '1' || s.show_upi === true);
           if (s.show_qr !== undefined) setShowQr(s.show_qr === 1 || s.show_qr === '1' || s.show_qr === true);
@@ -159,6 +179,84 @@ const PaymentGatewayManager = ({ isMobile: propIsMobile }) => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSelectActiveGateway = async (gatewayCode) => {
+    try {
+      const res = await api.post('/admin/payment-gateways/set-active', {
+        gateway_code: gatewayCode
+      });
+      if (res.data && res.data.success === '1') {
+        setActiveGatewayCode(gatewayCode);
+        setDepositMode('upi_intent');
+        setAutoGateways(prev =>
+          prev.map(g => ({ ...g, is_active: g.gateway_code === gatewayCode ? 1 : 0 }))
+        );
+        showToast(res.data.msg || `Active gateway switched to ${gatewayCode.toUpperCase()}`);
+      } else {
+        showToast(res.data?.msg || 'Failed to switch active gateway', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Error switching active gateway', 'error');
+    }
+  };
+
+  const handleGatewayTokenChange = (gatewayCode, value) => {
+    setAutoGateways(prev =>
+      prev.map(g => (g.gateway_code === gatewayCode ? { ...g, api_token: value } : g))
+    );
+  };
+
+  const handleGatewayUserTokenChange = (gatewayCode, value) => {
+    setAutoGateways(prev =>
+      prev.map(g => (g.gateway_code === gatewayCode ? { ...g, user_token: value } : g))
+    );
+  };
+
+  const handleSaveGatewayToken = async (gateway) => {
+    const code = gateway.gateway_code;
+    setSavingGateway(prev => ({ ...prev, [code]: true }));
+    try {
+      const res = await api.post('/admin/payment-gateways/update-gateway', {
+        gateway_code: code,
+        api_token: gateway.api_token,
+        user_token: gateway.user_token,
+        is_active: gateway.is_active === 1 || gateway.gateway_code === activeGatewayCode
+      });
+      if (res.data && res.data.success === '1') {
+        showToast(res.data.msg || `"${gateway.gateway_name}" credentials (User_token & API Token) saved successfully!`);
+      } else {
+        showToast(res.data?.msg || 'Failed to save credentials', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Error saving credentials on server', 'error');
+    } finally {
+      setSavingGateway(prev => ({ ...prev, [code]: false }));
+    }
+  };
+
+  const handleTestGatewayToken = async (gateway) => {
+    const code = gateway.gateway_code;
+    setTestingGateway(prev => ({ ...prev, [code]: true }));
+    try {
+      const res = await api.post('/admin/payment-gateways/test-gateway', {
+        gateway_code: code,
+        api_token: gateway.api_token,
+        user_token: gateway.user_token
+      });
+      if (res.data && res.data.success === '1') {
+        showToast(res.data.msg || `Connection to ${gateway.gateway_name} verified successfully!`);
+      } else {
+        showToast(res.data?.msg || `Connection test failed for ${gateway.gateway_name}`, 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Connection test error', 'error');
+    } finally {
+      setTestingGateway(prev => ({ ...prev, [code]: false }));
     }
   };
 
@@ -289,7 +387,6 @@ const PaymentGatewayManager = ({ isMobile: propIsMobile }) => {
     try {
       const res = await api.post('/admin/payment-gateways/set-default', {
         upi_id: defaultUpiId,
-        auto_upi_id: defaultUpiId,
         payee_name: payeeName,
         payment_barcode_image: qrImage,
         show_upi: showUpi ? 1 : 0,
@@ -309,7 +406,6 @@ const PaymentGatewayManager = ({ isMobile: propIsMobile }) => {
             ac_name: payeeName,
             payment_upi_id: defaultUpiId,
             upi_payment_id: defaultUpiId,
-            auto_upi_id: defaultUpiId,
             payment_barcode_image: qrImage,
             show_upi: showUpi ? 1 : 0,
             show_qr: showQr ? 1 : 0
@@ -1013,29 +1109,31 @@ const PaymentGatewayManager = ({ isMobile: propIsMobile }) => {
           </div>
         </div>
 
-        {/* KPI 2: Active Deposit UPI VPA */}
+        {/* KPI 2: Active Deposit Gateway / VPA */}
         <div className="pgm-card pgm-kpi-card">
           <div style={{
             width: isMobile ? '40px' : '44px',
             height: isMobile ? '40px' : '44px',
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(79, 70, 229, 0.25) 100%)',
+            background: isAutoMode
+              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.25) 100%)'
+              : 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(79, 70, 229, 0.25) 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#6366f1',
+            color: isAutoMode ? '#10b981' : '#6366f1',
             flexShrink: 0
           }}>
-            <Smartphone size={isMobile ? 20 : 22} />
+            {isAutoMode ? <Zap size={isMobile ? 20 : 22} /> : <Smartphone size={isMobile ? 20 : 22} />}
           </div>
           <div style={{ minWidth: 0, flex: 1 }}>
             <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block' }}>
-              Primary Receiving VPA
+              {isAutoMode ? 'Active Gateway (User End)' : 'Primary Receiving VPA'}
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px', minWidth: 0 }}>
               <span style={{
-                fontFamily: 'monospace',
-                fontSize: isMobile ? '0.9rem' : '0.95rem',
+                fontFamily: isAutoMode ? 'inherit' : 'monospace',
+                fontSize: isMobile ? '0.9rem' : '0.98rem',
                 fontWeight: '800',
                 color: '#1e293b',
                 whiteSpace: 'nowrap',
@@ -1043,9 +1141,15 @@ const PaymentGatewayManager = ({ isMobile: propIsMobile }) => {
                 textOverflow: 'ellipsis',
                 flex: 1
               }}>
-                {activeVpa || 'Not configured'}
+                {isAutoMode
+                  ? (activeGatewayCode === 'niceupi'
+                      ? 'NiceUpi'
+                      : activeGatewayCode === 'imb'
+                      ? 'IMB Payment getway'
+                      : 'ZenUpi')
+                  : (activeVpa || 'Not configured')}
               </span>
-              {activeVpa && (
+              {!isAutoMode && activeVpa && (
                 <button
                   type="button"
                   onClick={() => handleCopy(activeVpa, 'kpi_vpa')}
@@ -1066,8 +1170,8 @@ const PaymentGatewayManager = ({ isMobile: propIsMobile }) => {
                 </button>
               )}
             </div>
-            <span style={{ fontSize: '0.7rem', color: isValidVpa(activeVpa) ? '#10b981' : '#f59e0b', fontWeight: '700', display: 'block' }}>
-              {isValidVpa(activeVpa) ? '✓ Valid NPCI VPA' : '⚠️ Missing @bank handle'}
+            <span style={{ fontSize: '0.7rem', color: isAutoMode ? '#10b981' : (isValidVpa(activeVpa) ? '#10b981' : '#f59e0b'), fontWeight: '700', display: 'block' }}>
+              {isAutoMode ? '⚡ Instant Auto-Credit Active' : (isValidVpa(activeVpa) ? '✓ Valid NPCI VPA' : '⚠️ Missing @bank handle')}
             </span>
           </div>
         </div>
@@ -1326,13 +1430,14 @@ const PaymentGatewayManager = ({ isMobile: propIsMobile }) => {
       {/* 4. CONFIGURATION PANELS (DYNAMIC ACCORDING TO ACTIVE MODE) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-        {/* SECTION 4A: AUTO DEPOSIT DIRECT UPI ID ENGINE (ACTIVE WHEN AUTO MODE) */}
+        {/* SECTION 4A: MULTIPLE AUTOMATED PAYMENT GATEWAYS MANAGER (NICEUPI, IMB, ZENUPI) */}
         {isAutoMode && (
           <div className="pgm-card-dark pgm-section-card" style={{
             position: 'relative',
             border: '2px solid #10b981',
             animation: 'fadeIn 0.25s ease-out'
           }}>
+            {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
                 <div style={{
@@ -1347,259 +1452,634 @@ const PaymentGatewayManager = ({ isMobile: propIsMobile }) => {
                   boxShadow: '0 4px 16px rgba(16, 185, 129, 0.45)',
                   flexShrink: 0
                 }}>
-                  <Zap size={isMobile ? 20 : 24} />
+                  <Layers size={isMobile ? 20 : 24} />
                 </div>
                 <div style={{ minWidth: 0 }}>
                   <h3 style={{ fontSize: isMobile ? '1.1rem' : '1.25rem', fontWeight: '800', margin: 0, color: '#ffffff' }}>
-                    Auto Deposit Direct UPI ID Engine
+                    Automated Payment Gateways (Auto Deposit Mode)
                   </h3>
                   <span style={{ fontSize: isMobile ? '0.74rem' : '0.8rem', color: '#34d399', fontWeight: '700', display: 'block' }}>
-                    Used for instant PhonePe, GPay, Paytm &amp; BHIM deep links
+                    Choose 1 Active Gateway for automated instant user deposits &amp; token management
                   </span>
                 </div>
               </div>
 
-              <span style={{
-                padding: '4px 10px',
-                borderRadius: '20px',
-                fontSize: '0.72rem',
-                fontWeight: '800',
-                backgroundColor: 'rgba(16, 185, 129, 0.25)',
-                color: '#34d399',
-                border: '1px solid rgba(16, 185, 129, 0.4)'
-              }}>
-                ACTIVE IN APP
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{
+                  padding: '5px 12px',
+                  borderRadius: '20px',
+                  fontSize: '0.74rem',
+                  fontWeight: '800',
+                  backgroundColor: 'rgba(16, 185, 129, 0.25)',
+                  color: '#34d399',
+                  border: '1px solid rgba(16, 185, 129, 0.4)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#10b981', boxShadow: '0 0 8px #10b981' }} />
+                  ACTIVE USER GATEWAY: {(autoGateways.find(g => g.gateway_code === activeGatewayCode)?.gateway_name || activeGatewayCode).toUpperCase()}
+                </span>
+              </div>
             </div>
 
-            <p style={{ margin: '0 0 16px 0', color: '#94a3b8', fontSize: isMobile ? '0.82rem' : '0.88rem', lineHeight: '1.5' }}>
-              When a player enters their deposit amount on the mobile app and taps <strong>"PAY NOW"</strong> or selects an app, the transaction will be routed directly to this UPI ID without intermediate gateway deductions.
+            <p style={{ margin: '0 0 20px 0', color: '#cbd5e1', fontSize: isMobile ? '0.82rem' : '0.88rem', lineHeight: '1.5' }}>
+              Select which automated payment gateway should be <strong>Active</strong> for players on the <strong>Add Fund</strong> page. Enter your API Token and configure your Webhook URL in your merchant portal for instant auto-crediting.
             </p>
 
-            <form onSubmit={handleSaveAutoUpi} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: isMobile ? '0.82rem' : '0.86rem', fontWeight: '700', marginBottom: '8px', color: '#e2e8f0', flexWrap: 'wrap', gap: '4px' }}>
-                  <span>Auto Deposit UPI ID (VPA) *</span>
-                  <span style={{ fontSize: '0.72rem', color: isValidVpa(autoUpiId) ? '#34d399' : '#f59e0b', fontWeight: '600' }}>
-                    {isValidVpa(autoUpiId) ? '✓ Valid format' : 'Format: username@bank'}
-                  </span>
-                </label>
+            {/* List of Multiple Automated Gateways */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              {autoGateways.map((gw, idx) => {
+                const isActive = gw.gateway_code === activeGatewayCode || gw.is_active === 1;
+                const isNiceUpi = gw.gateway_code === 'niceupi';
+                const isImb = gw.gateway_code === 'imb';
+                const isZenUpi = gw.gateway_code === 'zenupi';
 
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <input
-                    type="text"
-                    placeholder="e.g. 9982778833@paytm or autodeposit@okaxis"
-                    value={autoUpiId}
-                    onChange={(e) => setAutoUpiId(e.target.value)}
-                    required
-                    className="pgm-input-dark pgm-input-with-copy"
+                const primaryAccent = isNiceUpi ? '#0ea5e9' : isImb ? '#8b5cf6' : '#10b981';
+                const gradient = isNiceUpi
+                  ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'
+                  : isImb
+                  ? 'linear-gradient(135deg, #7c3aed 0%, #6366f1 100%)'
+                  : 'linear-gradient(135deg, #059669 0%, #047857 100%)';
+
+                const webhookUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://bharat-matka.onrender.com'}/api/payment/webhook/${gw.gateway_code}`;
+                const isShowingToken = Boolean(showTokenMap[gw.gateway_code]);
+                const isShowingUserToken = Boolean(showUserTokenMap[gw.gateway_code]);
+                const isSaving = Boolean(savingGateway[gw.gateway_code]);
+                const isTesting = Boolean(testingGateway[gw.gateway_code]);
+                const hasUserToken = Boolean(gw.user_token && gw.user_token.trim().length > 2);
+                const hasApiToken = Boolean(gw.api_token && gw.api_token.trim().length > 2);
+                const hasToken = hasUserToken || hasApiToken;
+
+                return (
+                  <div
+                    key={gw.gateway_code}
                     style={{
-                      paddingLeft: '42px',
-                      paddingRight: autoUpiId ? (isMobile ? '82px' : '110px') : '14px',
-                      fontFamily: 'monospace',
-                      fontSize: isMobile ? '0.88rem' : '0.98rem',
-                      letterSpacing: '0.02em',
-                      borderColor: isValidVpa(autoUpiId) ? 'rgba(16, 185, 129, 0.6)' : 'rgba(255, 255, 255, 0.16)'
-                    }}
-                  />
-                  <div style={{ position: 'absolute', left: '12px', color: '#10b981', display: 'flex', alignItems: 'center' }}>
-                    <Smartphone size={18} />
-                  </div>
-
-                  <div style={{ position: 'absolute', right: '8px', display: 'flex', alignItems: 'center' }}>
-                    {autoUpiId && (
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(autoUpiId, 'auto_upi')}
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.12)',
-                          border: 'none',
-                          color: copiedKey === 'auto_upi' ? '#34d399' : '#cbd5e1',
-                          padding: '6px 9px',
-                          borderRadius: '6px',
-                          fontSize: '0.72rem',
-                          fontWeight: '700',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}
-                      >
-                        {copiedKey === 'auto_upi' ? <CheckCheck size={13} /> : <Copy size={13} />}
-                        <span>{copiedKey === 'auto_upi' ? 'Copied' : 'Copy'}</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Live URI Deep-Link Inspector Box */}
-              <div style={{
-                background: 'rgba(15, 23, 42, 0.85)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '12px',
-                padding: isMobile ? '12px 14px' : '14px 16px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
-                  <span style={{ fontSize: isMobile ? '0.7rem' : '0.74rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Deep-Link URI Payload (Sample ₹500)
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(sampleIntentUri, 'intent_uri')}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: copiedKey === 'intent_uri' ? '#34d399' : '#38bdf8',
-                      cursor: 'pointer',
-                      fontSize: '0.72rem',
-                      fontWeight: '700',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: '2px 0'
+                      backgroundColor: isActive ? 'rgba(15, 23, 42, 0.95)' : 'rgba(15, 23, 42, 0.6)',
+                      border: isActive ? `2px solid ${primaryAccent}` : '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '16px',
+                      padding: isMobile ? '16px 14px' : '20px 22px',
+                      boxShadow: isActive ? `0 8px 30px ${primaryAccent}26` : 'none',
+                      transition: 'all 0.25s ease'
                     }}
                   >
-                    {copiedKey === 'intent_uri' ? <CheckCheck size={13} /> : <Copy size={13} />}
-                    <span>{copiedKey === 'intent_uri' ? 'Copied URI' : 'Copy URI'}</span>
-                  </button>
-                </div>
-
-                <div style={{
-                  fontFamily: 'monospace',
-                  fontSize: isMobile ? '0.74rem' : '0.8rem',
-                  color: '#38bdf8',
-                  wordBreak: 'break-all',
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  padding: '8px 10px',
-                  borderRadius: '6px',
-                  border: '1px solid rgba(56, 189, 248, 0.15)',
-                  maxHeight: '90px',
-                  overflowY: 'auto'
-                }}>
-                  {sampleIntentUri}
-                </div>
-              </div>
-
-              {/* Live Mobile Experience Preview Grid */}
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.07)',
-                borderRadius: '12px',
-                padding: isMobile ? '12px' : '16px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '6px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Sparkles size={16} color="#34d399" />
-                    <span style={{ fontSize: isMobile ? '0.78rem' : '0.84rem', fontWeight: '800', color: '#ffffff' }}>
-                      Player Mobile 1-Tap App Preview
-                    </span>
-                  </div>
-                  <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-                    Auto-configured with active VPA
-                  </span>
-                </div>
-
-                <div className="pgm-apps-preview-grid">
-                  {[
-                    { key: 'phonepe', ...UPI_BRAND_STYLES.phonepe },
-                    { key: 'gpay', ...UPI_BRAND_STYLES.gpay },
-                    { key: 'paytm', ...UPI_BRAND_STYLES.paytm },
-                    { key: 'bhim', ...UPI_BRAND_STYLES.bhim }
-                  ].map((app) => {
-                    const testUri = `${app.scheme}?pa=${encodeURIComponent(activeVpa || 'merchant@upi')}&pn=${encodeURIComponent(payeeName || 'Pravesh')}&am=500.00&cu=INR&tn=Deposit_500`;
-                    return (
-                      <div
-                        key={app.key}
-                        style={{
-                          background: 'rgba(15, 23, 42, 0.7)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          borderRadius: '10px',
-                          padding: '10px 12px',
+                    {/* Top Row: Gateway Title, Badges & Activate Switch */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '14px',
+                      flexWrap: 'wrap',
+                      gap: '12px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+                        <div style={{
+                          width: isMobile ? '38px' : '44px',
+                          height: isMobile ? '38px' : '44px',
+                          borderRadius: '12px',
+                          background: gradient,
                           display: 'flex',
-                          flexDirection: 'column',
-                          gap: '6px'
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{
-                            background: app.gradient,
-                            color: '#ffffff',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#ffffff',
+                          fontWeight: '900',
+                          fontSize: isMobile ? '0.95rem' : '1.05rem',
+                          flexShrink: 0,
+                          boxShadow: `0 4px 14px ${primaryAccent}4d`
+                        }}>
+                          {idx + 1}
+                        </div>
+
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <h4 style={{ margin: 0, fontSize: isMobile ? '1.02rem' : '1.15rem', fontWeight: '800', color: '#ffffff' }}>
+                              {gw.gateway_name}
+                            </h4>
+
+                            {isActive ? (
+                              <span style={{
+                                backgroundColor: '#10b981',
+                                color: '#ffffff',
+                                fontSize: '0.68rem',
+                                fontWeight: '800',
+                                padding: '3px 8px',
+                                borderRadius: '12px',
+                                textTransform: 'uppercase',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}>
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#ffffff', display: 'inline-block' }} />
+                                LIVE ON USER END
+                              </span>
+                            ) : (
+                              <span style={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                                color: '#94a3b8',
+                                fontSize: '0.68rem',
+                                fontWeight: '700',
+                                padding: '3px 8px',
+                                borderRadius: '12px',
+                                textTransform: 'uppercase'
+                              }}>
+                                INACTIVE
+                              </span>
+                            )}
+
+                            <span style={{
+                              fontSize: '0.68rem',
+                              fontWeight: '700',
+                              color: (isNiceUpi ? hasUserToken : hasToken) ? '#34d399' : '#f59e0b',
+                              backgroundColor: (isNiceUpi ? hasUserToken : hasToken) ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                              border: `1px solid ${(isNiceUpi ? hasUserToken : hasToken) ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                              padding: '2px 7px',
+                              borderRadius: '8px'
+                            }}>
+                              {isNiceUpi
+                                ? (hasUserToken ? '✓ User_token Configured' : '⚠️ User_token Needed')
+                                : (hasToken ? '✓ Token Configured' : '⚠️ Token Not Set')}
+                            </span>
+                          </div>
+
+                          <p style={{ margin: '3px 0 0 0', fontSize: isMobile ? '0.74rem' : '0.8rem', color: '#94a3b8' }}>
+                            {isNiceUpi && 'Automated QR & UPI intent order creation with webhook callback (https://niceupi.com)'}
+                            {isImb && 'IMB automated UPI payment gateway with fast order verification'}
+                            {isZenUpi && 'ZenUpi automated deep-link gateway with instant settlement'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Activate Button / Status Indicator */}
+                      <div style={{ flexShrink: 0 }}>
+                        {isActive ? (
+                          <div style={{
+                            backgroundColor: 'rgba(16, 185, 129, 0.18)',
+                            border: '1.5px solid #10b981',
+                            color: '#34d399',
+                            padding: '8px 14px',
+                            borderRadius: '10px',
                             fontWeight: '800',
-                            fontSize: '0.74rem',
-                            padding: '3px 8px',
-                            borderRadius: '6px',
-                            display: 'inline-flex',
+                            fontSize: '0.82rem',
+                            display: 'flex',
                             alignItems: 'center',
-                            gap: '4px'
+                            gap: '6px'
                           }}>
-                            {app.name}
-                          </span>
+                            <CheckCircle2 size={16} color="#10b981" />
+                            <span>Active Gateway</span>
+                          </div>
+                        ) : (
                           <button
                             type="button"
-                            onClick={() => handleCopy(testUri, `app_${app.key}`)}
-                            title="Copy Intent URL"
+                            onClick={() => handleSelectActiveGateway(gw.gateway_code)}
                             style={{
-                              background: 'none',
-                              border: 'none',
-                              color: copiedKey === `app_${app.key}` ? '#34d399' : '#94a3b8',
+                              background: 'rgba(255, 255, 255, 0.08)',
+                              border: '1.5px solid rgba(255, 255, 255, 0.22)',
+                              color: '#ffffff',
+                              padding: '8px 16px',
+                              borderRadius: '10px',
+                              fontWeight: '700',
+                              fontSize: '0.82rem',
                               cursor: 'pointer',
-                              padding: '2px',
                               display: 'flex',
-                              alignItems: 'center'
+                              alignItems: 'center',
+                              gap: '6px',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseOver={(e) => {
+                              e.currentTarget.style.borderColor = primaryAccent;
+                              e.currentTarget.style.backgroundColor = `${primaryAccent}26`;
+                            }}
+                            onMouseOut={(e) => {
+                              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.22)';
+                              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
                             }}
                           >
-                            {copiedKey === `app_${app.key}` ? <CheckCheck size={14} color="#34d399" /> : <Copy size={14} />}
+                            <span style={{ width: '10px', height: '10px', borderRadius: '50%', border: '2px solid #cbd5e1', display: 'inline-block' }} />
+                            <span>Set as Active Gateway</span>
                           </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Middle Section: Gateway Credentials (User Token & API Token) */}
+                    <div style={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.28)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '14px',
+                      padding: isMobile ? '14px 12px' : '16px 18px',
+                      marginBottom: '14px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                        paddingBottom: '10px',
+                        flexWrap: 'wrap',
+                        gap: '6px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Key size={16} color={primaryAccent} />
+                          <span style={{ fontSize: isMobile ? '0.85rem' : '0.92rem', fontWeight: '800', color: '#ffffff' }}>
+                            {gw.gateway_name} API & Security Credentials
+                          </span>
                         </div>
-                        <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontFamily: 'monospace', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {app.scheme}
+                        <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                          Obtain from {gw.gateway_name} merchant dashboard
                         </span>
-                        <a
-                          href={testUri}
-                          style={{
-                            fontSize: '0.72rem',
-                            color: '#34d399',
+                      </div>
+
+                      {/* Field 1: User Token (user_token) */}
+                      <div>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: '6px',
+                          flexWrap: 'wrap',
+                          gap: '6px'
+                        }}>
+                          <label style={{
+                            fontSize: isMobile ? '0.78rem' : '0.82rem',
                             fontWeight: '700',
-                            textDecoration: 'none',
-                            display: 'inline-flex',
+                            color: '#e2e8f0',
+                            display: 'flex',
                             alignItems: 'center',
-                            gap: '3px',
-                            marginTop: '2px'
+                            gap: '6px'
+                          }}>
+                            <span>User Token (<code style={{ color: '#38bdf8' }}>user_token</code>)</span>
+                            {isNiceUpi && (
+                              <span style={{
+                                backgroundColor: '#f59e0b',
+                                color: '#09121f',
+                                fontSize: '0.64rem',
+                                fontWeight: '900',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                textTransform: 'uppercase'
+                              }}>
+                                Required for NiceUpi
+                              </span>
+                            )}
+                            {isImb && (
+                              <span style={{
+                                backgroundColor: '#8b5cf6',
+                                color: '#ffffff',
+                                fontSize: '0.64rem',
+                                fontWeight: '900',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                textTransform: 'uppercase'
+                              }}>
+                                Required for IMB (user_token)
+                              </span>
+                            )}
+                          </label>
+                          <span style={{ fontSize: '0.7rem', color: hasUserToken ? '#34d399' : '#94a3b8' }}>
+                            {hasUserToken ? '✓ user_token configured' : 'Required parameter for order creation'}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <div style={{ position: 'relative', flex: 1 }}>
+                            <input
+                              type={isShowingUserToken ? 'text' : 'password'}
+                              placeholder={isNiceUpi ? "Paste NiceUpi User_token here (Required by NiceUpi API)..." : (isImb ? "Paste IMB user_token (e.g. 940149cb99886d8885f314476a994b6)..." : `Paste ${gw.gateway_name} User Token...`)}
+                              value={gw.user_token || ''}
+                              onChange={(e) => handleGatewayUserTokenChange(gw.gateway_code, e.target.value)}
+                              className="pgm-input-dark"
+                              style={{
+                                fontFamily: 'monospace',
+                                fontSize: isMobile ? '0.82rem' : '0.88rem',
+                                paddingRight: '40px',
+                                letterSpacing: isShowingUserToken ? '0.02em' : '0.12em',
+                                borderColor: (isNiceUpi || isImb) && !hasUserToken ? 'rgba(245, 158, 11, 0.4)' : undefined
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowUserTokenMap(prev => ({ ...prev, [gw.gateway_code]: !prev[gw.gateway_code] }))}
+                              title={isShowingUserToken ? 'Hide token' : 'Show token'}
+                              style={{
+                                position: 'absolute',
+                                right: '8px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                background: 'none',
+                                border: 'none',
+                                color: '#94a3b8',
+                                cursor: 'pointer',
+                                padding: '6px',
+                                display: 'flex',
+                                alignItems: 'center'
+                              }}
+                            >
+                              {isShowingUserToken ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                          </div>
+
+                          {gw.user_token && (
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(gw.user_token, `utoken_${gw.gateway_code}`)}
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.08)',
+                                border: '1px solid rgba(255, 255, 255, 0.16)',
+                                color: copiedKey === `utoken_${gw.gateway_code}` ? '#34d399' : '#cbd5e1',
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                fontSize: '0.78rem',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                minHeight: '40px',
+                                flexShrink: 0
+                              }}
+                            >
+                              {copiedKey === `utoken_${gw.gateway_code}` ? <CheckCheck size={14} /> : <Copy size={14} />}
+                              <span>{copiedKey === `utoken_${gw.gateway_code}` ? 'Copied' : 'Copy'}</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Field 2: API Token (api_token) */}
+                      <div>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: '6px',
+                          flexWrap: 'wrap',
+                          gap: '6px'
+                        }}>
+                          <label style={{
+                            fontSize: isMobile ? '0.78rem' : '0.82rem',
+                            fontWeight: '700',
+                            color: '#e2e8f0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}>
+                            <span>API Token (<code style={{ color: '#38bdf8' }}>api_token</code>)</span>
+                          </label>
+                          <span style={{ fontSize: '0.7rem', color: hasApiToken ? '#34d399' : '#94a3b8' }}>
+                            {hasApiToken ? '✓ api_token configured' : 'API authorization token'}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <div style={{ position: 'relative', flex: 1 }}>
+                            <input
+                              type={isShowingToken ? 'text' : 'password'}
+                              placeholder={`Paste ${gw.gateway_name} API Token here...`}
+                              value={gw.api_token || ''}
+                              onChange={(e) => handleGatewayTokenChange(gw.gateway_code, e.target.value)}
+                              className="pgm-input-dark"
+                              style={{
+                                fontFamily: 'monospace',
+                                fontSize: isMobile ? '0.82rem' : '0.88rem',
+                                paddingRight: '40px',
+                                letterSpacing: isShowingToken ? '0.02em' : '0.12em'
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowTokenMap(prev => ({ ...prev, [gw.gateway_code]: !prev[gw.gateway_code] }))}
+                              title={isShowingToken ? 'Hide token' : 'Show token'}
+                              style={{
+                                position: 'absolute',
+                                right: '8px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                background: 'none',
+                                border: 'none',
+                                color: '#94a3b8',
+                                cursor: 'pointer',
+                                padding: '6px',
+                                display: 'flex',
+                                alignItems: 'center'
+                              }}
+                            >
+                              {isShowingToken ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                          </div>
+
+                          {gw.api_token && (
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(gw.api_token, `token_${gw.gateway_code}`)}
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.08)',
+                                border: '1px solid rgba(255, 255, 255, 0.16)',
+                                color: copiedKey === `token_${gw.gateway_code}` ? '#34d399' : '#cbd5e1',
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                fontSize: '0.78rem',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                minHeight: '40px',
+                                flexShrink: 0
+                              }}
+                            >
+                              {copiedKey === `token_${gw.gateway_code}` ? <CheckCheck size={14} /> : <Copy size={14} />}
+                              <span>{copiedKey === `token_${gw.gateway_code}` ? 'Copied' : 'Copy'}</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Save Credentials Action Row */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        gap: '10px',
+                        paddingTop: '6px'
+                      }}>
+                        <div style={{ fontSize: '0.72rem', color: '#94a3b8', flex: 1, minWidth: '220px' }}>
+                          {isNiceUpi ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <span>
+                                ⚡ Both <strong style={{ color: '#38bdf8' }}>user_token</strong> and <strong style={{ color: '#38bdf8' }}>api_token</strong> are sent automatically to NiceUpi API.
+                              </span>
+                              <span style={{ color: '#f59e0b', fontSize: '0.73rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <span>⚠️ <strong>NiceUpi Setup Requirement:</strong> Link your UPI Merchant/QR account in your <a href="https://niceupi.com/merchant/dashboard" target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8', textDecoration: 'underline' }}>NiceUpi Dashboard</a> under <em>Merchants</em> to prevent <em>"Merchant Not Linked"</em> error.</span>
+                              </span>
+                            </div>
+                          ) : isImb ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <span>
+                                ⚡ <strong style={{ color: '#a78bfa' }}>user_token</strong> is sent directly to IMB API (<code style={{ color: '#a78bfa' }}>https://api.imbpay.in/v2/create-order</code>) with instant PhonePe/Paytm/BHIM link generation.
+                              </span>
+                            </div>
+                          ) : (
+                            <span>Credentials are stored securely and applied immediately.</span>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          disabled={isSaving}
+                          onClick={() => handleSaveGatewayToken(gw)}
+                          className="pgm-btn-emerald"
+                          style={{
+                            padding: '9px 20px',
+                            fontSize: '0.84rem',
+                            minHeight: '40px',
+                            width: isMobile ? '100%' : 'auto',
+                            justifyContent: 'center'
                           }}
                         >
-                          <span>Test Deep Link</span>
-                          <ArrowUpRight size={12} />
-                        </a>
+                          {isSaving ? <RefreshCw size={15} className="animate-spin" /> : <Check size={15} />}
+                          <span>{isSaving ? 'Saving...' : `Save ${gw.gateway_name} Credentials`}</span>
+                        </button>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
+                    </div>
 
-              {/* Save Button */}
-              <div className="pgm-form-footer">
-                <span style={{ fontSize: '0.76rem', color: '#94a3b8' }}>
-                  🔒 Updates both <code>auto_upi_id</code> and system settings safely.
-                </span>
+                    {/* Bottom Section: Webhook URL & Quick Actions */}
+                    <div style={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.18)',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      borderRadius: '12px',
+                      padding: isMobile ? '12px 14px' : '14px 16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+                        <span style={{ fontSize: isMobile ? '0.74rem' : '0.78rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Webhook Callback URL ({gw.gateway_name})
+                        </span>
 
-                <button
-                  type="submit"
-                  disabled={savingAutoUpi}
-                  className="pgm-btn-emerald"
-                  style={{
-                    padding: isMobile ? '12px 20px' : '12px 28px',
-                    fontSize: isMobile ? '0.9rem' : '0.94rem'
-                  }}
-                >
-                  {savingAutoUpi ? <RefreshCw size={17} className="animate-spin" /> : <Check size={17} />}
-                  <span>{savingAutoUpi ? 'Saving VPA...' : 'Save Auto UPI ID'}</span>
-                </button>
-              </div>
-            </form>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(webhookUrl, `wh_${gw.gateway_code}`)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: copiedKey === `wh_${gw.gateway_code}` ? '#34d399' : '#38bdf8',
+                            cursor: 'pointer',
+                            fontSize: '0.74rem',
+                            fontWeight: '700',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            padding: '2px 0'
+                          }}
+                        >
+                          {copiedKey === `wh_${gw.gateway_code}` ? <CheckCheck size={14} /> : <Copy size={14} />}
+                          <span>{copiedKey === `wh_${gw.gateway_code}` ? 'Copied Webhook' : 'Copy Webhook URL'}</span>
+                        </button>
+                      </div>
+
+                      <div style={{
+                        fontFamily: 'monospace',
+                        fontSize: isMobile ? '0.76rem' : '0.82rem',
+                        color: '#38bdf8',
+                        wordBreak: 'break-all',
+                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(56, 189, 248, 0.18)'
+                      }}>
+                        {webhookUrl}
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', paddingTop: '4px' }}>
+                        <span style={{ fontSize: '0.72rem', color: '#94a3b8', flex: 1, minWidth: '220px' }}>
+                          {isNiceUpi && '📋 Paste this Webhook URL in your NiceUpi Merchant Dashboard for instant auto-crediting.'}
+                          {isImb && '📋 Paste this Webhook URL in your IMB Merchant Dashboard (API Credentials -> Update Webhook URL) for realtime transaction credit.'}
+                          {isZenUpi && '📋 Paste this Webhook URL in your ZenUpi dashboard to enable automatic wallet credits.'}
+                        </span>
+
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          {isNiceUpi && (
+                            <a
+                              href="https://niceupi.com/merchant/dashboard"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                background: 'rgba(14, 165, 233, 0.15)',
+                                border: '1px solid rgba(14, 165, 233, 0.35)',
+                                color: '#38bdf8',
+                                padding: '6px 12px',
+                                borderRadius: '8px',
+                                fontSize: '0.74rem',
+                                fontWeight: '700',
+                                textDecoration: 'none',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              <span>NiceUpi Dashboard</span>
+                              <ExternalLink size={12} />
+                            </a>
+                          )}
+
+                          {isImb && (
+                            <a
+                              href="https://imbpay.in"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                background: 'rgba(139, 92, 246, 0.15)',
+                                border: '1px solid rgba(139, 92, 246, 0.35)',
+                                color: '#a78bfa',
+                                padding: '6px 12px',
+                                borderRadius: '8px',
+                                fontSize: '0.74rem',
+                                fontWeight: '700',
+                                textDecoration: 'none',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              <span>IMB Dashboard</span>
+                              <ExternalLink size={12} />
+                            </a>
+                          )}
+
+                          <button
+                            type="button"
+                            disabled={isTesting || (!gw.api_token && !gw.user_token)}
+                            onClick={() => handleTestGatewayToken(gw)}
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.08)',
+                              border: '1px solid rgba(255, 255, 255, 0.16)',
+                              color: '#ffffff',
+                              padding: '6px 12px',
+                              borderRadius: '8px',
+                              fontSize: '0.74rem',
+                              fontWeight: '700',
+                              cursor: (gw.api_token || gw.user_token) ? 'pointer' : 'not-allowed',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              opacity: (gw.api_token || gw.user_token) ? 1 : 0.5
+                            }}
+                          >
+                            {isTesting ? <RefreshCw size={12} className="animate-spin" /> : <Zap size={12} color="#f59e0b" />}
+                            <span>{isTesting ? 'Testing...' : 'Test Connection'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -1640,13 +2120,33 @@ const PaymentGatewayManager = ({ isMobile: propIsMobile }) => {
                 borderRadius: '20px',
                 fontSize: '0.72rem',
                 fontWeight: '800',
-                backgroundColor: '#fef3c7',
-                color: '#b45309',
-                border: '1px solid #fde68a'
+                backgroundColor: isAutoMode ? '#f1f5f9' : '#fef3c7',
+                color: isAutoMode ? '#64748b' : '#b45309',
+                border: isAutoMode ? '1px solid #cbd5e1' : '1px solid #fde68a'
               }}>
-                ACTIVE IN APP
+                {isAutoMode ? 'INACTIVE (AUTO MODE LIVE)' : 'ACTIVE IN APP (MANUAL MODE)'}
               </span>
             </div>
+
+            {isAutoMode && (
+              <div style={{
+                backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                border: '1px solid rgba(245, 158, 11, 0.25)',
+                borderRadius: '10px',
+                padding: '10px 14px',
+                marginBottom: '14px',
+                fontSize: '0.8rem',
+                color: '#b45309',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <Info size={16} style={{ flexShrink: 0 }} />
+                <span>
+                  <strong>Notice:</strong> Automated Payment Gateway (NiceUpi) is active in the app. The Manual UPI ID and static QR code below are only displayed to players if you switch Deposit Mode to <strong>"MANUAL QR SCAN"</strong>.
+                </span>
+              </div>
+            )}
 
             <p style={{ margin: '0 0 16px 0', color: '#64748b', fontSize: isMobile ? '0.82rem' : '0.88rem', lineHeight: '1.5' }}>
               Configure your business name and static QR code. When players choose Manual Scan, they can scan this QR with any UPI app on another phone or copy your UPI ID.

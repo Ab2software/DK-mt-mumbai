@@ -39,12 +39,12 @@ const AddFund = () => {
     setTimeout(() => setCopiedDialogUtr(false), 2000);
   };
 
-  // Mode and active UPI determination (prioritizes auto_upi_id when Auto mode is active)
+  // Mode and active UPI determination (Auto mode uses automated gateway API; manual uses static QR/UPI)
   const depositMode = paymentConfig?.deposit_mode || walletInfo?.deposit_mode || 'upi_intent';
   const isAutoMode = depositMode === 'upi_intent' || depositMode === 'auto';
-  const autoUpi = paymentConfig?.auto_upi_id || walletInfo?.auto_upi_id || paymentConfig?.active_upi_id || '';
+  const autoUpi = paymentConfig?.auto_upi_id || walletInfo?.auto_upi_id || '';
   const manualUpi = paymentConfig?.default_upi_id || walletInfo?.payment_upi_id || walletInfo?.upi_payment_id || '';
-  const activeUpiId = isAutoMode ? (autoUpi || manualUpi) : (manualUpi || autoUpi);
+  const activeUpiId = isAutoMode ? (autoUpi || '') : (manualUpi || '');
   const payeeName = paymentConfig?.payee_name || 'Pravesh Online';
 
   // Refs for tracking active order and focusing input fields on error
@@ -490,7 +490,8 @@ const AddFund = () => {
       const payload = {
         amount: amt,
         app_code: 'upi',
-        upi_id: activeUpiId
+        gateway: paymentConfig?.active_gateway?.gateway_code || 'niceupi',
+        ...(!isAutoMode && activeUpiId ? { upi_id: activeUpiId } : {})
       };
 
       const res = await api.post('/payment/create-order', payload);
@@ -520,9 +521,15 @@ const AddFund = () => {
         }));
       } catch (e) { }
 
-      // Open mobile UPI app intent (shows system chooser with PhonePe, GPay, Paytm, etc.)
-      const launchUrl = orderData.generic_upi_url || orderData.upi_url;
-      triggerUpiLaunch(launchUrl);
+      // Open gateway checkout page or mobile UPI app intent
+      const launchUrl = orderData.intent_url || orderData.payment_url || orderData.generic_upi_url || orderData.upi_url;
+      if (launchUrl) {
+        if (launchUrl.startsWith('http://') || launchUrl.startsWith('https://')) {
+          window.location.href = launchUrl;
+        } else {
+          triggerUpiLaunch(launchUrl);
+        }
+      }
 
     } catch (err) {
       console.error(err);
@@ -1888,6 +1895,27 @@ const AddFund = () => {
                   </small>
                 )}
               </div>
+
+              {/* Active Automated Gateway Badge */}
+              {isAutoMode && paymentConfig?.active_gateway?.gateway_name && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  marginBottom: '10px',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  color: '#043490',
+                  backgroundColor: 'rgba(4, 52, 144, 0.07)',
+                  border: '1px solid rgba(4, 52, 144, 0.15)',
+                  padding: '6px 14px',
+                  borderRadius: '12px'
+                }}>
+                  <Zap size={14} color="#10b981" />
+                  <span>Instant Automated Deposit via <strong>{paymentConfig.active_gateway.gateway_name}</strong></span>
+                </div>
+              )}
 
               {/* BIG PRIMARY "PAY NOW" BUTTON (OPENS MOBILE UPI APP DIRECTLY) */}
               <button
