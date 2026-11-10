@@ -5,7 +5,7 @@ import {
   CheckCircle2, XCircle, Clock, Search, Trophy, Wallet, 
   ArrowUpRight, ShieldCheck, Sparkles, UserCheck, UserX, Eye,
   Home, Share2, Target, FileText, Settings, ChevronDown, ChevronRight, ChevronLeft, Menu, Maximize2, LogOut, Zap,
-  CreditCard, MessageSquare, Bell
+  CreditCard, MessageSquare, Bell, MessageCircle
 } from 'lucide-react';
 import PaymentGatewayManager from './PaymentGatewayManager';
 import AdminSupportChat from './AdminSupportChat';

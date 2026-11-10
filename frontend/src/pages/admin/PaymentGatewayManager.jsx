@@ -1502,7 +1502,8 @@ const PaymentGatewayManager = ({ isMobile: propIsMobile }) => {
                   ? 'linear-gradient(135deg, #7c3aed 0%, #6366f1 100%)'
                   : 'linear-gradient(135deg, #059669 0%, #047857 100%)';
 
-                const webhookUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://bharat-matka.onrender.com'}/api/payment/webhook/${gw.gateway_code}`;
+                const apiBase = (api?.defaults?.baseURL || 'https://backend-mt-dk.onrender.com/api').replace(/\/+$/, '');
+                const webhookUrl = `${apiBase}/payment/webhook/${gw.gateway_code}`;
                 const isShowingToken = Boolean(showTokenMap[gw.gateway_code]);
                 const isShowingUserToken = Boolean(showUserTokenMap[gw.gateway_code]);
                 const isSaving = Boolean(savingGateway[gw.gateway_code]);

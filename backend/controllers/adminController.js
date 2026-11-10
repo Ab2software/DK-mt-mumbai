@@ -313,6 +313,13 @@ exports.updateUser = async (req, res) => {
 // Get Pending Deposits (Supports pagination and search)
 exports.getPendingDeposits = async (req, res) => {
   try {
+    try {
+      const paymentCtrl = require('./paymentController');
+      if (typeof paymentCtrl.sweepExpiredOrders === 'function') {
+        await paymentCtrl.sweepExpiredOrders();
+      }
+    } catch (e) {}
+
     const search = req.query.search ? req.query.search.trim() : '';
     const page = parseInt(req.query.page, 10);
     const limit = parseInt(req.query.limit, 10);
@@ -428,23 +435,41 @@ exports.approveDeposit = async (req, res) => {
     const safeCurrentWallet = isNaN(currentWallet) ? 0 : currentWallet;
     const updatedWallet = safeCurrentWallet + amount;
 
-    // Extract unique UTR / reference if present
+    // Extract unique UTR / Order reference if present
     let txnRef = null;
+    let orderIdRef = null;
     if (isFundRequest) {
       if (depositRecord.trans_details) {
+        const orderMatch = String(depositRecord.trans_details).match(/Order:\s*([A-Za-z0-9_-]+)/i);
+        if (orderMatch) orderIdRef = orderMatch[1];
         const m = String(depositRecord.trans_details).match(/\b\d{10,20}\b/);
-        if (m) txnRef = m[0];
+        txnRef = orderIdRef || (m ? m[0] : null);
       }
     } else {
+      if (depositRecord.txt_request && depositRecord.txt_request !== '0' && depositRecord.txt_request !== 'null') {
+        orderIdRef = String(depositRecord.txt_request).trim();
+      }
       if (depositRecord.txt_id && depositRecord.txt_id !== '0' && depositRecord.txt_id !== 'null') {
         txnRef = String(depositRecord.txt_id).trim();
-      } else if (depositRecord.txt_request && depositRecord.txt_request !== '0' && depositRecord.txt_request !== 'null') {
-        txnRef = String(depositRecord.txt_request).trim();
+      } else if (orderIdRef) {
+        txnRef = orderIdRef;
       }
       if (!txnRef && depositRecord.transaction_note) {
-        const m = String(depositRecord.transaction_note).match(/\b\d{10,20}\b/);
-        if (m) txnRef = m[0];
+        const orderMatch = String(depositRecord.transaction_note).match(/Order:\s*([A-Za-z0-9_-]+)/i);
+        if (orderMatch) {
+          orderIdRef = orderMatch[1];
+          txnRef = orderMatch[1];
+        } else {
+          const m = String(depositRecord.transaction_note).match(/\b\d{10,20}\b/);
+          if (m) txnRef = m[0];
+        }
       }
+    }
+
+    if (orderIdRef) {
+      try {
+        await db.query("UPDATE gateway_pending_orders SET status = 'COMPLETED' WHERE order_id = ?", [orderIdRef]);
+      } catch (e) {}
     }
 
     // 1. Mark status as '1' ONLY in the targeted record
@@ -571,26 +596,44 @@ exports.rejectDeposit = async (req, res) => {
     const username = depositRecord.username;
     const cleanPhone = String(username || '').replace(/\D/g, '').slice(-10);
 
-    // Extract unique UTR / reference if present
+    // Extract unique UTR / Order reference if present
     let txnRef = null;
+    let orderIdRef = null;
     if (isFundRequest) {
       if (depositRecord.trans_details) {
+        const orderMatch = String(depositRecord.trans_details).match(/Order:\s*([A-Za-z0-9_-]+)/i);
+        if (orderMatch) orderIdRef = orderMatch[1];
         const m = String(depositRecord.trans_details).match(/\b\d{10,20}\b/);
-        if (m) txnRef = m[0];
+        txnRef = orderIdRef || (m ? m[0] : null);
       }
     } else {
+      if (depositRecord.txt_request && depositRecord.txt_request !== '0' && depositRecord.txt_request !== 'null') {
+        orderIdRef = String(depositRecord.txt_request).trim();
+      }
       if (depositRecord.txt_id && depositRecord.txt_id !== '0' && depositRecord.txt_id !== 'null') {
         txnRef = String(depositRecord.txt_id).trim();
-      } else if (depositRecord.txt_request && depositRecord.txt_request !== '0' && depositRecord.txt_request !== 'null') {
-        txnRef = String(depositRecord.txt_request).trim();
+      } else if (orderIdRef) {
+        txnRef = orderIdRef;
       }
       if (!txnRef && depositRecord.transaction_note) {
-        const m = String(depositRecord.transaction_note).match(/\b\d{10,20}\b/);
-        if (m) txnRef = m[0];
+        const orderMatch = String(depositRecord.transaction_note).match(/Order:\s*([A-Za-z0-9_-]+)/i);
+        if (orderMatch) {
+          orderIdRef = orderMatch[1];
+          txnRef = orderMatch[1];
+        } else {
+          const m = String(depositRecord.transaction_note).match(/\b\d{10,20}\b/);
+          if (m) txnRef = m[0];
+        }
       }
     }
 
-    // Reject ONLY the targeted record, plus exact twin by UTR if available
+    if (orderIdRef) {
+      try {
+        await db.query("UPDATE gateway_pending_orders SET status = 'CANCELLED' WHERE order_id = ?", [orderIdRef]);
+      } catch (e) {}
+    }
+
+    // Reject ONLY the targeted record, plus exact twin by UTR/Order if available
     if (isFundRequest) {
       await db.query("UPDATE user_fund_request SET status = '-1' WHERE id = ?", [depositId]);
       if (txnRef && txnRef !== '0') {
@@ -1603,6 +1646,9 @@ exports.updateSettings = async (req, res) => {
       await db.query(`ALTER TABLE admin_settings ADD COLUMN mpin_status VARCHAR(10) DEFAULT '1'`);
     } catch (e) {}
     try {
+      await db.query(`ALTER TABLE admin_settings ADD COLUMN slider_status VARCHAR(10) DEFAULT '1'`);
+    } catch (e) {}
+    try {
       await db.query(`ALTER TABLE admin_settings ADD COLUMN referral_status VARCHAR(10) DEFAULT '1'`);
     } catch (e) {}
     try {
@@ -1612,13 +1658,16 @@ exports.updateSettings = async (req, res) => {
       await db.query(`ALTER TABLE admin_settings ADD COLUMN app_link TEXT`);
     } catch (e) {}
     try {
+      await db.query(`ALTER TABLE admin_settings ADD COLUMN how_to_play TEXT`);
+    } catch (e) {}
+    try {
       await db.query(`ALTER TABLE admin_settings ADD COLUMN auto_active_status VARCHAR(10) DEFAULT '1'`);
     } catch (e) {}
     try {
       await db.query(`ALTER TABLE admin_settings ADD COLUMN deposit_mode VARCHAR(20) DEFAULT 'manual'`);
     } catch (e) {}
     try {
-      await db.query(`ALTER TABLE admin_settings ADD COLUMN active_payment_gateway VARCHAR(50) DEFAULT 'razorpay'`);
+      await db.query(`ALTER TABLE admin_settings ADD COLUMN active_payment_gateway VARCHAR(50) DEFAULT 'niceupi'`);
     } catch (e) {}
     try {
       await db.query(`ALTER TABLE admin_settings ADD COLUMN auto_upi_id VARCHAR(150) DEFAULT ''`);
@@ -1726,6 +1775,7 @@ exports.updateSettings = async (req, res) => {
         cleanAutoUpi !== undefined ? cleanAutoUpi : null,
         privacy_policy_url !== undefined ? privacy_policy_url : null,
         data_deletion_url !== undefined ? data_deletion_url : null,
+        targetId
       ]
     );
 
@@ -2253,6 +2303,13 @@ exports.approveCommission = async (req, res) => {
 // Get Auto Deposits History (Enhanced with date filter, server pagination, and summaries)
 exports.getAutoDeposits = async (req, res) => {
   try {
+    try {
+      const paymentCtrl = require('./paymentController');
+      if (typeof paymentCtrl.sweepExpiredOrders === 'function') {
+        await paymentCtrl.sweepExpiredOrders();
+      }
+    } catch (e) {}
+
     const { date, search } = req.query;
     const page = parseInt(req.query.page, 10);
     const limit = parseInt(req.query.limit, 10);
@@ -3006,6 +3063,13 @@ exports.getWithdrawalReport = async (req, res) => {
 // 1. Get Fund Requests (PHP fund-request-management.php parity)
 exports.getFundRequests = async (req, res) => {
   try {
+    try {
+      const paymentCtrl = require('./paymentController');
+      if (typeof paymentCtrl.sweepExpiredOrders === 'function') {
+        await paymentCtrl.sweepExpiredOrders();
+      }
+    } catch (e) {}
+
     const { date, search, status } = req.query;
     const page = parseInt(req.query.page, 10);
     const limit = parseInt(req.query.limit, 10);

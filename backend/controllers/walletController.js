@@ -375,8 +375,20 @@ exports.getDepositRequestStatus = async (req, res) => {
   const phone = req.user.phone;
   const { date1, date2 } = req.query;
   try {
-    let sql = "SELECT id, amount, txt_request, txt_date, status FROM user_auto_deposite WHERE username = ?";
-    const params = [phone];
+    // Run expiry check so timed-out unpaid orders immediately appear as Cancelled
+    try {
+      const paymentCtrl = require('./paymentController');
+      if (typeof paymentCtrl.sweepExpiredOrders === 'function') {
+        await paymentCtrl.sweepExpiredOrders();
+      }
+    } catch (e) {}
+
+    const rawPhone = String(phone || '').replace(/^\+91/, '').replace(/^91/, '').trim();
+    const phoneWithPlus = `+91${rawPhone}`;
+    const tenDigits = rawPhone.slice(-10);
+
+    let sql = "SELECT id, amount, txt_request, txt_id, transaction_note, txt_date, status FROM user_auto_deposite WHERE (username = ? OR username = ? OR username = ? OR RIGHT(username, 10) = ?)";
+    const params = [phone, rawPhone, phoneWithPlus, tenDigits];
     if (date1 && date2) {
       sql += " AND DATE(txt_date) BETWEEN ? AND ?";
       params.push(date1, date2);
@@ -386,11 +398,17 @@ exports.getDepositRequestStatus = async (req, res) => {
     const result = deposits.map(row => {
       let status_text = 'Pending';
       if (row.status == '1') status_text = 'Approved';
-      else if (row.status == '-1') status_text = 'Rejected';
+      else if (row.status == '-1') {
+        status_text = (row.transaction_note && /cancel|timeout|expire|fail/i.test(row.transaction_note))
+          ? 'Cancelled'
+          : 'Rejected';
+      }
       return {
         id: row.id,
         amount: row.amount,
-        utr: row.txt_request || '',
+        utr: (row.txt_id && row.txt_id !== '0') ? row.txt_id : (row.txt_request || ''),
+        order_id: row.txt_request || '',
+        note: row.transaction_note || '',
         date: row.txt_date,
         status: String(row.status),
         status_text

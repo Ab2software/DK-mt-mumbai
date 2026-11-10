@@ -190,19 +190,35 @@ async function initUpiSchema() {
       await db.query("UPDATE auto_payment_gateways SET is_active = 1 WHERE gateway_code = 'niceupi'");
     }
 
-    // Clean up ghost unconfirmed intent requests created merely by clicking Pay Now (txt_id = '0' and status = '0')
+    // 4. Create internal tracking table for gateway orders & timeout cancellation
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS gateway_pending_orders (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        order_id VARCHAR(150) UNIQUE NOT NULL,
+        gateway_code VARCHAR(50) NOT NULL,
+        username VARCHAR(100) NOT NULL,
+        user_phone VARCHAR(50) NOT NULL,
+        user_name VARCHAR(150) DEFAULT '',
+        amount DECIMAL(10, 2) NOT NULL,
+        status VARCHAR(20) DEFAULT 'PENDING',
+        expires_at DATETIME NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
     try {
-      await db.query("DELETE FROM user_auto_deposite WHERE txt_id = '0' AND status = '0' AND txt_request LIKE 'UPI_%'");
-      await db.query("DELETE FROM user_fund_request WHERE status = '0' AND trans_details LIKE 'Auto UPI%Order: UPI_%' AND trans_details NOT LIKE '%UTR:%'");
-    } catch (cleanErr) {
-      console.warn('Ghost request cleanup notice:', cleanErr.message);
-    }
+      await db.query(`ALTER TABLE gateway_pending_orders ADD COLUMN expires_at DATETIME NULL`);
+    } catch (e) {}
 
     isInitialized = true;
   } catch (err) {
     console.error('Error initializing upi_gateways schema:', err.message);
   }
 }
+
+const AUTO_ORDER_TIMEOUT_MINUTES = 15; // Auto-cancel unpaid orders after 15 mins after verifying gateway status
+const processingOrdersLock = new Set();
 
 // Helper: Reliably fetch the admin_settings record regardless of id column value
 async function getAdminSettingsRow() {
@@ -500,54 +516,378 @@ exports.setDepositMode = async (req, res) => {
   }
 };
 
-// Helper: Direct wallet credit & transaction settlement for automated payments
-async function creditUserWalletDirect(username, amount, orderId, utr, note) {
-  const cleanPhone = String(username || '').replace(/\D/g, '').slice(-10);
-  const [users] = await db.query(
-    "SELECT id, phone, name, wallet FROM user_info WHERE phone = ? OR RIGHT(phone, 10) = ? OR id = ? LIMIT 1",
-    [username, cleanPhone, username]
-  );
-  if (users.length === 0) return { credited: false, msg: 'User account not found' };
-
-  const user = users[0];
-  const oldWallet = parseFloat(user.wallet || '0');
-  const addAmt = parseFloat(amount || '0');
-  const safeOldWallet = isNaN(oldWallet) ? 0 : oldWallet;
-  const newWallet = safeOldWallet + addAmt;
-
-  // 1. Update user_info wallet balance
-  await db.query("UPDATE user_info SET wallet = ? WHERE id = ?", [newWallet, user.id]);
-
+// Helper: Create Pending Deposit Request in DB immediately on Auto Order Creation
+async function createPendingDepositRecord({ phone, name, orderId, amount, gatewayCode, gatewayName }) {
   const todayDateTime = getISTDateTimeStr();
   const currentDateStr = getISTDateStr();
+  const displayGw = gatewayName || gatewayCode || 'Auto UPI';
 
-  // 2. Mark user_auto_deposite status as 1 (Approved)
+  // 1. Track order + timeout deadline in gateway_pending_orders
   await db.query(
-    "UPDATE user_auto_deposite SET status = '1', txt_id = ? WHERE txt_request = ? AND (username = ? OR RIGHT(username, 10) = ?)",
-    [utr || orderId, orderId, username, cleanPhone]
+    `INSERT INTO gateway_pending_orders (order_id, gateway_code, username, user_phone, user_name, amount, status, expires_at)
+     VALUES (?, ?, ?, ?, ?, ?, 'PENDING', DATE_ADD(NOW(), INTERVAL ? MINUTE))
+     ON DUPLICATE KEY UPDATE amount = VALUES(amount), status = 'PENDING', expires_at = DATE_ADD(NOW(), INTERVAL ? MINUTE)`,
+    [orderId, gatewayCode, phone, phone, name || 'User', amount, AUTO_ORDER_TIMEOUT_MINUTES, AUTO_ORDER_TIMEOUT_MINUTES]
   );
 
-  // 3. Insert or update user_fund_request so it shows in reports & passes through statement
-  await db.query(
-    "INSERT INTO user_fund_request (username, points, amount, trans_details, receipe_image, date, status, action) VALUES (?, ?, ?, ?, '', ?, '1', 'auto')",
-    [user.phone, addAmt, addAmt, `${note || 'Auto Payment'} | Ref: ${utr || orderId}`, currentDateStr]
-  );
+  // 2. Generate Pending deposit request in user_auto_deposite (status = '0')
+  const [existingAuto] = await db.query("SELECT id FROM user_auto_deposite WHERE txt_request = ? LIMIT 1", [orderId]);
+  if (existingAuto.length === 0) {
+    await db.query(
+      `INSERT INTO user_auto_deposite (username, transaction_note, amount, txt_request, txt_id, txt_date, status)
+       VALUES (?, ?, ?, ?, '0', ?, '0')`,
+      [phone, `${displayGw} Auto Deposit | Order: ${orderId}`, amount, orderId, todayDateTime]
+    );
+  }
 
-  // 4. Broadcast live notification to Admin & User socket
+  // 3. Generate Pending fund request in user_fund_request (status = '0')
+  const [existingFund] = await db.query("SELECT id FROM user_fund_request WHERE trans_details LIKE ? LIMIT 1", [`%Order: ${orderId}%`]);
+  if (existingFund.length === 0) {
+    await db.query(
+      `INSERT INTO user_fund_request (username, points, amount, trans_details, receipe_image, date, status, action)
+       VALUES (?, ?, ?, ?, '', ?, '0', 'auto')`,
+      [phone, amount, amount, `${displayGw} Auto Deposit | Order: ${orderId}`, currentDateStr]
+    );
+  }
+
+  // 4. Notify Admin Dashboard immediately
   try {
     const { broadcastToAdmins } = require('../socket/chatSocket');
     broadcastToAdmins({
       type: 'badge_update',
-      event: 'auto_deposit_approved',
-      user: user.phone,
-      amount: addAmt,
-      utr: utr || orderId,
-      message: `Auto Deposit Success: ₹${addAmt} credited to ${user.phone}`
+      event: 'new_deposit',
+      user: phone,
+      amount: parseFloat(amount || 0),
+      order_id: orderId,
+      message: `New Auto Deposit Order (Pending): ₹${amount} from ${phone}`
     });
   } catch (wsErr) {}
-
-  return { credited: true, newWallet };
 }
+
+// Helper: Check live order status directly from Payment Gateway API (NiceUpi / IMB)
+async function checkGatewayOrderStatusAPI(orderId, gatewayCodeHint = '') {
+  if (!orderId) return { state: 'PENDING' };
+  const code = String(gatewayCodeHint || '').toLowerCase();
+
+  try {
+    if (code === 'niceupi' || String(orderId).startsWith('BM_')) {
+      const [niceRows] = await db.query("SELECT api_token, user_token FROM auto_payment_gateways WHERE gateway_code = 'niceupi' LIMIT 1");
+      const niceRow = niceRows[0];
+      const uToken = (niceRow?.user_token || '').trim();
+      const aToken = (niceRow?.api_token || '').trim();
+      const primaryToken = uToken || aToken;
+
+      if (primaryToken) {
+        const postData = new URLSearchParams();
+        postData.append('user_token', uToken || aToken);
+        postData.append('api_token', aToken || uToken);
+        postData.append('order_id', orderId);
+
+        const statusRes = await fetch('https://niceupi.com/api/check-order-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: postData.toString()
+        });
+        const statusData = await statusRes.json();
+        console.log('[NiceUpi real-time status check]:', statusData);
+
+        const rawStatus = String(statusData.status || statusData.data?.status || '').toUpperCase();
+        const isCompleted =
+          rawStatus === 'COMPLETED' ||
+          rawStatus === 'SUCCESS' ||
+          rawStatus === 'SUCCESSFUL' ||
+          rawStatus === 'PAID' ||
+          statusData.status === true;
+        const isFailed =
+          rawStatus === 'FAILED' ||
+          rawStatus === 'FAILURE' ||
+          rawStatus === 'CANCELLED' ||
+          rawStatus === 'CANCELED' ||
+          rawStatus === 'EXPIRED';
+
+        if (isCompleted) {
+          return {
+            state: 'SUCCESS',
+            utr: statusData.utr || statusData.data?.utr || statusData.utr_number || 'NICEUPI_AUTO',
+            amount: parseFloat(statusData.amount || statusData.data?.amount || 0),
+            raw: statusData
+          };
+        }
+        if (isFailed) {
+          return { state: 'FAILED', raw: statusData };
+        }
+      }
+    } else if (code === 'imb' || String(orderId).startsWith('IMB_')) {
+      const [imbRows] = await db.query("SELECT api_token, user_token FROM auto_payment_gateways WHERE gateway_code = 'imb' LIMIT 1");
+      const imbRow = imbRows[0];
+      const uToken = (imbRow?.user_token || imbRow?.api_token || '').trim();
+
+      if (uToken) {
+        const postData = new URLSearchParams();
+        postData.append('user_token', uToken);
+        postData.append('order_id', orderId);
+
+        const statusRes = await fetch('https://api.imbpay.in/v2/check-order-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+          },
+          body: postData.toString()
+        });
+        const statusData = await statusRes.json();
+        console.log('[IMB real-time status check]:', statusData);
+
+        const resObj = statusData.result || {};
+        const txnStatus = String(resObj.txnStatus || statusData.status || '').toUpperCase();
+        const isCompleted =
+          txnStatus === 'COMPLETED' ||
+          txnStatus === 'SUCCESS' ||
+          txnStatus === 'SUCCESSFUL' ||
+          txnStatus === 'PAID' ||
+          statusData.status === true;
+        const isFailed =
+          txnStatus === 'FAILED' ||
+          txnStatus === 'FAILURE' ||
+          txnStatus === 'CANCELLED' ||
+          txnStatus === 'CANCELED' ||
+          txnStatus === 'EXPIRED';
+
+        if (isCompleted) {
+          return {
+            state: 'SUCCESS',
+            utr: resObj.utr || statusData.utr || 'IMB_AUTO',
+            amount: parseFloat(resObj.amount || statusData.amount || 0),
+            raw: statusData
+          };
+        }
+        if (isFailed) {
+          return { state: 'FAILED', raw: statusData };
+        }
+      }
+    }
+  } catch (gwErr) {
+    console.warn(`Gateway status check error (${orderId}):`, gwErr.message);
+  }
+  return { state: 'PENDING' };
+}
+
+// Helper: Cancel an unpaid/expired order (only if not already approved/success)
+async function cancelOrderDirect(orderId, reason = 'Auto Cancelled (Timeout)') {
+  if (!orderId || processingOrdersLock.has(orderId)) return { cancelled: false };
+  processingOrdersLock.add(orderId);
+  try {
+    // Never cancel an order that was already credited!
+    const [paidRows] = await db.query(
+      "SELECT id FROM user_auto_deposite WHERE txt_request = ? AND status = '1' LIMIT 1",
+      [orderId]
+    );
+    if (paidRows.length > 0) return { cancelled: false, alreadyPaid: true };
+
+    await db.query(
+      "UPDATE gateway_pending_orders SET status = 'CANCELLED' WHERE order_id = ? AND status = 'PENDING'",
+      [orderId]
+    );
+    await db.query(
+      `UPDATE user_auto_deposite 
+       SET status = '-1', transaction_note = CONCAT(transaction_note, ' | ', ?) 
+       WHERE txt_request = ? AND status = '0'`,
+      [reason, orderId]
+    );
+    await db.query(
+      `UPDATE user_fund_request 
+       SET status = '-1', trans_details = CONCAT(trans_details, ' | ', ?) 
+       WHERE trans_details LIKE ? AND status = '0'`,
+      [reason, `%Order: ${orderId}%`]
+    );
+
+    try {
+      const { broadcastToAdmins } = require('../socket/chatSocket');
+      broadcastToAdmins({
+        type: 'badge_update',
+        event: 'auto_deposit_cancelled',
+        order_id: orderId,
+        message: `Auto Order ${orderId} cancelled: ${reason}`
+      });
+    } catch (wsErr) {}
+
+    return { cancelled: true };
+  } catch (err) {
+    console.error('cancelOrderDirect error:', err.message);
+    return { cancelled: false, error: err.message };
+  } finally {
+    processingOrdersLock.delete(orderId);
+  }
+}
+
+// Helper: Direct wallet credit & transaction settlement for automated payments (Idempotent)
+async function creditUserWalletDirect(username, amount, orderId, utr, note) {
+  if (processingOrdersLock.has(orderId)) {
+    return { credited: false, locked: true, msg: 'Order is currently processing' };
+  }
+  processingOrdersLock.add(orderId);
+
+  try {
+    const cleanPhone = String(username || '').replace(/\D/g, '').slice(-10);
+    const [users] = await db.query(
+      "SELECT id, phone, name, wallet FROM user_info WHERE phone = ? OR RIGHT(phone, 10) = ? OR id = ? LIMIT 1",
+      [username, cleanPhone, username]
+    );
+    if (users.length === 0) return { credited: false, msg: 'User account not found' };
+
+    const user = users[0];
+
+    // Idempotency Guard: Never double-credit if order is already marked Approved (status = '1')
+    const [alreadyApproved] = await db.query(
+      "SELECT id FROM user_auto_deposite WHERE txt_request = ? AND status = '1' LIMIT 1",
+      [orderId]
+    );
+    if (alreadyApproved.length > 0) {
+      return { credited: true, alreadyProcessed: true, newWallet: parseFloat(user.wallet || '0') };
+    }
+
+    const oldWallet = parseFloat(user.wallet || '0');
+    const addAmt = parseFloat(amount || '0');
+    if (isNaN(addAmt) || addAmt <= 0) return { credited: false, msg: 'Invalid deposit amount' };
+
+    const safeOldWallet = isNaN(oldWallet) ? 0 : oldWallet;
+    const newWallet = safeOldWallet + addAmt;
+
+    // 1. Update user_info wallet balance
+    await db.query("UPDATE user_info SET wallet = ? WHERE id = ?", [newWallet, user.id]);
+
+    const todayDateTime = getISTDateTimeStr();
+    const currentDateStr = getISTDateStr();
+    const currentTimeStr = getISTTime12h();
+
+    // 2. Mark gateway_pending_orders as COMPLETED
+    try {
+      await db.query("UPDATE gateway_pending_orders SET status = 'COMPLETED' WHERE order_id = ?", [orderId]);
+    } catch (e) {}
+
+    // 3. Convert pending user_auto_deposite to Approved ('1') or insert if missing
+    const [existingAuto] = await db.query(
+      "SELECT id FROM user_auto_deposite WHERE txt_request = ? LIMIT 1",
+      [orderId]
+    );
+    if (existingAuto.length > 0) {
+      await db.query(
+        "UPDATE user_auto_deposite SET status = '1', txt_id = ?, transaction_note = CONCAT(transaction_note, ' | Paid UTR: ', ?) WHERE id = ?",
+        [utr || orderId, utr || orderId, existingAuto[0].id]
+      );
+    } else {
+      await db.query(
+        `INSERT INTO user_auto_deposite (username, transaction_note, amount, txt_request, txt_id, txt_date, status)
+         VALUES (?, ?, ?, ?, ?, ?, '1')`,
+        [user.phone, `${note || 'Auto Payment'} | Order: ${orderId}`, addAmt, orderId, utr || orderId, todayDateTime]
+      );
+    }
+
+    // 4. Convert pending user_fund_request to Approved ('1') or insert if missing
+    const [existingFund] = await db.query(
+      "SELECT id FROM user_fund_request WHERE trans_details LIKE ? LIMIT 1",
+      [`%Order: ${orderId}%`]
+    );
+    if (existingFund.length > 0) {
+      await db.query(
+        "UPDATE user_fund_request SET status = '1', trans_details = CONCAT(trans_details, ' | UTR: ', ?) WHERE id = ?",
+        [utr || orderId, existingFund[0].id]
+      );
+    } else {
+      await db.query(
+        "INSERT INTO user_fund_request (username, points, amount, trans_details, receipe_image, date, status, action) VALUES (?, ?, ?, ?, '', ?, '1', 'auto')",
+        [user.phone, addAmt, addAmt, `${note || 'Auto Payment'} | Order: ${orderId} | UTR: ${utr || orderId}`, currentDateStr]
+      );
+    }
+
+    // 5. Log into wallet_history so user sees it in Wallet Statement / Passbook
+    try {
+      await db.query(
+        'INSERT INTO wallet_history (status, date, time, amount, updated_amount, remark, phone_number) VALUES ("1", ?, ?, ?, ?, ?, ?)',
+        [currentDateStr, currentTimeStr, addAmt, newWallet, `Auto Deposit Approved (${utr || orderId})`, user.phone]
+      );
+    } catch (whErr) {
+      console.warn('wallet_history log warning:', whErr.message);
+    }
+
+    // 6. Trigger referral deposit commissions
+    try {
+      const adminCtrl = require('./adminController');
+      if (typeof adminCtrl.processReferralCommission === 'function') {
+        adminCtrl.processReferralCommission(user.phone, 'every_deposit', addAmt);
+        adminCtrl.processReferralCommission(user.phone, 'first_deposit', addAmt);
+      }
+    } catch (refErr) {}
+
+    // 7. Broadcast live notification to Admin & User socket
+    try {
+      const { broadcastToAdmins } = require('../socket/chatSocket');
+      broadcastToAdmins({
+        type: 'badge_update',
+        event: 'auto_deposit_approved',
+        user: user.phone,
+        amount: addAmt,
+        utr: utr || orderId,
+        message: `Auto Deposit Success: ₹${addAmt} credited to ${user.phone}`
+      });
+    } catch (wsErr) {}
+
+    return { credited: true, newWallet };
+  } finally {
+    processingOrdersLock.delete(orderId);
+  }
+}
+
+// Background Expiry Sweeper: Checks gateway status before cancelling expired unpaid orders
+let isSweepingExpiredOrders = false;
+async function sweepExpiredOrders() {
+  if (isSweepingExpiredOrders) return;
+  isSweepingExpiredOrders = true;
+  try {
+    await initUpiSchema();
+    const [expiredOrders] = await db.query(
+      `SELECT * FROM gateway_pending_orders 
+       WHERE status = 'PENDING' 
+         AND (expires_at <= NOW() OR (expires_at IS NULL AND created_at <= DATE_SUB(NOW(), INTERVAL ? MINUTE)))
+       LIMIT 30`,
+      [AUTO_ORDER_TIMEOUT_MINUTES]
+    );
+
+    for (const order of expiredOrders) {
+      // Double check if webhook already credited user_auto_deposite
+      const [paidCheck] = await db.query(
+        "SELECT id FROM user_auto_deposite WHERE txt_request = ? AND status = '1' LIMIT 1",
+        [order.order_id]
+      );
+      if (paidCheck.length > 0) {
+        await db.query("UPDATE gateway_pending_orders SET status = 'COMPLETED' WHERE id = ?", [order.id]);
+        continue;
+      }
+
+      // Check real-time status from payment gateway before cancelling
+      const gwStatus = await checkGatewayOrderStatusAPI(order.order_id, order.gateway_code);
+      if (gwStatus.state === 'SUCCESS') {
+        await creditUserWalletDirect(
+          order.user_phone || order.username,
+          gwStatus.amount > 0 ? gwStatus.amount : order.amount,
+          order.order_id,
+          gwStatus.utr,
+          `${String(order.gateway_code || 'AUTO').toUpperCase()} Auto Verified`
+        );
+      } else {
+        await cancelOrderDirect(order.order_id, 'Auto Cancelled (Payment Timeout - Not Paid)');
+      }
+    }
+  } catch (err) {
+    console.warn('sweepExpiredOrders notice:', err.message);
+  } finally {
+    isSweepingExpiredOrders = false;
+  }
+}
+
+// Run background sweeper every 60 seconds
+setInterval(sweepExpiredOrders, 60 * 1000);
+exports.sweepExpiredOrders = sweepExpiredOrders;
 
 // Admin: Set Active Auto Payment Gateway (NiceUpi, IMB, ZenUpi)
 exports.setActiveGateway = async (req, res) => {
@@ -745,21 +1085,29 @@ exports.handleWebhook = async (req, res) => {
   try {
     await initUpiSchema();
     const gateway = (req.params.gateway || '').toLowerCase();
-    const payload = req.body || {};
-    console.log(`[Webhook Received for ${gateway}]:`, payload);
+    const payload = { ...(req.query || {}), ...(req.body || {}) };
+    console.log(`[Webhook Received for ${gateway || 'generic'}]:`, payload);
 
+    let dataObj = payload.data || {};
+    if (typeof dataObj === 'string') {
+      try { dataObj = JSON.parse(dataObj); } catch (e) { dataObj = {}; }
+    }
     const resultObj = payload.result || {};
+
     const orderId =
       payload.order_id ||
       payload.orderId ||
       resultObj.orderId ||
       resultObj.order_id ||
+      dataObj.order_id ||
+      dataObj.orderId ||
       payload.client_txn_id ||
       payload.txn_id ||
       payload.txId;
 
     const utr =
       resultObj.utr ||
+      dataObj.utr ||
       payload.utr ||
       payload.utr_number ||
       payload.bank_ref_no ||
@@ -768,6 +1116,7 @@ exports.handleWebhook = async (req, res) => {
 
     const amount = parseFloat(
       resultObj.amount ||
+      dataObj.amount ||
       payload.amount ||
       payload.txn_amount ||
       payload.points ||
@@ -776,8 +1125,10 @@ exports.handleWebhook = async (req, res) => {
 
     const status = String(
       resultObj.txnStatus ||
+      dataObj.status ||
       payload.status ||
       payload.txn_status ||
+      payload.state ||
       ''
     ).toUpperCase();
 
@@ -786,48 +1137,79 @@ exports.handleWebhook = async (req, res) => {
       status === 'SUCCESS' ||
       status === 'SUCCESSFUL' ||
       status === 'PAID' ||
+      status === 'TRUE' ||
       payload.status === true ||
       payload.status === 1 ||
       payload.status === '1';
+
+    const isFailed =
+      status === 'FAILED' ||
+      status === 'FAILURE' ||
+      status === 'FAIL' ||
+      status === 'CANCELLED' ||
+      status === 'CANCELED' ||
+      status === 'EXPIRED' ||
+      status === 'REJECTED' ||
+      status === 'TIMEOUT' ||
+      payload.status === false ||
+      status === 'FALSE';
 
     if (!orderId) {
       return res.status(400).json({ status: 'error', message: 'Order ID is required' });
     }
 
+    if (isFailed) {
+      await cancelOrderDirect(orderId, `Gateway Webhook (${status || 'FAILED'})`);
+      console.log(`[Webhook]: Order ${orderId} marked cancelled due to ${status}`);
+      return res.json({ status: 'cancelled', message: `Order cancelled (${status})` });
+    }
+
     if (!isSuccess) {
-      console.log(`[Webhook]: Order ${orderId} status is ${status}, skipping credit.`);
+      console.log(`[Webhook]: Order ${orderId} status is ${status}, still pending.`);
       return res.json({ status: 'ignored', message: `Order status is ${status}` });
     }
 
-    // Check if order already in user_auto_deposite
-    let [existing] = await db.query(
-      "SELECT * FROM user_auto_deposite WHERE txt_request = ? LIMIT 1",
+    // 1. Check if order in gateway_pending_orders
+    let [pendingOrders] = await db.query(
+      "SELECT * FROM gateway_pending_orders WHERE order_id = ? LIMIT 1",
       [orderId]
     );
 
     let targetUsername = null;
     let targetAmount = amount;
 
-    if (existing.length > 0) {
-      const order = existing[0];
-      if (order.status === '1') {
+    if (pendingOrders.length > 0) {
+      const pOrder = pendingOrders[0];
+      if (pOrder.status === 'COMPLETED') {
         return res.json({ status: 'already_processed', message: 'Order already credited' });
       }
-      targetUsername = order.username;
-      targetAmount = amount > 0 ? amount : parseFloat(order.amount || 0);
+      targetUsername = pOrder.user_phone || pOrder.username;
+      targetAmount = amount > 0 ? amount : parseFloat(pOrder.amount || 0);
     } else {
-      // Fallback: look up by customer_mobile
-      const mob = resultObj.customer_mobile || payload.customer_mobile;
-      if (mob) {
-        const cleanMob = String(mob).replace(/\D/g, '').slice(-10);
-        const [userPending] = await db.query(
-          "SELECT * FROM user_auto_deposite WHERE (username = ? OR RIGHT(username, 10) = ?) AND status = '0' ORDER BY id DESC LIMIT 1",
-          [mob, cleanMob]
-        );
-        if (userPending.length > 0) {
-          const matchedOrder = userPending[0];
-          targetUsername = matchedOrder.username;
-          targetAmount = amount > 0 ? amount : parseFloat(matchedOrder.amount || 0);
+      // Fallback: check user_auto_deposite
+      let [existing] = await db.query(
+        "SELECT * FROM user_auto_deposite WHERE txt_request = ? LIMIT 1",
+        [orderId]
+      );
+      if (existing.length > 0) {
+        const order = existing[0];
+        if (order.status === '1') {
+          return res.json({ status: 'already_processed', message: 'Order already credited' });
+        }
+        targetUsername = order.username;
+        targetAmount = amount > 0 ? amount : parseFloat(order.amount || 0);
+      } else {
+        // Fallback: look up by customer_mobile
+        const mob = resultObj.customer_mobile || dataObj.customer_mobile || payload.customer_mobile;
+        if (mob) {
+          const cleanMob = String(mob).replace(/\D/g, '').slice(-10);
+          const [userPending] = await db.query(
+            "SELECT phone FROM user_info WHERE phone = ? OR RIGHT(phone, 10) = ? LIMIT 1",
+            [mob, cleanMob]
+          );
+          if (userPending.length > 0) {
+            targetUsername = userPending[0].phone;
+          }
         }
       }
     }
@@ -846,7 +1228,7 @@ exports.handleWebhook = async (req, res) => {
 
     return res.json({
       status: 'success',
-      message: 'Deposit credited successfully',
+      message: creditResult.alreadyProcessed ? 'Order already credited' : 'Deposit credited successfully',
       wallet: creditResult.newWallet
     });
   } catch (err) {
@@ -998,7 +1380,12 @@ exports.createOrder = async (req, res) => {
       const cleanPhone = String(phone || '').replace(/\D/g, '').slice(-10) || '9999999999';
       const host = req.get('host') || 'bharat-matka.onrender.com';
       const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
-      const redirectUrl = `${protocol}://${host}/wallet`;
+      let frontendOrigin = `${protocol}://${host}`;
+      try {
+        if (req.get('origin')) frontendOrigin = req.get('origin');
+        else if (req.get('referer')) frontendOrigin = new URL(req.get('referer')).origin;
+      } catch (e) {}
+      const redirectUrl = `${frontendOrigin}/add-fund`;
 
       // ----------------------------------------------------
       // GATEWAY 1: NiceUpi Automated Gateway
@@ -1038,6 +1425,10 @@ exports.createOrder = async (req, res) => {
           postData.append('order_id', orderId);
           postData.append('redirect_url', redirectUrl);
           postData.append('remark', 'Bharat Matka Fund');
+          postData.append('remark1', 'Bharat Matka Fund');
+          if (activeGw?.merchant_id && activeGw.merchant_id.trim()) {
+            postData.append('merchant_id', activeGw.merchant_id.trim());
+          }
 
           const apiRes = await fetch('https://niceupi.com/api/create-order', {
             method: 'POST',
@@ -1058,6 +1449,7 @@ exports.createOrder = async (req, res) => {
             apiData.status === 200 ||
             apiData.status === '1';
 
+          const finalOrderId = apiData.order_id || apiData.data?.order_id || apiData.result?.orderId || orderId;
           const paymentUrl = apiData.payment_url || apiData.data?.payment_url || apiData.url || apiData.checkout_url;
           const intentUrl = apiData.intent_url || apiData.data?.intent_url || apiData.upi_intent_url || paymentUrl;
           const qrCode = apiData.qr_code || apiData.data?.qr_code || apiData.qr || '';
@@ -1073,12 +1465,15 @@ exports.createOrder = async (req, res) => {
           }
 
           if (isSuccess && (paymentUrl || intentUrl)) {
-            const todayDateTime = getISTDateTimeStr();
-            await db.query(
-              `INSERT INTO user_auto_deposite (username, transaction_note, amount, txt_request, txt_id, txt_date, status)
-               VALUES (?, ?, ?, ?, '0', ?, '0')`,
-              [phone, `NiceUpi Auto Deposit | Order: ${orderId}`, numAmount, orderId, todayDateTime]
-            );
+            // Generate Pending Deposit Request immediately (converts to Success on payment or Cancelled on timeout)
+            await createPendingDepositRecord({
+              phone,
+              name,
+              orderId: finalOrderId,
+              amount: numAmount,
+              gatewayCode: 'niceupi',
+              gatewayName: 'NiceUpi'
+            });
 
             return res.json({
               success: '1',
@@ -1086,8 +1481,9 @@ exports.createOrder = async (req, res) => {
               data: {
                 gateway: 'niceupi',
                 gateway_name: 'NiceUpi',
-                order_id: orderId,
+                order_id: finalOrderId,
                 amount: numAmount,
+                expires_in_seconds: AUTO_ORDER_TIMEOUT_MINUTES * 60,
                 payment_url: paymentUrl,
                 intent_url: intentUrl,
                 phonepe_url: phonepeUrl,
@@ -1166,6 +1562,7 @@ exports.createOrder = async (req, res) => {
             apiData.status === 200;
 
           const result = apiData.result || apiData.data || {};
+          const finalOrderId = result.orderId || orderId;
           const paymentUrl = result.payment_url || apiData.payment_url || '';
           const paytmLink = result.paytm_link || '';
           const bhimLink = result.bhim_link || '';
@@ -1181,12 +1578,15 @@ exports.createOrder = async (req, res) => {
           }
 
           if (isSuccess && (paymentUrl || bhimLink || phonepeLink || paytmLink)) {
-            const todayDateTime = getISTDateTimeStr();
-            await db.query(
-              `INSERT INTO user_auto_deposite (username, transaction_note, amount, txt_request, txt_id, txt_date, status)
-               VALUES (?, ?, ?, ?, '0', ?, '0')`,
-              [phone, `IMB Auto Deposit | Order: ${orderId}`, numAmount, orderId, todayDateTime]
-            );
+            // Generate Pending Deposit Request immediately (converts to Success on payment or Cancelled on timeout)
+            await createPendingDepositRecord({
+              phone,
+              name,
+              orderId: finalOrderId,
+              amount: numAmount,
+              gatewayCode: 'imb',
+              gatewayName: 'IMB Payment Gateway'
+            });
 
             return res.json({
               success: '1',
@@ -1194,8 +1594,9 @@ exports.createOrder = async (req, res) => {
               data: {
                 gateway: 'imb',
                 gateway_name: 'IMB Payment Gateway',
-                order_id: result.orderId || orderId,
+                order_id: finalOrderId,
                 amount: numAmount,
+                expires_in_seconds: AUTO_ORDER_TIMEOUT_MINUTES * 60,
                 payment_url: paymentUrl,
                 intent_url: intentUrl,
                 phonepe_url: phonepeLink,
@@ -1237,12 +1638,14 @@ exports.createOrder = async (req, res) => {
         }
 
         const orderId = `ZEN_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
-        const todayDateTime = getISTDateTimeStr();
-        await db.query(
-          `INSERT INTO user_auto_deposite (username, transaction_note, amount, txt_request, txt_id, txt_date, status)
-           VALUES (?, ?, ?, ?, '0', ?, '0')`,
-          [phone, `ZenUpi Auto Deposit | Order: ${orderId}`, numAmount, orderId, todayDateTime]
-        );
+        await createPendingDepositRecord({
+          phone,
+          name,
+          orderId,
+          amount: numAmount,
+          gatewayCode: 'zenupi',
+          gatewayName: 'ZenUpi'
+        });
 
         return res.json({
           success: '1',
@@ -1252,6 +1655,7 @@ exports.createOrder = async (req, res) => {
             gateway_name: 'ZenUpi',
             order_id: orderId,
             amount: numAmount,
+            expires_in_seconds: AUTO_ORDER_TIMEOUT_MINUTES * 60,
             user: { name, phone }
           }
         });
@@ -1296,6 +1700,16 @@ exports.createOrder = async (req, res) => {
     }
 
     const orderId = `UPI_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
+    if (isAuto) {
+      await createPendingDepositRecord({
+        phone,
+        name,
+        orderId,
+        amount: numAmount,
+        gatewayCode: 'upi_intent',
+        gatewayName: 'Direct UPI Auto'
+      });
+    }
     const urls = buildUpiUri(targetAppCode, targetUpiId, targetPayee, numAmount, orderId);
     const phonepeUrls = buildUpiUri('phonepe', targetUpiId, targetPayee, numAmount, orderId);
     const paytmUrls = buildUpiUri('paytm', targetUpiId, targetPayee, numAmount, orderId);
@@ -1307,6 +1721,7 @@ exports.createOrder = async (req, res) => {
       data: {
         order_id: orderId,
         amount: numAmount,
+        expires_in_seconds: AUTO_ORDER_TIMEOUT_MINUTES * 60,
         upi_id: targetUpiId,
         payee_name: targetPayee,
         app_name: targetAppName,
@@ -1494,7 +1909,7 @@ exports.submitUpiFundRequest = async (req, res) => {
   }
 };
 
-// User Protected: Check Payment Status (DOES NOT auto-approve; stays pending until Admin approves)
+// User Protected: Check Payment Status (Checks Webhook DB state, Real-time Gateway API & Timeout Expiry)
 exports.verifyPayment = async (req, res) => {
   const phone = req.user.phone;
   const { order_id, payment_id, amount, utr_no } = req.body;
@@ -1504,21 +1919,20 @@ exports.verifyPayment = async (req, res) => {
     return res.json({ success: '0', msg: 'Reference ID is required.' });
   }
 
-  const numAmount = parseFloat(amount);
-
   try {
     await initUpiSchema();
 
     const cleanPhone = String(phone || '').replace(/\D/g, '').slice(-10);
+    const targetOrderId = order_id || refId;
 
-    // 1. Check if Admin has already approved this record in user_auto_deposite or user_fund_request
+    // 1. Check if Webhook or Admin already approved this deposit
     const [approvedAuto] = await db.query(
       `SELECT * FROM user_auto_deposite 
        WHERE (txt_request = ? OR txt_id = ? OR transaction_note LIKE ?) 
          AND (username = ? OR RIGHT(username, 10) = ?) 
          AND status = '1' 
        LIMIT 1`,
-      [order_id || refId, refId, `%${refId}%`, phone, cleanPhone || phone]
+      [targetOrderId, refId, `%${refId}%`, phone, cleanPhone || phone]
     );
 
     const [approvedFund] = await db.query(
@@ -1527,7 +1941,7 @@ exports.verifyPayment = async (req, res) => {
          AND (username = ? OR RIGHT(username, 10) = ?) 
          AND status = '1' 
        LIMIT 1`,
-      [`%${order_id || refId}%`, phone, cleanPhone || phone]
+      [`%${targetOrderId}%`, phone, cleanPhone || phone]
     );
 
     if (approvedAuto.length > 0 || approvedFund.length > 0) {
@@ -1544,78 +1958,56 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
-    // 2. Real-time Status Verification with NiceUpi API
-    const targetOrderId = order_id || refId;
-    if (targetOrderId && String(targetOrderId).startsWith('BM_')) {
-      try {
-        const [niceRows] = await db.query("SELECT api_token, user_token FROM auto_payment_gateways WHERE gateway_code = 'niceupi' LIMIT 1");
-        const niceRow = niceRows[0];
-        const uToken = (niceRow?.user_token || '').trim();
-        const aToken = (niceRow?.api_token || '').trim();
-        const primaryToken = uToken || aToken;
+    // 2. Real-time Status Check with Payment Gateway API (NiceUpi / IMB)
+    const [gwOrders] = await db.query(
+      "SELECT *, TIMESTAMPDIFF(SECOND, NOW(), expires_at) as remaining_seconds FROM gateway_pending_orders WHERE order_id = ? LIMIT 1",
+      [targetOrderId]
+    );
+    const gwOrder = gwOrders && gwOrders[0] ? gwOrders[0] : null;
 
-        if (primaryToken) {
-          const postData = new URLSearchParams();
-          if (uToken) postData.append('user_token', uToken);
-          else if (aToken) postData.append('user_token', aToken);
+    if (targetOrderId && (String(targetOrderId).startsWith('BM_') || String(targetOrderId).startsWith('IMB_') || gwOrder)) {
+      const gwStatus = await checkGatewayOrderStatusAPI(targetOrderId, gwOrder?.gateway_code);
 
-          if (aToken) postData.append('api_token', aToken);
-          else if (uToken) postData.append('api_token', uToken);
+      if (gwStatus.state === 'SUCCESS') {
+        const orderAmt = gwStatus.amount > 0 ? gwStatus.amount : parseFloat(gwOrder?.amount || amount || 0);
+        const gwLabel = (gwOrder?.gateway_code === 'imb' || String(targetOrderId).startsWith('IMB_')) ? 'IMB Payment Gateway' : 'NiceUpi Auto Payment';
+        const creditRes = await creditUserWalletDirect(
+          phone,
+          orderAmt,
+          targetOrderId,
+          gwStatus.utr,
+          gwLabel
+        );
 
-          postData.append('order_id', targetOrderId);
-
-          const statusRes = await fetch('https://niceupi.com/api/check-order-status', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: postData.toString()
+        if (creditRes.credited) {
+          return res.json({
+            success: '1',
+            approved: true,
+            status: '1',
+            msg: `Payment of ₹${orderAmt} verified successfully!`,
+            wallet: creditRes.newWallet
           });
-
-          const statusData = await statusRes.json();
-          console.log('[NiceUpi real-time status check]:', statusData);
-
-          const isCompleted =
-            statusData.status === 'COMPLETED' ||
-            statusData.status === 'SUCCESS' ||
-            statusData.status === true ||
-            statusData.data?.status === 'COMPLETED' ||
-            statusData.data?.status === 'SUCCESS';
-
-          if (isCompleted) {
-            const utr = statusData.utr || statusData.data?.utr || statusData.utr_number || 'NICEUPI_AUTO';
-            const orderAmt = parseFloat(statusData.amount || statusData.data?.amount || amount || 0);
-
-            const creditRes = await creditUserWalletDirect(
-              phone,
-              orderAmt,
-              targetOrderId,
-              utr,
-              'NiceUpi Auto Payment'
-            );
-
-            if (creditRes.credited) {
-              return res.json({
-                success: '1',
-                approved: true,
-                status: '1',
-                msg: `Payment of ₹${orderAmt} verified successfully via NiceUpi!`,
-                wallet: creditRes.newWallet
-              });
-            }
-          }
         }
-      } catch (niceErr) {
-        console.warn('NiceUpi check status API notice:', niceErr.message);
+      } else if (gwStatus.state === 'FAILED') {
+        await cancelOrderDirect(targetOrderId, 'Gateway Reported Failed');
+        return res.json({
+          success: '0',
+          rejected: true,
+          cancelled: true,
+          status: '-1',
+          msg: 'Payment failed or cancelled at UPI gateway.'
+        });
       }
     }
 
-    // 2. Check if Admin rejected this record
+    // 3. Check if already cancelled / rejected in DB (via Webhook, Timeout, or Admin)
     const [rejectedAuto] = await db.query(
       `SELECT * FROM user_auto_deposite 
        WHERE (txt_request = ? OR txt_id = ? OR transaction_note LIKE ?) 
          AND (username = ? OR RIGHT(username, 10) = ?) 
          AND status = '-1' 
        LIMIT 1`,
-      [order_id || refId, refId, `%${refId}%`, phone, cleanPhone || phone]
+      [targetOrderId, refId, `%${refId}%`, phone, cleanPhone || phone]
     );
 
     const [rejectedFund] = await db.query(
@@ -1624,19 +2016,37 @@ exports.verifyPayment = async (req, res) => {
          AND (username = ? OR RIGHT(username, 10) = ?) 
          AND status = '-1' 
        LIMIT 1`,
-      [`%${order_id || refId}%`, phone, cleanPhone || phone]
+      [`%${targetOrderId}%`, phone, cleanPhone || phone]
     );
 
-    if (rejectedAuto.length > 0 || rejectedFund.length > 0) {
+    if (rejectedAuto.length > 0 || rejectedFund.length > 0 || gwOrder?.status === 'CANCELLED') {
+      const noteText = rejectedAuto[0]?.transaction_note || '';
+      const isAutoTimeout = /timeout|cancel|expire|fail/i.test(noteText) || gwOrder?.status === 'CANCELLED';
       return res.json({
         success: '0',
         rejected: true,
+        cancelled: isAutoTimeout,
         status: '-1',
-        msg: 'Your deposit request was declined by Admin. Please contact support or submit your 12-digit UTR.'
+        msg: isAutoTimeout
+          ? 'Order cancelled automatically because payment was not completed in time.'
+          : 'Your deposit request was declined by Admin. Please contact support or submit your 12-digit UTR.'
       });
     }
 
-    // 3. If user provided a 12-digit UTR during verify, save it to the pending record so admin sees it
+    // 4. Auto-cancel immediately if this active gateway order has crossed its timeout deadline without payment
+    if (gwOrder && gwOrder.status === 'PENDING' && gwOrder.remaining_seconds !== null && gwOrder.remaining_seconds <= 0) {
+      await cancelOrderDirect(targetOrderId, 'Auto Cancelled (Payment Timeout - Not Paid)');
+      return res.json({
+        success: '0',
+        rejected: true,
+        cancelled: true,
+        expired: true,
+        status: '-1',
+        msg: 'Payment time expired! Order was automatically cancelled because payment was not received.'
+      });
+    }
+
+    // 5. If user provided a 12-digit UTR during manual verify, save it to the pending record
     if (utr_no && /^\d{12}$/.test(String(utr_no).trim())) {
       const cleanUtr = String(utr_no).trim();
       try {
@@ -1644,25 +2054,25 @@ exports.verifyPayment = async (req, res) => {
           `UPDATE user_auto_deposite 
            SET txt_id = ?, transaction_note = CONCAT(transaction_note, ' | UTR: ', ?) 
            WHERE txt_request = ? AND (username = ? OR RIGHT(username, 10) = ?) AND status = '0'`,
-          [cleanUtr, cleanUtr, order_id || refId, phone, cleanPhone || phone]
+          [cleanUtr, cleanUtr, targetOrderId, phone, cleanPhone || phone]
         );
         await db.query(
           `UPDATE user_fund_request 
            SET trans_details = CONCAT(trans_details, ' | UTR: ', ?) 
            WHERE trans_details LIKE ? AND (username = ? OR RIGHT(username, 10) = ?) AND status = '0'`,
-          [cleanUtr, `%${order_id || refId}%`, phone, cleanPhone || phone]
+          [cleanUtr, `%${targetOrderId}%`, phone, cleanPhone || phone]
         );
       } catch (e) {}
     }
 
-    // 4. Check if a real pending deposit request was submitted with UTR
+    // 6. Check if order is still Pending confirmation
     const [pendingAuto] = await db.query(
       `SELECT * FROM user_auto_deposite 
        WHERE (txt_request = ? OR txt_id = ? OR transaction_note LIKE ?) 
          AND (username = ? OR RIGHT(username, 10) = ?) 
          AND status = '0' 
        LIMIT 1`,
-      [order_id || refId, refId, `%${refId}%`, phone, cleanPhone || phone]
+      [targetOrderId, refId, `%${refId}%`, phone, cleanPhone || phone]
     );
 
     const [pendingFund] = await db.query(
@@ -1671,20 +2081,21 @@ exports.verifyPayment = async (req, res) => {
          AND (username = ? OR RIGHT(username, 10) = ?) 
          AND status = '0' 
        LIMIT 1`,
-      [`%${order_id || refId}%`, phone, cleanPhone || phone]
+      [`%${targetOrderId}%`, phone, cleanPhone || phone]
     );
 
-    if (pendingAuto.length > 0 || pendingFund.length > 0) {
+    if (pendingAuto.length > 0 || pendingFund.length > 0 || (gwOrder && gwOrder.status === 'PENDING')) {
       return res.json({
         success: '1',
         approved: false,
         pending: true,
         status: '0',
-        msg: 'Payment is pending confirmation from UPI gateway. Please complete payment in your UPI app.'
+        remaining_seconds: gwOrder?.remaining_seconds ?? undefined,
+        msg: 'Payment is pending confirmation from UPI gateway webhook. Please complete payment in your UPI app.'
       });
     }
 
-    // 5. Not submitted yet
+    // 7. Not submitted yet
     return res.json({
       success: '0',
       pending: false,
@@ -1693,6 +2104,76 @@ exports.verifyPayment = async (req, res) => {
     });
   } catch (err) {
     console.error('verifyPayment error:', err);
+    return res.status(500).json({ success: '0', error: err.message });
+  }
+};
+
+// User Protected: Cancel Unpaid Order (First checks gateway status so paid orders are never lost)
+exports.cancelOrder = async (req, res) => {
+  const phone = req.user.phone;
+  const { order_id } = req.body;
+  if (!order_id) {
+    return res.json({ success: '0', msg: 'Order ID is required' });
+  }
+
+  try {
+    await initUpiSchema();
+    const cleanPhone = String(phone || '').replace(/\D/g, '').slice(-10);
+
+    // 1. Check if already paid via webhook
+    const [paidAuto] = await db.query(
+      "SELECT * FROM user_auto_deposite WHERE txt_request = ? AND (username = ? OR RIGHT(username, 10) = ?) AND status = '1' LIMIT 1",
+      [order_id, phone, cleanPhone || phone]
+    );
+    if (paidAuto.length > 0) {
+      const [uRows] = await db.query("SELECT wallet FROM user_info WHERE phone = ? OR RIGHT(phone, 10) = ? LIMIT 1", [phone, cleanPhone || phone]);
+      return res.json({
+        success: '1',
+        approved: true,
+        status: '1',
+        msg: 'Payment was already completed and credited to your wallet!',
+        wallet: uRows.length > 0 ? parseFloat(uRows[0].wallet || '0') : undefined
+      });
+    }
+
+    // 2. Verify live with gateway before cancelling (in case user actually paid in UPI app)
+    const [gwRows] = await db.query(
+      "SELECT * FROM gateway_pending_orders WHERE order_id = ? AND (username = ? OR user_phone = ? OR RIGHT(user_phone, 10) = ?) LIMIT 1",
+      [order_id, phone, phone, cleanPhone || phone]
+    );
+    const gwOrder = gwRows && gwRows[0] ? gwRows[0] : null;
+    const gwStatus = await checkGatewayOrderStatusAPI(order_id, gwOrder?.gateway_code);
+
+    if (gwStatus.state === 'SUCCESS') {
+      const orderAmt = gwStatus.amount > 0 ? gwStatus.amount : parseFloat(gwOrder?.amount || 0);
+      const creditRes = await creditUserWalletDirect(
+        phone,
+        orderAmt,
+        order_id,
+        gwStatus.utr,
+        'Auto Payment Verified'
+      );
+      if (creditRes.credited) {
+        return res.json({
+          success: '1',
+          approved: true,
+          status: '1',
+          msg: `Payment of ₹${orderAmt} was detected and credited to your wallet!`,
+          wallet: creditRes.newWallet
+        });
+      }
+    }
+
+    // 3. Cancel order safely
+    await cancelOrderDirect(order_id, 'Cancelled by User');
+    return res.json({
+      success: '1',
+      cancelled: true,
+      status: '-1',
+      msg: 'Order cancelled.'
+    });
+  } catch (err) {
+    console.error('cancelOrder error:', err);
     return res.status(500).json({ success: '0', error: err.message });
   }
 };

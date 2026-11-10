@@ -128,59 +128,8 @@ if (fs.existsSync(landingDistPath)) {
   app.use('/img', express.static(landingDistPath));
   app.use('/assets', express.static(path.join(landingDistPath, 'assets')));
 }
+app.use('/img', express.static(path.join(__dirname, '..', 'landing', 'img')));
 app.use('/img', express.static(path.join(__dirname, '..', 'frontend', 'public', 'img')));
-
-
-
-
-try {
-  const candidateLogos = [
-    '/Users/anilrathore/.gemini/antigravity-ide/brain/f6fab270-6493-4b5c-abc2-b128311f7c21/.user_uploaded/media_1793522866752.jpg',
-    '/Users/anilrathore/.gemini/antigravity-ide/brain/f6fab270-6493-4b5c-abc2-b128311f7c21/.user_uploaded/media_1793517360538.jpg'
-  ];
-  const uploadedLogo = candidateLogos.find(p => fs.existsSync(p));
-  const landingImgDir = path.join(__dirname, '..', 'landing', 'img');
-  const logoSrc = path.join(landingImgDir, 'logo.png');
-  const favDest = path.join(landingImgDir, 'fav.png');
-  if (uploadedLogo && fs.existsSync(uploadedLogo)) {
-    try { fs.copyFileSync(uploadedLogo, logoSrc); } catch (e) {}
-  }
-  if (fs.existsSync(logoSrc)) {
-    fs.copyFileSync(logoSrc, favDest);
-    try { fs.copyFileSync(logoSrc, path.join(landingImgDir, 'tara-baba-logo.png')); } catch (e) {}
-  }
-  const feImgDir = path.join(__dirname, '..', 'frontend', 'public', 'img');
-  if (fs.existsSync(logoSrc) && fs.existsSync(feImgDir)) {
-    fs.copyFileSync(logoSrc, path.join(feImgDir, 'fav.png'));
-    fs.copyFileSync(logoSrc, path.join(feImgDir, 'logo.png'));
-    fs.copyFileSync(logoSrc, path.join(feImgDir, 'logo.jpg'));
-    try { fs.copyFileSync(logoSrc, path.join(feImgDir, 'tara-baba-logo.png')); } catch (e) {}
-    try { fs.copyFileSync(logoSrc, path.join(feImgDir, 'lucky-matka-logo.png')); } catch (e) {}
-  }
-  const feAssetsImg = path.join(__dirname, '..', 'frontend', 'public', 'assets', 'images');
-  if (fs.existsSync(logoSrc) && fs.existsSync(feAssetsImg)) {
-    try { fs.copyFileSync(logoSrc, path.join(feAssetsImg, 'logo1.png')); } catch (e) {}
-  }
-  const playStoreAssets = path.join(__dirname, '..', 'PlayStore', 'assets');
-  if (fs.existsSync(logoSrc) && fs.existsSync(playStoreAssets)) {
-    try { fs.copyFileSync(logoSrc, path.join(playStoreAssets, 'logo.png')); } catch (e) {}
-  }
-  // Android res mipmaps
-  const androidResDir = path.join(__dirname, '..', 'Application', 'app', 'src', 'main', 'res');
-  if (fs.existsSync(logoSrc) && fs.existsSync(androidResDir)) {
-    const mipmaps = ['mipmap-mdpi', 'mipmap-hdpi', 'mipmap-xhdpi', 'mipmap-xxhdpi', 'mipmap-xxxhdpi'];
-    mipmaps.forEach(m => {
-      const dir = path.join(androidResDir, m);
-      if (fs.existsSync(dir)) {
-        try {
-          fs.copyFileSync(logoSrc, path.join(dir, 'ic_launcher.webp'));
-          fs.copyFileSync(logoSrc, path.join(dir, 'ic_launcher_round.webp'));
-          fs.copyFileSync(logoSrc, path.join(dir, 'ic_launcher_foreground.webp'));
-        } catch (e) {}
-      }
-    });
-  }
-} catch (e) {}
 
 // Routes
 const apiRoutes = require('./routes/api');

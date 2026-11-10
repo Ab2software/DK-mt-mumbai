@@ -21,6 +21,8 @@ const AddFund = () => {
   const [loading, setLoading] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [cancellingOrder, setCancellingOrder] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState(null);
   const [submittingUtr, setSubmittingUtr] = useState(false);
   const [paymentSuccessData, setPaymentSuccessData] = useState(null);
   const [activeOrder, setActiveOrder] = useState(null);
@@ -396,8 +398,16 @@ const AddFund = () => {
           dateFormatted: `${dateStr}, ${timeStr}`,
           msg: res.data.msg || 'Deposit request submitted successfully! It is currently PENDING Admin approval.'
         });
-      } else if (res.data?.rejected) {
-        setError(res.data?.msg || 'Your deposit request was declined.');
+      } else if (res.data?.rejected || res.data?.cancelled || res.data?.expired) {
+        try {
+          sessionStorage.removeItem('pending_upi_order');
+        } catch (e) { }
+        setActiveOrder(null);
+        activeOrderRef.current = null;
+        setRemainingSeconds(null);
+        setError(res.data?.msg || 'Order cancelled because payment was not completed.');
+      } else if (res.data?.remaining_seconds !== undefined) {
+        setRemainingSeconds(Math.max(0, parseInt(res.data.remaining_seconds, 10) || 0));
       }
       // If still pending in Auto Gateway mode, we keep activeOrder alive so polling continues!
     } catch (err) {
@@ -410,7 +420,10 @@ const AddFund = () => {
 
   // Auto-polling for Webhook / Gateway Payment Status when activeOrder is active
   useEffect(() => {
-    if (!activeOrder) return;
+    if (!activeOrder) {
+      setRemainingSeconds(null);
+      return;
+    }
 
     // Check status immediately
     callVerifyPayment(activeOrder);
@@ -420,7 +433,15 @@ const AddFund = () => {
       callVerifyPayment(activeOrder);
     }, 3000);
 
-    return () => clearInterval(pollInterval);
+    // Countdown tick every 1 second
+    const timerInterval = setInterval(() => {
+      setRemainingSeconds(prev => (prev !== null && prev > 0 ? prev - 1 : prev));
+    }, 1000);
+
+    return () => {
+      clearInterval(pollInterval);
+      clearInterval(timerInterval);
+    };
   }, [activeOrder]);
 
   // RETURN DETECTION: When user switches back from UPI app to this browser/app
@@ -510,6 +531,7 @@ const AddFund = () => {
       const now = Date.now();
       launchTimeRef.current = now;
       activeOrderRef.current = orderData;
+      setRemainingSeconds(orderData.expires_in_seconds || 900);
       setActiveOrder(orderData);
       setShowManualSection(true);
 
@@ -528,6 +550,50 @@ const AddFund = () => {
       setError(serverMsg || 'Error launching UPI payment');
     } finally {
       setProcessingPayment(false);
+    }
+  };
+
+  // Explicit cancel button (checks gateway status on backend first so paid orders are never lost)
+  const handleCancelOrder = async () => {
+    if (!activeOrder) return;
+    setCancellingOrder(true);
+    try {
+      const res = await api.post('/payment/cancel-order', {
+        order_id: activeOrder.order_id
+      });
+      if (res.data?.success === '1' && res.data?.approved) {
+        try { sessionStorage.removeItem('pending_upi_order'); } catch (e) {}
+        setActiveOrder(null);
+        activeOrderRef.current = null;
+        setRemainingSeconds(null);
+        if (res.data.wallet !== undefined) {
+          setWalletInfo(prev => prev ? { ...prev, wallet: res.data.wallet } : prev);
+        } else {
+          loadData();
+        }
+        const now = new Date();
+        setPaymentSuccessData({
+          amount: activeOrder.amount,
+          orderId: activeOrder.order_id,
+          wallet: res.data.wallet,
+          isManual: false,
+          dateFormatted: `${now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}, ${now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`,
+          msg: res.data.msg || `₹${activeOrder.amount} verified and credited to your wallet!`
+        });
+        return;
+      }
+      try { sessionStorage.removeItem('pending_upi_order'); } catch (e) {}
+      setActiveOrder(null);
+      activeOrderRef.current = null;
+      setRemainingSeconds(null);
+      setError('Order cancelled. No amount was added.');
+    } catch (err) {
+      try { sessionStorage.removeItem('pending_upi_order'); } catch (e) {}
+      setActiveOrder(null);
+      activeOrderRef.current = null;
+      setRemainingSeconds(null);
+    } finally {
+      setCancellingOrder(false);
     }
   };
 
@@ -1519,6 +1585,28 @@ const AddFund = () => {
               )}
             </div>
 
+            {remainingSeconds !== null && (
+              <div style={{
+                marginBottom: '12px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 12px',
+                borderRadius: '12px',
+                backgroundColor: remainingSeconds < 120 ? '#fef2f2' : '#f1f5f9',
+                border: `1px solid ${remainingSeconds < 120 ? '#fecaca' : '#e2e8f0'}`,
+                color: remainingSeconds < 120 ? '#dc2626' : '#475569',
+                fontSize: '0.76rem',
+                fontWeight: '800',
+                fontFamily: 'monospace'
+              }}>
+                <Clock size={13} />
+                <span>
+                  Auto-cancels in {String(Math.floor(remainingSeconds / 60)).padStart(2, '0')}:{String(remainingSeconds % 60).padStart(2, '0')}
+                </span>
+              </div>
+            )}
+
             <h4 style={{ margin: '0 0 6px 0', fontSize: '1.08rem', fontWeight: '900', color: '#0f172a' }}>
               Waiting for Payment from UPI App...
             </h4>
@@ -1561,13 +1649,8 @@ const AddFund = () => {
 
               <button
                 type="button"
-                onClick={() => {
-                  try {
-                    sessionStorage.removeItem('pending_upi_order');
-                  } catch (e) { }
-                  setActiveOrder(null);
-                  activeOrderRef.current = null;
-                }}
+                disabled={cancellingOrder}
+                onClick={handleCancelOrder}
                 style={{
                   backgroundColor: 'transparent',
                   border: '1px solid #cbd5e1',
@@ -1576,10 +1659,10 @@ const AddFund = () => {
                   borderRadius: '10px',
                   fontWeight: '700',
                   fontSize: '0.84rem',
-                  cursor: 'pointer'
+                  cursor: cancellingOrder ? 'not-allowed' : 'pointer'
                 }}
               >
-                Cancel / Change Amount
+                {cancellingOrder ? 'Checking & Cancelling...' : 'Cancel Order / Change Amount'}
               </button>
             </div>
           </div>

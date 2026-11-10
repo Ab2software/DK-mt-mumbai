@@ -251,6 +251,7 @@ router.get('/payment/config', paymentController.getPublicPaymentConfig);
 router.post('/payment/create-order', verifyToken, paymentController.createOrder);
 router.post('/payment/submit-fund', verifyToken, paymentController.submitUpiFundRequest);
 router.post('/payment/verify-payment', verifyToken, paymentController.verifyPayment);
+router.post('/payment/cancel-order', verifyToken, paymentController.cancelOrder);
 router.post('/payment/webhook/:gateway', paymentController.handleWebhook);
 router.post('/payment/webhook', paymentController.handleWebhook);
 router.get('/payment/webhook/:gateway', (req, res) => res.json({ status: 'ok', msg: 'Webhook endpoint active' }));
