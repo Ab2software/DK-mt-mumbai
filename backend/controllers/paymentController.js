@@ -47,11 +47,14 @@ const DEFAULT_UPI_APPS = [
   }
 ];
 
-// Initialize UPI schema & Seed default apps
+// Initialize UPI schema & Seed default apps (singleflight concurrency guard)
 let isInitialized = false;
+let initSchemaPromise = null;
 async function initUpiSchema() {
   if (isInitialized) return;
-  try {
+  if (initSchemaPromise) return initSchemaPromise;
+  initSchemaPromise = (async () => {
+    try {
     // 1. Ensure admin_settings columns exist
     try {
       await db.query(`ALTER TABLE admin_settings ADD COLUMN deposit_mode VARCHAR(20) DEFAULT 'upi_intent'`);
@@ -212,22 +215,25 @@ async function initUpiSchema() {
     } catch (e) {}
 
     isInitialized = true;
-  } catch (err) {
-    console.error('Error initializing upi_gateways schema:', err.message);
-  }
+    } catch (err) {
+      console.error('Error initializing upi_gateways schema:', err.message);
+    } finally {
+      initSchemaPromise = null;
+    }
+  })();
+  return initSchemaPromise;
 }
 
 const AUTO_ORDER_TIMEOUT_MINUTES = 15; // Auto-cancel unpaid orders after 15 mins after verifying gateway status
 const processingOrdersLock = new Set();
+let hasPendingGatewayOrders = true;
+let sweeperCooldownUntil = 0;
 
 // Helper: Reliably fetch the admin_settings record regardless of id column value
 async function getAdminSettingsRow() {
   const [rows] = await db.query('SELECT * FROM admin_settings LIMIT 1');
   return (rows && rows.length > 0) ? rows[0] : {};
 }
-
-// Auto-run schema init on load
-initUpiSchema();
 
 // Admin: Get all UPI Apps & Current Deposit Settings
 exports.getAdminGateways = async (req, res) => {
@@ -518,6 +524,7 @@ exports.setDepositMode = async (req, res) => {
 
 // Helper: Create Pending Deposit Request in DB immediately on Auto Order Creation
 async function createPendingDepositRecord({ phone, name, orderId, amount, gatewayCode, gatewayName }) {
+  hasPendingGatewayOrders = true;
   const todayDateTime = getISTDateTimeStr();
   const currentDateStr = getISTDateStr();
   const displayGw = gatewayName || gatewayCode || 'Auto UPI';
@@ -841,10 +848,17 @@ async function creditUserWalletDirect(username, amount, orderId, utr, note) {
 // Background Expiry Sweeper: Checks gateway status before cancelling expired unpaid orders
 let isSweepingExpiredOrders = false;
 async function sweepExpiredOrders() {
-  if (isSweepingExpiredOrders) return;
+  if (isSweepingExpiredOrders || !hasPendingGatewayOrders || Date.now() < sweeperCooldownUntil) return;
   isSweepingExpiredOrders = true;
   try {
     await initUpiSchema();
+    const [pendingCheck] = await db.query("SELECT COUNT(*) as cnt FROM gateway_pending_orders WHERE status = 'PENDING'");
+    const totalPending = pendingCheck?.[0]?.cnt || 0;
+    if (totalPending === 0) {
+      hasPendingGatewayOrders = false;
+      return;
+    }
+
     const [expiredOrders] = await db.query(
       `SELECT * FROM gateway_pending_orders 
        WHERE status = 'PENDING' 
@@ -879,14 +893,17 @@ async function sweepExpiredOrders() {
       }
     }
   } catch (err) {
+    if (err && (err.code === 'ER_USER_LIMIT_REACHED' || err.errno === 1226)) {
+      sweeperCooldownUntil = Date.now() + 5 * 60 * 1000;
+    }
     console.warn('sweepExpiredOrders notice:', err.message);
   } finally {
     isSweepingExpiredOrders = false;
   }
 }
 
-// Run background sweeper every 2 minutes (unref so it doesn't keep non-server processes alive)
-const sweepTimer = setInterval(sweepExpiredOrders, 2 * 60 * 1000);
+// Run background sweeper every 3 minutes (unref so it doesn't keep non-server processes alive)
+const sweepTimer = setInterval(sweepExpiredOrders, 3 * 60 * 1000);
 if (typeof sweepTimer.unref === 'function') sweepTimer.unref();
 exports.sweepExpiredOrders = sweepExpiredOrders;
 

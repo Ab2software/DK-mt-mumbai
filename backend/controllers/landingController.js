@@ -127,9 +127,17 @@ exports.getLandingInfo = async (req, res) => {
   }
 };
 
+let cachedRatesPayload = null;
+let cachedRatesAt = 0;
+let cachedMarketsPayload = null;
+let cachedMarketsAt = 0;
+
 // Public Game Rates
 exports.getLandingRates = async (req, res) => {
   try {
+    if (cachedRatesPayload && Date.now() - cachedRatesAt < 30000) {
+      return res.json(cachedRatesPayload);
+    }
     const [r] = await db.query('SELECT * FROM game_rates ORDER BY id ASC');
     const formatted = r.map((item, idx) => {
       const minVal = Number(item.min_value) || 10;
@@ -145,7 +153,9 @@ exports.getLandingRates = async (req, res) => {
         multiplier: `${mult % 1 === 0 ? mult : mult.toFixed(1)}x`
       };
     });
-    return res.json({ success: '1', data: formatted });
+    cachedRatesPayload = { success: '1', data: formatted };
+    cachedRatesAt = Date.now();
+    return res.json(cachedRatesPayload);
   } catch (err) {
     return res.status(500).json({ success: '0', error: err.message });
   }
@@ -154,6 +164,9 @@ exports.getLandingRates = async (req, res) => {
 // 2. Get All Markets with Today's Live Declared Results for Landing Page
 exports.getLandingMarkets = async (req, res) => {
   try {
+    if (cachedMarketsPayload && Date.now() - cachedMarketsAt < 10000) {
+      return res.json(cachedMarketsPayload);
+    }
     const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const nowIST = getISTDate();
     const todayDayName = daysOfWeek[nowIST.getDay()];
@@ -304,7 +317,9 @@ exports.getLandingMarkets = async (req, res) => {
 
     marketList.sort(compareMarketTimes);
 
-    return res.json({ success: '1', data: marketList, ist_date: todayDateStr });
+    cachedMarketsPayload = { success: '1', data: marketList, ist_date: todayDateStr };
+    cachedMarketsAt = Date.now();
+    return res.json(cachedMarketsPayload);
   } catch (err) {
     console.error('Error fetching landing markets:', err);
     return res.status(500).json({ success: '0', error: err.message });

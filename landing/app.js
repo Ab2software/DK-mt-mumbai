@@ -94,6 +94,15 @@ async function fetchFromApi(endpoint) {
 }
 
 const APK_STORE_FILE = 'apk/Bharat-Matka.apk';
+const FALLBACK_BACKEND_APK = 'https://backend-mt-dk.onrender.com/api/download-apk';
+
+const APK_CANDIDATES = [
+  'apk/Bharat-Matka.apk',
+  'public/apk/Bharat-Matka.apk',
+  FALLBACK_BACKEND_APK
+];
+
+let verifiedApkUrl = APK_STORE_FILE;
 
 let appConfig = {
   appName: 'Bharat Matka',
@@ -109,10 +118,54 @@ let allRates = [];
 let currentFilter = 'all';
 let searchQuery = '';
 
+function getFrontendAppOrigin() {
+  if (typeof window === 'undefined') return 'https://bharat-matka.onrender.com';
+  const host = window.location.hostname || '';
+  if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:5173';
+  if (host.includes('bharat-matka-website')) return 'https://bharat-matka.onrender.com';
+  return window.location.origin;
+}
+
+async function resolveWorkingApkUrl() {
+  for (const candidate of APK_CANDIDATES) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const res = await fetch(candidate, { method: 'HEAD', signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (!res.ok) continue;
+      const contentType = (res.headers.get('content-type') || '').toLowerCase();
+      const contentLength = parseInt(res.headers.get('content-length') || '0', 10);
+      // Skip SPA HTML fallback rewrites or tiny error pages
+      if (contentType.includes('text/html')) continue;
+      if (contentLength > 0 && contentLength < 100000) continue;
+      verifiedApkUrl = candidate;
+      appConfig.appLink = candidate;
+      applyDownloadLinksToDOM();
+      return candidate;
+    } catch (e) {
+      // Try next candidate
+    }
+  }
+  verifiedApkUrl = FALLBACK_BACKEND_APK;
+  appConfig.appLink = FALLBACK_BACKEND_APK;
+  applyDownloadLinksToDOM();
+  return FALLBACK_BACKEND_APK;
+}
+
+function applyDownloadLinksToDOM() {
+  const targetApk = verifiedApkUrl || APK_STORE_FILE;
+  document.querySelectorAll('.apk-download-btn').forEach(el => {
+    el.setAttribute('href', targetApk);
+    el.setAttribute('download', 'Bharat-Matka.apk');
+  });
+}
+
 function triggerApkDownload(e) {
   if (e) e.preventDefault();
+  const targetApk = verifiedApkUrl || APK_STORE_FILE;
   const a = document.createElement('a');
-  a.href = appConfig.appLink || APK_STORE_FILE;
+  a.href = targetApk;
   a.setAttribute('download', 'Bharat-Matka.apk');
   document.body.appendChild(a);
   a.click();
@@ -126,8 +179,10 @@ window.triggerApkDownload = triggerApkDownload;
 document.addEventListener('DOMContentLoaded', () => {
   initEventListeners();
   updateDomainBanner();
+  applyDownloadLinksToDOM();
+  resolveWorkingApkUrl();
   loadAllDynamicData();
-  setInterval(loadLiveMarkets, 15000);
+  setInterval(loadLiveMarkets, 30000);
 });
 
 function updateDomainBanner() {
@@ -162,7 +217,6 @@ async function loadAppInfo() {
       appConfig.appName = d.app_name || 'Bharat Matka';
       if (d.mobile) appConfig.mobile = d.mobile;
       if (d.wp_mobile) appConfig.wpMobile = d.wp_mobile;
-      if (d.app_link && d.app_link !== '#') appConfig.appLink = d.app_link;
       if (d.privacy_policy_url) appConfig.privacyPolicyUrl = d.privacy_policy_url;
       if (d.data_deletion_url) appConfig.dataDeletionUrl = d.data_deletion_url;
 
@@ -178,25 +232,31 @@ async function loadAppInfo() {
 }
 
 function applyBrandingDOM() {
+  const appOrigin = getFrontendAppOrigin();
+
   document.querySelectorAll('.dyn-app-name').forEach(el => {
     el.textContent = appConfig.appName;
   });
 
+  const privacyUrl = (appConfig.privacyPolicyUrl || '/privacy-policy').startsWith('http')
+    ? appConfig.privacyPolicyUrl
+    : `${appOrigin}${appConfig.privacyPolicyUrl.startsWith('/') ? '' : '/'}${appConfig.privacyPolicyUrl || 'privacy-policy'}`;
+
+  const deletionUrl = (appConfig.dataDeletionUrl || '/data-deletion').startsWith('http')
+    ? appConfig.dataDeletionUrl
+    : `${appOrigin}${appConfig.dataDeletionUrl.startsWith('/') ? '' : '/'}${appConfig.dataDeletionUrl || 'data-deletion'}`;
+
   document.querySelectorAll('.dyn-privacy-link').forEach(el => {
-    el.setAttribute('href', appConfig.privacyPolicyUrl || '/privacy-policy');
+    el.setAttribute('href', privacyUrl);
   });
   document.querySelectorAll('.dyn-deletion-link').forEach(el => {
-    el.setAttribute('href', appConfig.dataDeletionUrl || '/data-deletion');
+    el.setAttribute('href', deletionUrl);
   });
 
-  const targetApk = appConfig.appLink || APK_STORE_FILE;
-  document.querySelectorAll('.apk-download-btn').forEach(el => {
-    el.setAttribute('href', targetApk);
-    el.setAttribute('download', 'Bharat-Matka.apk');
-  });
+  applyDownloadLinksToDOM();
 
   document.querySelectorAll('.dyn-chat-link').forEach(el => {
-    el.setAttribute('href', '/support');
+    el.setAttribute('href', `${appOrigin}/support`);
   });
 }
 
@@ -310,7 +370,7 @@ function renderLiveMarketsDOM() {
     return;
   }
 
-  const apkUrl = appConfig.appLink || APK_STORE_FILE;
+  const apkUrl = verifiedApkUrl || APK_STORE_FILE;
 
   container.innerHTML = filtered.map(m => {
     const resultStr = m.result_display || '***-**-***';
@@ -508,7 +568,7 @@ function initEventListeners() {
   document.addEventListener('click', e => {
     const btn = e.target.closest('.apk-download-btn');
     if (btn) {
-      btn.setAttribute('href', appConfig.appLink || APK_STORE_FILE);
+      btn.setAttribute('href', verifiedApkUrl || APK_STORE_FILE);
       btn.setAttribute('download', 'Bharat-Matka.apk');
     }
   });
