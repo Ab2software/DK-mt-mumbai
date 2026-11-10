@@ -284,27 +284,30 @@ exports.login = async (req, res) => {
 
 // Admin Login
 exports.adminLogin = async (req, res) => {
-  const { username, password } = req.body; // username can be email or phone
-
-  if (!username || !password) {
-    return res.json({ success: '0', msg: 'Username/Email and Password are required!' });
-  }
-
   try {
-    const [admins] = await db.query(
-      'SELECT * FROM admin WHERE (email = ? OR mobile = ?) AND password = ?',
-      [username, username, password]
-    );
+    const { username, password } = req.body || {}; // username can be email or phone
 
-    if (admins.length === 0) {
+    if (!username || !password) {
+      return res.json({ success: '0', msg: 'Username/Email and Password are required!' });
+    }
+
+    const [admins] = await db.query('SELECT * FROM admin');
+
+    const cleanUser = String(username).trim().toLowerCase();
+    const admin = (admins || []).find((a) => {
+      const identifiers = [a.email, a.mobile, a.phone, a.username, a.name]
+        .filter((val) => val !== null && val !== undefined && String(val).trim() !== '')
+        .map((val) => String(val).trim().toLowerCase());
+      return identifiers.includes(cleanUser) && String(a.password) === String(password);
+    });
+
+    if (!admin) {
       return res.json({ success: '0', msg: 'Invalid Email/Mobile or Password!' });
     }
 
-    const admin = admins[0];
-
     // Create JWT Token for admin (Expires in 1 hour)
     const jwtToken = jwt.sign(
-      { id: admin.id, name: admin.name, email: admin.email, role: 'admin' },
+      { id: admin.id, name: admin.name || 'Admin', email: admin.email || '', role: 'admin' },
       process.env.JWT_SECRET || 'lucky_matka_super_secret_jwt_key_99',
       { expiresIn: '1h' }
     );
@@ -314,14 +317,19 @@ exports.adminLogin = async (req, res) => {
       msg: 'Logged in successfully',
       token: jwtToken,
       admin: {
-        name: admin.name,
-        email: admin.email,
-        mobile: admin.mobile
+        name: admin.name || 'Admin',
+        email: admin.email || '',
+        mobile: admin.mobile || admin.phone || ''
       }
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ success: '0', msg: 'Internal server error' });
+    console.error('adminLogin error:', err);
+    return res.status(500).json({
+      success: '0',
+      msg: err.message || 'Internal server error',
+      error: err.message,
+      code: err.code
+    });
   }
 };
 

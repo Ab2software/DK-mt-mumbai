@@ -885,8 +885,9 @@ async function sweepExpiredOrders() {
   }
 }
 
-// Run background sweeper every 60 seconds
-setInterval(sweepExpiredOrders, 60 * 1000);
+// Run background sweeper every 2 minutes (unref so it doesn't keep non-server processes alive)
+const sweepTimer = setInterval(sweepExpiredOrders, 2 * 60 * 1000);
+if (typeof sweepTimer.unref === 'function') sweepTimer.unref();
 exports.sweepExpiredOrders = sweepExpiredOrders;
 
 // Admin: Set Active Auto Payment Gateway (NiceUpi, IMB, ZenUpi)

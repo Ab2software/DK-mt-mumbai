@@ -47,7 +47,12 @@ const AdminLogin = ({ setAdminAuth }) => {
       }
     } catch (err) {
       console.error(err);
-      setError('Invalid username, email or password');
+      const serverMsg = err.response?.data?.msg || err.response?.data?.error;
+      if (err.response && err.response.status >= 500) {
+        setError(serverMsg ? `Server Error: ${serverMsg}` : 'Server is temporarily unavailable. Please wait a few seconds and try again.');
+      } else {
+        setError(serverMsg || 'Invalid username, email or password');
+      }
     } finally {
       setLoading(false);
     }
