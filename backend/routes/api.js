@@ -11,6 +11,7 @@ const { verifyToken } = require('../middlewares/auth');
 router.get('/landing/info', landingController.getLandingInfo);
 router.get('/landing/rates', landingController.getLandingRates);
 router.get('/landing/markets', landingController.getLandingMarkets);
+router.get('/landing/sliders', landingController.getLandingSliders);
 router.get('/landing/chart/:chartType/:gameName', landingController.getChartData);
 router.get('/landing/chart/:chartType', landingController.getChartData);
 
@@ -18,6 +19,7 @@ router.get('/landing/chart/:chartType', landingController.getChartData);
 router.get('/markets', landingController.getLandingMarkets);
 router.get('/rates', landingController.getLandingRates);
 router.get('/info', landingController.getLandingInfo);
+router.get('/website-sliders', landingController.getLandingSliders);
 
 
 // Health Check Endpoint (Checks Server & DB Health)

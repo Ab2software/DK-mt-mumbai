@@ -5,7 +5,7 @@ import {
   CheckCircle2, XCircle, Clock, Search, Trophy, Wallet, 
   ArrowUpRight, ShieldCheck, Sparkles, UserCheck, UserX, Eye,
   Home, Share2, Target, FileText, Settings, ChevronDown, ChevronRight, ChevronLeft, Menu, Maximize2, LogOut, Zap,
-  CreditCard, MessageSquare, Bell, MessageCircle
+  CreditCard, MessageSquare, Bell, MessageCircle, Pencil, Trash2, Plus, Image as ImageIcon
 } from 'lucide-react';
 import PaymentGatewayManager from './PaymentGatewayManager';
 import AdminSupportChat from './AdminSupportChat';
@@ -287,7 +287,7 @@ const AdminDashboard = ({ setAdminAuth }) => {
       setOpenMenus(prev => ({ ...prev, games: true }));
     } else if (activeTab.startsWith('num_')) {
       setOpenMenus(prev => ({ ...prev, numbers: true }));
-    } else if (['settings', 'contact_settings', 'sliders', 'how_to_play'].includes(activeTab)) {
+    } else if (['settings', 'contact_settings', 'sliders', 'website_slider', 'how_to_play', 'auto_active'].includes(activeTab)) {
       setOpenMenus(prev => ({ ...prev, settings: true }));
     }
   }, [activeTab]);
@@ -431,6 +431,21 @@ const AdminDashboard = ({ setAdminAuth }) => {
   const [showAddSliderModal, setShowAddSliderModal] = useState(false);
   const [newSliderForm, setNewSliderForm] = useState({ slider_image: '', display_order: '1' });
   const [addSliderLoading, setAddSliderLoading] = useState(false);
+
+  const [websiteSliders, setWebsiteSliders] = useState([]);
+  const [websiteSlidersLoading, setWebsiteSlidersLoading] = useState(false);
+  const [showWebsiteSliderModal, setShowWebsiteSliderModal] = useState(false);
+  const [editingWebsiteSliderId, setEditingWebsiteSliderId] = useState(null);
+  const [websiteSliderForm, setWebsiteSliderForm] = useState({
+    image_url: '',
+    title: '',
+    subtitle: '',
+    redirect_url: '',
+    display_order: '1',
+    status: '1'
+  });
+  const [websiteSliderSaving, setWebsiteSliderSaving] = useState(false);
+  const [websiteSliderFeedback, setWebsiteSliderFeedback] = useState({ type: '', text: '' });
   const [pendingDeposits, setPendingDeposits] = useState([]);
   const [pendingWithdrawals, setPendingWithdrawals] = useState([]);
 
@@ -520,6 +535,61 @@ const AdminDashboard = ({ setAdminAuth }) => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const resolveSliderImageSrc = (rawVal) => {
+    const val = String(rawVal || '').trim();
+    if (!val) return '';
+    if (val.startsWith('http://') || val.startsWith('https://') || val.startsWith('data:') || val.startsWith('/')) {
+      return val;
+    }
+    if (val.startsWith('img/')) {
+      return `/${val}`;
+    }
+    return `/uploads/${val}`;
+  };
+
+  const handleWebsiteSliderFilePick = (e, callback) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      alert('File size exceeds 8MB limit. Please select a smaller image.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      const rawDataUrl = uploadEvent.target?.result;
+      if (!rawDataUrl || typeof rawDataUrl !== 'string') return;
+      const isSkipCompress = file.type === 'image/gif' || file.type === 'image/svg+xml' || file.size <= 220 * 1024;
+      if (isSkipCompress) {
+        callback(rawDataUrl);
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const maxWidth = 1600;
+          const maxHeight = 900;
+          let { width, height } = img;
+          const scale = Math.min(1, maxWidth / width, maxHeight / height);
+          width = Math.max(1, Math.round(width * scale));
+          height = Math.max(1, Math.round(height * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const webpUrl = canvas.toDataURL('image/webp', 0.86);
+          const compressed = webpUrl.startsWith('data:image/webp') ? webpUrl : canvas.toDataURL('image/jpeg', 0.86);
+          callback(compressed.length < rawDataUrl.length ? compressed : rawDataUrl);
+        } catch (err) {
+          callback(rawDataUrl);
+        }
+      };
+      img.onerror = () => callback(rawDataUrl);
+      img.src = rawDataUrl;
+    };
+    reader.readAsDataURL(file);
   };
 
   // ==========================================
@@ -1432,6 +1502,113 @@ const AdminDashboard = ({ setAdminAuth }) => {
     }
   };
 
+  const resetWebsiteSliderForm = () => {
+    setEditingWebsiteSliderId(null);
+    setWebsiteSliderForm({
+      image_url: '',
+      title: '',
+      subtitle: '',
+      redirect_url: '',
+      display_order: String((websiteSliders?.length || 0) + 1),
+      status: '1'
+    });
+  };
+
+  const fetchWebsiteSliders = async () => {
+    setWebsiteSlidersLoading(true);
+    try {
+      const res = await api.get('/admin/website-sliders', getHeaders());
+      if (res.data.success === '1') {
+        setWebsiteSliders(res.data.data || []);
+      }
+    } catch (err) {
+      console.error(err);
+      setWebsiteSliderFeedback({ type: 'error', text: err.response?.data?.msg || 'Failed to load website sliders' });
+    } finally {
+      setWebsiteSlidersLoading(false);
+    }
+  };
+
+  const openAddWebsiteSliderModal = () => {
+    setWebsiteSliderFeedback({ type: '', text: '' });
+    resetWebsiteSliderForm();
+    setShowWebsiteSliderModal(true);
+  };
+
+  const openEditWebsiteSliderModal = (slider) => {
+    setWebsiteSliderFeedback({ type: '', text: '' });
+    setEditingWebsiteSliderId(slider.id);
+    setWebsiteSliderForm({
+      image_url: slider.image_url || '',
+      title: slider.title || '',
+      subtitle: slider.subtitle || '',
+      redirect_url: slider.redirect_url || '',
+      display_order: String(slider.display_order || '1'),
+      status: String(slider.status ?? '1') === '0' ? '0' : '1'
+    });
+    setShowWebsiteSliderModal(true);
+  };
+
+  const handleWebsiteSliderSubmit = async (e) => {
+    e.preventDefault();
+    if (!websiteSliderForm.image_url || !websiteSliderForm.image_url.trim()) {
+      alert('Please upload a slider image or enter an image URL.');
+      return;
+    }
+    setWebsiteSliderSaving(true);
+    setWebsiteSliderFeedback({ type: '', text: '' });
+    try {
+      const endpoint = editingWebsiteSliderId ? '/admin/website-sliders/update' : '/admin/website-sliders/add';
+      const payload = editingWebsiteSliderId
+        ? { id: editingWebsiteSliderId, ...websiteSliderForm }
+        : websiteSliderForm;
+      const res = await api.post(endpoint, payload, getHeaders());
+      if (res.data.success === '1') {
+        setShowWebsiteSliderModal(false);
+        resetWebsiteSliderForm();
+        setWebsiteSliderFeedback({
+          type: 'success',
+          text: editingWebsiteSliderId ? 'Website slider updated successfully!' : 'Website slider added successfully!'
+        });
+        fetchWebsiteSliders();
+      } else {
+        alert(res.data.msg || 'Failed to save website slider');
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.msg || err.response?.data?.error || 'Error saving website slider');
+    } finally {
+      setWebsiteSliderSaving(false);
+    }
+  };
+
+  const handleToggleWebsiteSliderStatus = async (id) => {
+    try {
+      const res = await api.post('/admin/website-sliders/status', { id }, getHeaders());
+      if (res.data.success === '1') {
+        fetchWebsiteSliders();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteWebsiteSlider = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this website slider?')) return;
+    try {
+      const res = await api.post('/admin/website-sliders/delete', { id }, getHeaders());
+      if (res.data.success === '1') {
+        setWebsiteSliderFeedback({ type: 'success', text: 'Website slider deleted successfully!' });
+        fetchWebsiteSliders();
+      } else {
+        alert(res.data.msg || 'Failed to delete website slider');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error deleting website slider');
+    }
+  };
+
   const handleSaveHowToPlay = async (e) => {
     e.preventDefault();
     setHowToPlayLoading(true);
@@ -1884,6 +2061,8 @@ const AdminDashboard = ({ setAdminAuth }) => {
       fetchSettings();
     } else if (activeTab === 'sliders') {
       fetchSliders();
+    } else if (activeTab === 'website_slider') {
+      fetchWebsiteSliders();
     } else if (activeTab === 'deposits') {
       fetchFundRequests();
     } else if (activeTab === 'withdrawals') {
@@ -2774,9 +2953,9 @@ const AdminDashboard = ({ setAdminAuth }) => {
 
           {/* Settings (Collapsible) */}
           <div>
-            <div onClick={() => toggleMenu('settings')} style={sidebarItemStyle(['settings', 'contact_settings', 'sliders', 'how_to_play', 'auto_active'].includes(activeTab))}>
+            <div onClick={() => toggleMenu('settings')} style={sidebarItemStyle(['settings', 'contact_settings', 'sliders', 'website_slider', 'how_to_play', 'auto_active'].includes(activeTab))}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-                <Settings size={18} style={{ flexShrink: 0, color: ['settings', 'contact_settings', 'sliders', 'how_to_play', 'auto_active'].includes(activeTab) ? '#f1673e' : '#a6b0cf' }} />
+                <Settings size={18} style={{ flexShrink: 0, color: ['settings', 'contact_settings', 'sliders', 'website_slider', 'how_to_play', 'auto_active'].includes(activeTab) ? '#f1673e' : '#a6b0cf' }} />
                 {(!isDesktopSidebarCollapsed || isMobile) && <span style={{ whiteSpace: 'nowrap' }}>Settings</span>}
               </div>
               {(!isDesktopSidebarCollapsed || isMobile) && (
@@ -2801,6 +2980,9 @@ const AdminDashboard = ({ setAdminAuth }) => {
                 </div>
                 <div onClick={() => handleTabClick('sliders')} style={submenuItemStyle(activeTab === 'sliders')}>
                   Slider Images
+                </div>
+                <div onClick={() => handleTabClick('website_slider')} style={submenuItemStyle(activeTab === 'website_slider')}>
+                  Website Slider
                 </div>
                 <div onClick={() => handleTabClick('how_to_play')} style={submenuItemStyle(activeTab === 'how_to_play')}>
                   How To Play
@@ -3729,7 +3911,7 @@ const AdminDashboard = ({ setAdminAuth }) => {
 
                     {/* Stat Card 2: Total Games */}
                     <div
-                      onClick={() => handleTabClick('rates')}
+                      onClick={() => handleTabClick('game_names')}
                       style={{
                         background: 'linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)',
                         padding: '16px 18px',
@@ -7746,6 +7928,164 @@ const AdminDashboard = ({ setAdminAuth }) => {
             </div>
           )}
 
+          {/* VIEW: SETTINGS - WEBSITE SLIDER (LANDING PAGE SLIDER MANAGEMENT) */}
+          {activeTab === 'website_slider' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
+                <h4 style={{ margin: 0, fontSize: '1.15rem', color: '#495057', textTransform: 'uppercase', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ImageIcon size={20} style={{ color: '#556ee6' }} />
+                  Website Slider Management
+                </h4>
+                <div style={{ fontSize: '0.8rem', color: '#74788d' }}>
+                  Settings / <span style={{ color: '#556ee6' }}>Website Slider</span>
+                </div>
+              </div>
+
+              {websiteSliderFeedback.text && (
+                <div style={{
+                  backgroundColor: websiteSliderFeedback.type === 'error' ? '#fde8e8' : '#def7ec',
+                  color: websiteSliderFeedback.type === 'error' ? '#9b1c1c' : '#03543f',
+                  border: `1px solid ${websiteSliderFeedback.type === 'error' ? '#f8b4b4' : '#bcf0da'}`,
+                  padding: '10px 16px',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                  marginBottom: '18px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <span>{websiteSliderFeedback.type === 'error' ? '⚠ ' : '✓ '}{websiteSliderFeedback.text}</span>
+                  <span style={{ cursor: 'pointer', fontWeight: '700' }} onClick={() => setWebsiteSliderFeedback({ type: '', text: '' })}>✕</span>
+                </div>
+              )}
+
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '24px', border: '1px solid #eff2f7', boxShadow: '0 0.75rem 1.5rem rgba(18,38,63,.03)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '18px' }}>
+                  <div>
+                    <h5 style={{ margin: 0, fontSize: '1.05rem', color: '#495057', fontWeight: '600' }}>Landing Page Image Sliders</h5>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#74788d' }}>
+                      Add, edit, reorder, enable/disable, or delete image banners shown on the Bharat Matka landing page ({websiteSliders.filter(s => String(s.status) === '1').length} Active).
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <button
+                      type="button"
+                      onClick={fetchWebsiteSliders}
+                      style={{ backgroundColor: '#f8f9fa', color: '#495057', border: '1px solid #ced4da', borderRadius: '4px', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <RefreshCw size={14} /> Refresh
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openAddWebsiteSliderModal}
+                      style={{ backgroundColor: '#556ee6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <Plus size={16} /> Add Website Slider
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #eff2f7' }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'left', color: '#495057' }}>#</th>
+                        <th style={{ padding: '10px 12px', textAlign: 'left', color: '#495057' }}>Banner Preview</th>
+                        <th style={{ padding: '10px 12px', textAlign: 'left', color: '#495057' }}>Title / Subtitle / Link</th>
+                        <th style={{ padding: '10px 12px', textAlign: 'center', color: '#495057' }}>Order</th>
+                        <th style={{ padding: '10px 12px', textAlign: 'center', color: '#495057' }}>Status</th>
+                        <th style={{ padding: '10px 12px', textAlign: 'center', color: '#495057' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {websiteSliders.map((ws, idx) => (
+                        <tr key={ws.id} style={{ borderBottom: '1px solid #eff2f7' }}>
+                          <td style={{ padding: '10px 12px', color: '#495057', fontWeight: '600' }}>{idx + 1}</td>
+                          <td style={{ padding: '10px 12px' }}>
+                            <img
+                              src={resolveSliderImageSrc(ws.image_url)}
+                              alt={ws.title || 'website slider'}
+                              style={{ width: '170px', height: '72px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #eff2f7', backgroundColor: '#f8f9fa' }}
+                              onError={(e) => {
+                                e.target.src = 'https://placehold.co/170x72?text=Website+Slider';
+                              }}
+                            />
+                          </td>
+                          <td style={{ padding: '10px 12px', maxWidth: '280px' }}>
+                            <div style={{ fontWeight: '600', color: '#343a40', marginBottom: '2px' }}>
+                              {ws.title || <span style={{ color: '#9ca3af', fontWeight: '400', fontStyle: 'italic' }}>No Title Banner</span>}
+                            </div>
+                            {ws.subtitle && (
+                              <div style={{ fontSize: '0.78rem', color: '#74788d', marginBottom: '2px' }}>{ws.subtitle}</div>
+                            )}
+                            {ws.redirect_url && (
+                              <div style={{ fontSize: '0.74rem', color: '#556ee6', wordBreak: 'break-all' }}>
+                                Link: {ws.redirect_url}
+                              </div>
+                            )}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: '700', color: '#495057' }}>
+                            {ws.display_order || 1}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleWebsiteSliderStatus(ws.id)}
+                              style={{
+                                border: 'none',
+                                cursor: 'pointer',
+                                borderRadius: '4px',
+                                padding: '4px 12px',
+                                fontSize: '0.75rem',
+                                fontWeight: 'bold',
+                                backgroundColor: String(ws.status) === '1' ? '#def7ec' : '#fde8e8',
+                                color: String(ws.status) === '1' ? '#03543f' : '#9b1c1c'
+                              }}
+                            >
+                              {String(ws.status) === '1' ? 'Active' : 'Inactive'}
+                            </button>
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                              <button
+                                type="button"
+                                onClick={() => openEditWebsiteSliderModal(ws)}
+                                style={{ backgroundColor: '#556ee6', color: '#fff', border: 'none', padding: '5px 11px', borderRadius: '4px', fontSize: '0.78rem', cursor: 'pointer', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                              >
+                                <Pencil size={13} /> Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteWebsiteSlider(ws.id)}
+                                style={{ backgroundColor: '#f46a6a', color: '#fff', border: 'none', padding: '5px 11px', borderRadius: '4px', fontSize: '0.78rem', cursor: 'pointer', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                              >
+                                <Trash2 size={13} /> Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {websiteSliders.length === 0 && !websiteSlidersLoading && (
+                        <tr>
+                          <td colSpan="6" style={{ padding: '28px', textAlign: 'center', color: '#74788d' }}>
+                            No Website Slider Banners Found. Click &quot;+ Add Website Slider&quot; to add one!
+                          </td>
+                        </tr>
+                      )}
+                      {websiteSlidersLoading && (
+                        <tr>
+                          <td colSpan="6" style={{ padding: '28px', textAlign: 'center', color: '#556ee6' }}>
+                            Loading Website Sliders...
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* VIEW: SETTINGS - HOW TO PLAY (PHP how-to-play.php parity) */}
           {activeTab === 'how_to_play' && (
             <div>
@@ -11361,6 +11701,175 @@ const AdminDashboard = ({ setAdminAuth }) => {
                   style={{ padding: '8px 22px', backgroundColor: '#556ee6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
                 >
                   {addSliderLoading ? 'Adding...' : 'Submit'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add / Edit Website Slider Modal */}
+      {showWebsiteSliderModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '16px'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '8px',
+            width: '100%',
+            maxWidth: '540px',
+            maxHeight: '92vh',
+            overflowY: 'auto',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            padding: '24px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+              <h5 style={{ margin: 0, color: '#343a40', fontWeight: 'bold', fontSize: '1.05rem' }}>
+                {editingWebsiteSliderId ? 'Edit Website Slider' : 'Add Website Slider'}
+              </h5>
+              <span
+                style={{ cursor: 'pointer', fontSize: '1.3rem', color: '#74788d', lineHeight: 1 }}
+                onClick={() => setShowWebsiteSliderModal(false)}
+              >
+                ✕
+              </span>
+            </div>
+
+            <form onSubmit={handleWebsiteSliderSubmit}>
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#495057', display: 'block', marginBottom: '6px' }}>
+                  Slider Banner Image * (Upload File or Paste URL)
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleWebsiteSliderFilePick(e, (base64) => setWebsiteSliderForm(prev => ({ ...prev, image_url: base64 })))}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      border: '1px solid #ced4da',
+                      fontSize: '0.85rem',
+                      backgroundColor: '#ffffff',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Or paste image URL (https://...) or /uploads/banner.jpg"
+                    value={websiteSliderForm.image_url}
+                    onChange={(e) => setWebsiteSliderForm(prev => ({ ...prev, image_url: e.target.value }))}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #ced4da', fontSize: '0.82rem', color: '#495057' }}
+                  />
+                  {websiteSliderForm.image_url && (
+                    <div style={{ marginTop: '4px', textAlign: 'center', backgroundColor: '#f8f9fa', padding: '10px', borderRadius: '6px', border: '1px dashed #ced4da' }}>
+                      <p style={{ margin: '0 0 6px 0', fontSize: '0.75rem', color: '#74788d', fontWeight: 'bold' }}>Live Banner Preview:</p>
+                      <img
+                        src={resolveSliderImageSrc(websiteSliderForm.image_url)}
+                        alt="Website Slider Preview"
+                        style={{ maxHeight: '150px', width: '100%', objectFit: 'contain', borderRadius: '6px' }}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '14px' }}>
+                <div>
+                  <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#495057', display: 'block', marginBottom: '6px' }}>
+                    Title (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Fast Deposit & Withdrawal"
+                    value={websiteSliderForm.title}
+                    onChange={(e) => setWebsiteSliderForm(prev => ({ ...prev, title: e.target.value }))}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #ced4da', fontSize: '0.85rem' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#495057', display: 'block', marginBottom: '6px' }}>
+                    Subtitle / Tagline (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Play 24x7 Live Markets"
+                    value={websiteSliderForm.subtitle}
+                    onChange={(e) => setWebsiteSliderForm(prev => ({ ...prev, subtitle: e.target.value }))}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #ced4da', fontSize: '0.85rem' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#495057', display: 'block', marginBottom: '6px' }}>
+                  Click Redirect Link (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. #available-games or https://..."
+                  value={websiteSliderForm.redirect_url}
+                  onChange={(e) => setWebsiteSliderForm(prev => ({ ...prev, redirect_url: e.target.value }))}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #ced4da', fontSize: '0.85rem' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#495057', display: 'block', marginBottom: '6px' }}>
+                    Display Order
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={websiteSliderForm.display_order}
+                    onChange={(e) => setWebsiteSliderForm(prev => ({ ...prev, display_order: e.target.value }))}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #ced4da', fontSize: '0.88rem' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#495057', display: 'block', marginBottom: '6px' }}>
+                    Status
+                  </label>
+                  <select
+                    value={websiteSliderForm.status}
+                    onChange={(e) => setWebsiteSliderForm(prev => ({ ...prev, status: e.target.value }))}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #ced4da', fontSize: '0.88rem', backgroundColor: '#ffffff' }}
+                  >
+                    <option value="1">Active (Show on Landing Page)</option>
+                    <option value="0">Inactive (Hidden)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '12px', borderTop: '1px solid #eff2f7' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowWebsiteSliderModal(false)}
+                  style={{ padding: '8px 18px', backgroundColor: '#74788d', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={websiteSliderSaving}
+                  style={{ padding: '8px 22px', backgroundColor: '#556ee6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                >
+                  {websiteSliderSaving ? 'Saving...' : editingWebsiteSliderId ? 'Update Slider' : 'Add Slider'}
                 </button>
               </div>
             </form>

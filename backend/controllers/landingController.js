@@ -131,6 +131,60 @@ let cachedRatesPayload = null;
 let cachedRatesAt = 0;
 let cachedMarketsPayload = null;
 let cachedMarketsAt = 0;
+let cachedSlidersPayload = null;
+let cachedSlidersAt = 0;
+let slidersInFlightPromise = null;
+let websiteSlidersTablePromise = null;
+
+async function ensureWebsiteSlidersTable() {
+  if (!websiteSlidersTablePromise) {
+    websiteSlidersTablePromise = (async () => {
+      const [existingTables] = await db.query("SHOW TABLES LIKE 'website_sliders'");
+      const isFreshTable = !Array.isArray(existingTables) || existingTables.length === 0;
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS website_sliders (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          title VARCHAR(255) DEFAULT '',
+          subtitle VARCHAR(255) DEFAULT '',
+          image_url LONGTEXT NOT NULL,
+          redirect_url VARCHAR(500) DEFAULT '',
+          display_order INT DEFAULT 1,
+          status VARCHAR(10) DEFAULT '1',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+      if (isFreshTable) {
+        await db.query(
+          `INSERT INTO website_sliders (title, subtitle, image_url, redirect_url, display_order, status) VALUES
+           (?, ?, ?, ?, 1, '1'),
+           (?, ?, ?, ?, 2, '1')`,
+          [
+            'Play Live Matka Markets 24x7',
+            'Instant UPI Deposit & Fast Auto Payout on Bharat Matka',
+            'img/slider-banner-1.jpg',
+            '#available-games',
+            'Bharat Ka Sabse Trusted & Safe App',
+            'Best Game Win Rates & Instant Withdrawal Support',
+            'img/slider-banner-2.jpg',
+            'apk/Bharat-Matka.apk'
+          ]
+        );
+      }
+    })().catch((err) => {
+      websiteSlidersTablePromise = null;
+      throw err;
+    });
+  }
+  return websiteSlidersTablePromise;
+}
+
+exports.ensureWebsiteSlidersTable = ensureWebsiteSlidersTable;
+
+exports.invalidateWebsiteSlidersCache = () => {
+  cachedSlidersPayload = null;
+  cachedSlidersAt = 0;
+};
 
 // Public Game Rates
 exports.getLandingRates = async (req, res) => {
@@ -403,6 +457,42 @@ exports.getChartData = async (req, res) => {
     });
   } catch (err) {
     console.error('Error fetching chart data:', err);
+    return res.status(500).json({ success: '0', error: err.message });
+  }
+};
+
+// 4. Get Active Website Sliders for Landing Page
+exports.getLandingSliders = async (req, res) => {
+  try {
+    if (cachedSlidersPayload && Date.now() - cachedSlidersAt < 60000) {
+      return res.json(cachedSlidersPayload);
+    }
+
+    if (!slidersInFlightPromise) {
+      slidersInFlightPromise = (async () => {
+        await ensureWebsiteSlidersTable();
+        const [allRows] = await db.query(
+          `SELECT id, title, subtitle,
+             CASE WHEN TRIM(CAST(status AS CHAR)) = '1' THEN image_url ELSE '' END AS image_url,
+             redirect_url, display_order, status, created_at
+           FROM website_sliders
+           ORDER BY COALESCE(display_order, 1) ASC, id DESC`
+        );
+        const rows = Array.isArray(allRows) ? allRows : [];
+        const activeRows = rows.filter((r) => String(r.status ?? '').trim() === '1' && r.image_url);
+        const payload = { success: '1', total_count: rows.length, data: activeRows };
+        cachedSlidersPayload = payload;
+        cachedSlidersAt = Date.now();
+        return payload;
+      })().finally(() => {
+        slidersInFlightPromise = null;
+      });
+    }
+
+    const payload = await slidersInFlightPromise;
+    return res.json(payload);
+  } catch (err) {
+    console.error('Error fetching website sliders:', err);
     return res.status(500).json({ success: '0', error: err.message });
   }
 };

@@ -86,6 +86,13 @@ router.post('/toggle-slider-status', verifyAdmin, adminController.toggleSliderSt
 router.post('/sliders/delete', verifyAdmin, adminController.deleteSliderImage);
 router.post('/delete-slider-image', verifyAdmin, adminController.deleteSliderImage);
 
+// Website Landing Page Slider Management
+router.get('/website-sliders', verifyAdmin, adminController.getWebsiteSliders);
+router.post('/website-sliders/add', verifyAdmin, adminController.addWebsiteSlider);
+router.post('/website-sliders/update', verifyAdmin, adminController.updateWebsiteSlider);
+router.post('/website-sliders/delete', verifyAdmin, adminController.deleteWebsiteSlider);
+router.post('/website-sliders/status', verifyAdmin, adminController.toggleWebsiteSliderStatus);
+
 // Additional PHP Parity Endpoints
 router.get('/metrics/ank-bids', verifyAdmin, adminController.getSingleAnkBids);
 router.get('/single-ank-bids', verifyAdmin, adminController.getSingleAnkBids);

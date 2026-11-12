@@ -31,7 +31,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20261112">
 </head>
 
 <body>
@@ -116,154 +116,24 @@
     <!-- 1. HERO PROMOTIONAL BANNER -->
     <section class="hero-wrapper">
       <div class="container">
-        <div class="hero-banner-card">
 
-          <!-- Subtle Diagonal Decorative Rays -->
-          <div class="hero-rays" aria-hidden="true"></div>
 
-          <!-- Center Presenter Illustration Layer -->
-          <div class="hero-presenter-layer" aria-hidden="true">
-            <img src="img/hero-presenter.jpg" alt="Bharat Matka App Presenter" class="hero-presenter-img">
+        <!-- 1B. DYNAMIC ADMIN-MANAGED WEBSITE IMAGE SLIDER -->
+        <section class="website-slider-wrapper" id="websiteSliderSection" aria-label="Promotional Image Slider"
+          style="display: none;">
+          <div class="ws-carousel" id="websiteSliderCarousel">
+            <div class="ws-track" id="websiteSliderTrack"></div>
+            <button type="button" class="ws-nav-btn ws-prev" id="wsPrevBtn" aria-label="Previous slide">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button type="button" class="ws-nav-btn ws-next" id="wsNextBtn" aria-label="Next slide">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+            <div class="ws-dots" id="websiteSliderDots" aria-label="Slide navigation dots"></div>
           </div>
+        </section>
 
-          <!-- Grid Overlays: Left Headline + Right App Mockups -->
-          <div class="hero-inner-grid">
-
-            <!-- Left Promo Copy -->
-            <div class="hero-left-col">
-              <div class="hero-brand-pill">
-                <span class="brand-orange">Bharat</span>
-                <span class="brand-green">Matka</span>
-              </div>
-              <div class="hero-domain-line" id="heroDomainLabel">www.bharatmatka.com</div>
-
-              <h1 class="hero-big-headline">
-                <span class="headline-white">LAGAO DIMAAG</span>
-                <span class="headline-green">JEETO BADA.</span>
-              </h1>
-
-              <p class="hero-sub-tagline">PLAY IN BHARAT MATKA</p>
-
-              <div class="hero-trust-card">
-                <div class="trust-card-title">MATKA | AVIATOR</div>
-                <div class="trust-card-sub">BHARAT KA SABSE TRUSTED &amp; SAFE APPLICATION</div>
-              </div>
-            </div>
-
-            <!-- Right Dual Mobile Phones + Download CTA -->
-            <div class="hero-right-col">
-              <div class="hero-phones-cluster">
-
-                <!-- Phone 1 (Front Left: Markets Screen) -->
-                <div class="promo-phone promo-phone-front">
-                  <div class="promo-phone-notch"></div>
-                  <div class="promo-phone-screen">
-                    <div class="pp-header">
-                      <span class="pp-brand">Bharat <em>Matka</em></span>
-                      <span class="pp-wallet"><i class="fa-solid fa-wallet"></i> ₹ 529</span>
-                    </div>
-                    <div class="pp-quick-tabs">
-                      <span class="pp-qtab active">STARLINE</span>
-                      <span class="pp-qtab">GAMES</span>
-                      <span class="pp-qtab">JACKPOT</span>
-                    </div>
-                    <div class="pp-market-list" id="heroPhoneMarkets">
-                      <div class="pp-market-row">
-                        <div>
-                          <div class="pp-mname">KALYAN</div>
-                          <div class="pp-mres">***-**-***</div>
-                        </div>
-                        <span class="pp-bet-btn">Place Bet</span>
-                      </div>
-                      <div class="pp-market-row">
-                        <div>
-                          <div class="pp-mname">MILAN DAY</div>
-                          <div class="pp-mres">570-22-589</div>
-                        </div>
-                        <span class="pp-bet-btn">Place Bet</span>
-                      </div>
-                      <div class="pp-market-row">
-                        <div>
-                          <div class="pp-mname">SRIDEVI</div>
-                          <div class="pp-mres">578-07-368</div>
-                        </div>
-                        <span class="pp-bet-btn">Place Bet</span>
-                      </div>
-                      <div class="pp-market-row">
-                        <div>
-                          <div class="pp-mname">MAIN BAZAR</div>
-                          <div class="pp-mres">***-**-***</div>
-                        </div>
-                        <span class="pp-bet-btn">Place Bet</span>
-                      </div>
-                    </div>
-                    <div class="pp-bottom-nav">
-                      <span class="active"><i class="fa-solid fa-house"></i></span>
-                      <span><i class="fa-solid fa-clock-rotate-left"></i></span>
-                      <span><i class="fa-solid fa-wallet"></i></span>
-                      <span><i class="fa-solid fa-comments"></i></span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Phone 2 (Back Right: Game Bid Modes Grid) -->
-                <div class="promo-phone promo-phone-back">
-                  <div class="promo-phone-notch"></div>
-                  <div class="promo-phone-screen">
-                    <div class="pp-sub-header">
-                      <i class="fa-solid fa-arrow-left"></i> KALYAN dashboard
-                    </div>
-                    <div class="pp-game-modes-grid">
-                      <div class="pp-mode-tile">
-                        <span class="pp-mode-icon purple"><i class="fa-solid fa-1"></i></span>
-                        <span>Single Digit</span>
-                      </div>
-                      <div class="pp-mode-tile">
-                        <span class="pp-mode-icon blue"><i class="fa-solid fa-dice"></i></span>
-                        <span>Jodi Digit</span>
-                      </div>
-                      <div class="pp-mode-tile">
-                        <span class="pp-mode-icon teal"><i class="fa-solid fa-layer-group"></i></span>
-                        <span>Single Pana</span>
-                      </div>
-                      <div class="pp-mode-tile">
-                        <span class="pp-mode-icon indigo"><i class="fa-solid fa-cubes"></i></span>
-                        <span>Double Pana</span>
-                      </div>
-                      <div class="pp-mode-tile">
-                        <span class="pp-mode-icon orange"><i class="fa-solid fa-gem"></i></span>
-                        <span>Triple Pana</span>
-                      </div>
-                      <div class="pp-mode-tile">
-                        <span class="pp-mode-icon green"><i class="fa-solid fa-trophy"></i></span>
-                        <span>Full Sangam</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-
-              <!-- Big Orange Download Button -->
-              <a href="apk/Bharat-Matka.apk" download="Bharat-Matka.apk" class="hero-download-cta apk-download-btn">
-                DOWNLOAD NOW
-              </a>
-            </div>
-
-          </div>
-
-          <!-- Bottom Center Support Pill -->
-          <a href="/support" class="hero-support-pill dyn-chat-link">
-            <i class="fa-solid fa-headset"></i>
-            <span>
-              <strong>FOR ANY QUERIES</strong>
-              CONTACT CHAT SUPPORT
-            </span>
-          </a>
-
-        </div>
-
-        <!-- 1B. WHITE APP PREVIEW CARD WITH 4 PHONE SHOWCASE FRAMES -->
+        <!-- 1C. WHITE APP PREVIEW CARD WITH 4 PHONE SHOWCASE FRAMES -->
         <div class="showcase-card">
           <div class="showcase-header-action">
             <a href="apk/Bharat-Matka.apk" download="Bharat-Matka.apk" class="store-pill-btn apk-download-btn">
@@ -509,7 +379,8 @@
       </p>
 
       <p class="footer-desc">
-        Our website provides real-time Matka market results, historical Jodi &amp; Panna charts, and verified game rates.
+        Our website provides real-time Matka market results, historical Jodi &amp; Panna charts, and verified game
+        rates.
         Download the official Bharat Matka Android app for fast automated UPI deposits, instant withdrawals, and 24x7
         live chat customer support.
       </p>
@@ -558,7 +429,8 @@
     <div class="chart-modal-container" style="max-width: 640px;">
       <div class="chart-modal-header">
         <h3><i class="fa-solid fa-circle-play"></i> How to Download &amp; Play</h3>
-        <button type="button" class="chart-close-btn" onclick="closeHowToPlayModal()" aria-label="Close">&times;</button>
+        <button type="button" class="chart-close-btn" onclick="closeHowToPlayModal()"
+          aria-label="Close">&times;</button>
       </div>
       <div class="chart-modal-body">
         <div class="how-to-steps">
@@ -573,7 +445,8 @@
             <span class="how-step-num">2</span>
             <div>
               <strong>Allow Installation</strong>
-              <p>Enable <em>"Install from Unknown Sources"</em> in your device prompt if asked, and complete installation.</p>
+              <p>Enable <em>"Install from Unknown Sources"</em> in your device prompt if asked, and complete
+                installation.</p>
             </div>
           </div>
           <div class="how-step-row">
@@ -587,7 +460,8 @@
             <span class="how-step-num">4</span>
             <div>
               <strong>Select Market &amp; Win</strong>
-              <p>Choose Single Digit, Jodi, or Pana on any live market like Kalyan, Milan, or Sridevi and withdraw anytime.</p>
+              <p>Choose Single Digit, Jodi, or Pana on any live market like Kalyan, Milan, or Sridevi and withdraw
+                anytime.</p>
             </div>
           </div>
         </div>
@@ -612,7 +486,7 @@
   </div>
 
   <!-- JavaScript -->
-  <script src="app.js"></script>
+  <script src="app.js?v=20261112"></script>
   <script>
     const mobileDrawer = document.getElementById('mobileMenuDrawer');
     const hamburgerBtn = document.getElementById('hamburgerBtn');

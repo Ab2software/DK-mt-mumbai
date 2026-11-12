@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const { getISTDate, getISTDateStr, getISTTimeStr, getISTTime12h, getISTDateTimeStr, compareMarketTimes } = require('../utils/istDate');
+const { ensureWebsiteSlidersTable, invalidateWebsiteSlidersCache } = require('./landingController');
 
 // Auto-ensure user_winning_report table columns support DP, SP, TP Pana and flexible types
 async function initWinningReportSchema() {
@@ -2006,6 +2007,128 @@ exports.deleteSliderImage = async (req, res) => {
     const { id } = req.body;
     await db.query('DELETE FROM slider_images WHERE id = ?', [id]);
     return res.json({ success: '1', msg: 'Slider image deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: '0', error: err.message });
+  }
+};
+
+function normalizeWebsiteSliderPayload(body = {}) {
+  const imageUrl = String(body.image_url ?? body.slider_image ?? '').trim();
+  const title = String(body.title ?? '').trim().slice(0, 255);
+  const subtitle = String(body.subtitle ?? '').trim().slice(0, 255);
+  const redirectUrl = String(body.redirect_url ?? '').trim().slice(0, 500);
+  const parsedOrder = parseInt(body.display_order, 10);
+  const displayOrder = Number.isFinite(parsedOrder) && parsedOrder > 0 ? parsedOrder : 1;
+  const rawStatus = body.status;
+  const status = (rawStatus === '0' || rawStatus === 0 || rawStatus === false) ? '0' : '1';
+  return { imageUrl, title, subtitle, redirectUrl, displayOrder, status };
+}
+
+function parseSliderId(req) {
+  const raw = req.body?.id ?? req.params?.id ?? req.query?.id;
+  const id = parseInt(raw, 10);
+  return Number.isFinite(id) && id > 0 ? id : null;
+}
+
+// Get All Website Landing Sliders (Admin)
+exports.getWebsiteSliders = async (req, res) => {
+  try {
+    await ensureWebsiteSlidersTable();
+    const [sliders] = await db.query(
+      'SELECT id, title, subtitle, image_url, redirect_url, display_order, status, created_at, updated_at FROM website_sliders ORDER BY COALESCE(display_order, 1) ASC, id DESC'
+    );
+    return res.json({ success: '1', data: sliders || [] });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: '0', error: err.message });
+  }
+};
+
+// Add Website Landing Slider
+exports.addWebsiteSlider = async (req, res) => {
+  try {
+    await ensureWebsiteSlidersTable();
+    const { imageUrl, title, subtitle, redirectUrl, displayOrder, status } = normalizeWebsiteSliderPayload(req.body);
+    if (!imageUrl) {
+      return res.status(400).json({ success: '0', msg: 'Slider image file or URL is required' });
+    }
+    const [result] = await db.query(
+      'INSERT INTO website_sliders (title, subtitle, image_url, redirect_url, display_order, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [title, subtitle, imageUrl, redirectUrl, displayOrder, status]
+    );
+    invalidateWebsiteSlidersCache();
+    return res.json({ success: '1', msg: 'Website slider added successfully', id: result?.insertId });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: '0', error: err.message });
+  }
+};
+
+// Update Website Landing Slider
+exports.updateWebsiteSlider = async (req, res) => {
+  try {
+    await ensureWebsiteSlidersTable();
+    const id = parseSliderId(req);
+    if (!id) {
+      return res.status(400).json({ success: '0', msg: 'Valid slider ID is required' });
+    }
+    const { imageUrl, title, subtitle, redirectUrl, displayOrder, status } = normalizeWebsiteSliderPayload(req.body);
+    if (!imageUrl) {
+      return res.status(400).json({ success: '0', msg: 'Slider image file or URL is required' });
+    }
+    const [result] = await db.query(
+      'UPDATE website_sliders SET title = ?, subtitle = ?, image_url = ?, redirect_url = ?, display_order = ?, status = ? WHERE id = ?',
+      [title, subtitle, imageUrl, redirectUrl, displayOrder, status, id]
+    );
+    if (!result || result.affectedRows === 0) {
+      return res.status(404).json({ success: '0', msg: 'Website slider not found' });
+    }
+    invalidateWebsiteSlidersCache();
+    return res.json({ success: '1', msg: 'Website slider updated successfully' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: '0', error: err.message });
+  }
+};
+
+// Toggle Website Landing Slider Status
+exports.toggleWebsiteSliderStatus = async (req, res) => {
+  try {
+    await ensureWebsiteSlidersTable();
+    const id = parseSliderId(req);
+    if (!id) {
+      return res.status(400).json({ success: '0', msg: 'Valid slider ID is required' });
+    }
+    const [result] = await db.query(
+      "UPDATE website_sliders SET status = IF(TRIM(CAST(status AS CHAR)) = '1', '0', '1') WHERE id = ?",
+      [id]
+    );
+    if (!result || result.affectedRows === 0) {
+      return res.status(404).json({ success: '0', msg: 'Website slider not found' });
+    }
+    invalidateWebsiteSlidersCache();
+    return res.json({ success: '1', msg: 'Website slider status updated successfully' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: '0', error: err.message });
+  }
+};
+
+// Delete Website Landing Slider
+exports.deleteWebsiteSlider = async (req, res) => {
+  try {
+    await ensureWebsiteSlidersTable();
+    const id = parseSliderId(req);
+    if (!id) {
+      return res.status(400).json({ success: '0', msg: 'Valid slider ID is required' });
+    }
+    const [result] = await db.query('DELETE FROM website_sliders WHERE id = ?', [id]);
+    if (!result || result.affectedRows === 0) {
+      return res.status(404).json({ success: '0', msg: 'Website slider not found' });
+    }
+    invalidateWebsiteSlidersCache();
+    return res.json({ success: '1', msg: 'Website slider deleted successfully' });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ success: '0', error: err.message });

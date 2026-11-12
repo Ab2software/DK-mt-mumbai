@@ -31,7 +31,13 @@ const CANDIDATE_API_BASES = (() => {
     if (port === '5001' || port === '5000') {
       candidates.push('/api');
     }
-    candidates.push('http://localhost:5001/api');
+    if (hostname === '127.0.0.1') {
+      candidates.push('http://127.0.0.1:5001/api');
+      candidates.push('http://localhost:5001/api');
+    } else {
+      candidates.push('http://localhost:5001/api');
+      candidates.push('http://127.0.0.1:5001/api');
+    }
     candidates.push('http://localhost:5000/api');
   }
 
@@ -178,6 +184,7 @@ window.triggerApkDownload = triggerApkDownload;
 // =========================================================================
 document.addEventListener('DOMContentLoaded', () => {
   initEventListeners();
+  renderWebsiteSliders(DEFAULT_WEBSITE_SLIDES);
   updateDomainBanner();
   applyDownloadLinksToDOM();
   resolveWorkingApkUrl();
@@ -200,6 +207,7 @@ function updateDomainBanner() {
 async function loadAllDynamicData() {
   await Promise.allSettled([
     loadAppInfo(),
+    loadWebsiteSliders(),
     loadGameRates(),
     loadLiveMarkets()
   ]);
@@ -585,5 +593,250 @@ function initEventListeners() {
     howModal.addEventListener('click', e => {
       if (e.target === howModal) closeHowToPlayModal();
     });
+  }
+
+  initWebsiteSliderEvents();
+}
+
+// =========================================================================
+// 6. DYNAMIC ADMIN-MANAGED WEBSITE IMAGE SLIDER
+// =========================================================================
+const DEFAULT_WEBSITE_SLIDES = [
+  {
+    id: 'default-1',
+    title: 'Play Live Matka Markets 24x7',
+    subtitle: 'Instant UPI Deposit & Fast Auto Payout on Bharat Matka',
+    image_url: 'img/slider-banner-1.jpg',
+    redirect_url: '#available-games',
+    status: '1'
+  },
+  {
+    id: 'default-2',
+    title: 'Bharat Ka Sabse Trusted & Safe App',
+    subtitle: 'Best Game Win Rates & Instant Withdrawal Support',
+    image_url: 'img/slider-banner-2.jpg',
+    redirect_url: 'apk/Bharat-Matka.apk',
+    status: '1'
+  }
+];
+
+let websiteSlidesData = [];
+let currentWebsiteSlideIdx = 0;
+let websiteSliderTimer = null;
+
+function getBackendOrigin() {
+  if (typeof activeApiBase === 'string' && /^https?:\/\//i.test(activeApiBase)) {
+    return activeApiBase.replace(/\/api\/?$/i, '');
+  }
+  return window.location.origin;
+}
+
+function resolveLandingAssetUrl(rawUrl) {
+  const clean = String(rawUrl || '').trim();
+  if (!clean) return '';
+  if (/^(data:|https?:\/\/)/i.test(clean)) return clean;
+  if (/^\/?img\//i.test(clean)) return clean.replace(/^\/+/, '');
+  const origin = getBackendOrigin();
+  if (clean.startsWith('/')) return `${origin}${clean}`;
+  return `${origin}/uploads/${clean}`;
+}
+
+function getSafeRedirectUrl(rawUrl) {
+  const clean = String(rawUrl || '').trim();
+  if (!clean) return '';
+  if (/^(https?:\/\/|\/|#)/i.test(clean)) return clean;
+  if (/^[a-z0-9][a-z0-9/_.-]*$/i.test(clean)) return clean;
+  return '';
+}
+
+async function loadWebsiteSliders() {
+  const section = document.getElementById('websiteSliderSection');
+  if (!section) return;
+  try {
+    const res = await fetchFromApi('/landing/sliders');
+    const json = await res.json();
+    if (!json || json.success !== '1') {
+      return;
+    }
+    const list = Array.isArray(json.data) ? json.data : [];
+    const activeSlides = list.filter(item => item && item.image_url && String(item.status ?? '1') === '1');
+    const totalCount = Number(json.total_count);
+    if (activeSlides.length > 0) {
+      renderWebsiteSliders(activeSlides);
+    } else if (!Number.isNaN(totalCount) && totalCount > 0) {
+      // Admin intentionally created slides and marked all inactive
+      renderWebsiteSliders([]);
+    }
+  } catch (err) {
+    console.warn('Could not load website sliders from API, keeping default banner slider:', err.message);
+  }
+}
+
+function renderWebsiteSliders(slides) {
+  const section = document.getElementById('websiteSliderSection');
+  const track = document.getElementById('websiteSliderTrack');
+  const dotsEl = document.getElementById('websiteSliderDots');
+  const prevBtn = document.getElementById('wsPrevBtn');
+  const nextBtn = document.getElementById('wsNextBtn');
+  if (!section || !track || !dotsEl) return;
+
+  stopWebsiteSliderAutoPlay();
+  const validSlides = Array.isArray(slides) ? slides : [];
+  websiteSlidesData = validSlides;
+
+  if (validSlides.length === 0) {
+    section.style.display = 'none';
+    track.innerHTML = '';
+    dotsEl.innerHTML = '';
+    return;
+  }
+
+  track.innerHTML = '';
+  dotsEl.innerHTML = '';
+  currentWebsiteSlideIdx = 0;
+
+  validSlides.forEach((slide, idx) => {
+    const safeHref = getSafeRedirectUrl(slide.redirect_url);
+    const slideEl = document.createElement(safeHref ? 'a' : 'div');
+    slideEl.className = 'ws-slide';
+    if (safeHref) {
+      slideEl.href = safeHref;
+      if (/^https?:\/\//i.test(safeHref)) {
+        slideEl.target = '_blank';
+        slideEl.rel = 'noopener noreferrer';
+      }
+    }
+
+    const img = document.createElement('img');
+    img.className = 'ws-slide-img';
+    img.src = resolveLandingAssetUrl(slide.image_url);
+    img.alt = slide.title || `Bharat Matka Banner ${idx + 1}`;
+    img.loading = idx === 0 ? 'eager' : 'lazy';
+    img.addEventListener('error', () => {
+      img.style.visibility = 'hidden';
+    });
+    slideEl.appendChild(img);
+
+    const hasTitle = Boolean(slide.title && String(slide.title).trim());
+    const hasSubtitle = Boolean(slide.subtitle && String(slide.subtitle).trim());
+    if (hasTitle || hasSubtitle) {
+      const caption = document.createElement('div');
+      caption.className = 'ws-caption';
+      if (hasTitle) {
+        const titleEl = document.createElement('h3');
+        titleEl.className = 'ws-caption-title';
+        titleEl.textContent = String(slide.title).trim();
+        caption.appendChild(titleEl);
+      }
+      if (hasSubtitle) {
+        const subEl = document.createElement('p');
+        subEl.className = 'ws-caption-subtitle';
+        subEl.textContent = String(slide.subtitle).trim();
+        caption.appendChild(subEl);
+      }
+      slideEl.appendChild(caption);
+    }
+
+    track.appendChild(slideEl);
+
+    if (validSlides.length > 1) {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = `ws-dot${idx === 0 ? ' active' : ''}`;
+      dot.setAttribute('aria-label', `Go to slide ${idx + 1}`);
+      dot.addEventListener('click', () => {
+        goToWebsiteSlide(idx);
+        restartWebsiteSliderAutoPlay();
+      });
+      dotsEl.appendChild(dot);
+    }
+  });
+
+  const showControls = validSlides.length > 1;
+  if (prevBtn) prevBtn.style.display = showControls ? 'inline-flex' : 'none';
+  if (nextBtn) nextBtn.style.display = showControls ? 'inline-flex' : 'none';
+  dotsEl.style.display = showControls ? 'flex' : 'none';
+
+  section.style.display = 'block';
+  updateWebsiteSliderTransform();
+  if (showControls) {
+    startWebsiteSliderAutoPlay();
+  }
+}
+
+function updateWebsiteSliderTransform() {
+  const track = document.getElementById('websiteSliderTrack');
+  const dotsEl = document.getElementById('websiteSliderDots');
+  if (!track) return;
+  track.style.transform = `translate3d(-${currentWebsiteSlideIdx * 100}%, 0, 0)`;
+  if (dotsEl) {
+    const dots = dotsEl.querySelectorAll('.ws-dot');
+    dots.forEach((dot, idx) => {
+      dot.classList.toggle('active', idx === currentWebsiteSlideIdx);
+    });
+  }
+}
+
+function goToWebsiteSlide(index) {
+  if (!websiteSlidesData || websiteSlidesData.length === 0) return;
+  const total = websiteSlidesData.length;
+  currentWebsiteSlideIdx = ((index % total) + total) % total;
+  updateWebsiteSliderTransform();
+}
+
+function startWebsiteSliderAutoPlay() {
+  stopWebsiteSliderAutoPlay();
+  if (websiteSlidesData.length <= 1) return;
+  websiteSliderTimer = setInterval(() => {
+    goToWebsiteSlide(currentWebsiteSlideIdx + 1);
+  }, 4500);
+}
+
+function stopWebsiteSliderAutoPlay() {
+  if (websiteSliderTimer) {
+    clearInterval(websiteSliderTimer);
+    websiteSliderTimer = null;
+  }
+}
+
+function restartWebsiteSliderAutoPlay() {
+  stopWebsiteSliderAutoPlay();
+  startWebsiteSliderAutoPlay();
+}
+
+function initWebsiteSliderEvents() {
+  const prevBtn = document.getElementById('wsPrevBtn');
+  const nextBtn = document.getElementById('wsNextBtn');
+  const carousel = document.getElementById('websiteSliderCarousel');
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      goToWebsiteSlide(currentWebsiteSlideIdx - 1);
+      restartWebsiteSliderAutoPlay();
+    });
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      goToWebsiteSlide(currentWebsiteSlideIdx + 1);
+      restartWebsiteSliderAutoPlay();
+    });
+  }
+  if (carousel) {
+    let touchStartX = 0;
+    carousel.addEventListener('mouseenter', stopWebsiteSliderAutoPlay);
+    carousel.addEventListener('mouseleave', startWebsiteSliderAutoPlay);
+    carousel.addEventListener('touchstart', e => {
+      stopWebsiteSliderAutoPlay();
+      if (e.touches && e.touches[0]) touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    carousel.addEventListener('touchend', e => {
+      if (e.changedTouches && e.changedTouches[0]) {
+        const diff = touchStartX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 40) {
+          goToWebsiteSlide(diff > 0 ? currentWebsiteSlideIdx + 1 : currentWebsiteSlideIdx - 1);
+        }
+      }
+      startWebsiteSliderAutoPlay();
+    }, { passive: true });
   }
 }
